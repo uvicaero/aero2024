@@ -1,1 +1,1 @@
-# aero2024
+# UVic Aero 2024
