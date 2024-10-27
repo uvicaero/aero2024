@@ -31,12 +31,12 @@ def detect_hotspots(img_path, threshold=0.5, debug=False):
 
     areas = stats[1:, cv2.CC_STAT_AREA] #first entry is background
 
-    for i in range(0, nlabels - 1):
-        if areas[i] >= 100:  #keep components with area >= 100 pixels
-            centroids.pop(i)
+    print(centroids)
+    centroids = centroids[1:]
 
+    filtered = centroids[areas >= 100] #keep components with area >= 100 pixels
 
-    return centroids[1:] #first entry is the background
+    return filtered
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
