@@ -3,8 +3,9 @@ import numpy as np
 import math
 import argparse
 
+# This is all very tentative/hypothetical and pending testing.
 
-# points: list of uncorrected hotspot points (as tuples?)
+# points: list of uncorrected hotspot points (as tuples)
 # cam_x, cam_y: camera GPS coordinates
 # pitch: EXIF tag GimbalPitch converted to radians, will always be negative
 # azimuth: angle clockwise from N, in radians. EXIF tag FlightYawDegrees
@@ -23,9 +24,9 @@ def get_image_points_gps(points, cam_x, cam_y, altitude, pitch, azimuth):
     dist_coeffs = 1 # -> find. comes from cam calibration
     img_half_height = 1 # -> find. number of pixels from centre of image to top of image
     image_half_width = 1 # -> find. 
-    ratXh = sensor_width/focal_length/2 # ratio of sensor half-width to focal length (at image centre)
-    ratYh = aspect * ratXh # ditto for sensor half-height
-    phiYh = math.atan(ratYh) # 1/2-FOV angle in Y direction at image centre. Will be in radians.
+    rat_x = sensor_width/focal_length/2 # ratio of sensor half-width to focal length (at image centre)
+    rat_y = aspect * rat_x # ditto for sensor half-height
+    phi_y = math.atan(rat_y) # 1/2-FOV angle in Y direction at image centre. Will be in radians.
 
     # still to come: applying undistortion to the points
 
@@ -37,10 +38,10 @@ def get_image_points_gps(points, cam_x, cam_y, altitude, pitch, azimuth):
         frac_pixels_y = point[1] / img_half_height # calculate fraction of the point's pixels-to-centre / total pixels from top edge to centre
         frac_pixels_x = point[0] / image_half_width
 
-        # k corresponds to the y-axis of the image, w to the x-axis of the image
-        ground_k = altitude/math.tan(-pitch+frac_pixels_y*phiYh) # ground distance of camera ground projection to y-coordinate on image
+        # k corresponds to the y-axis direction from the image, w to the x-axis direction from the image
+        ground_k = altitude/math.tan(-pitch+frac_pixels_y*phi_y) # ground distance of camera ground projection to y-coordinate on image
         full_distance = math.sqrt(altitude^2+ground_k^2) # full distance, hypotenuse of ground distance and altitude triangle
-        ground_w = full_distance * ratXh * frac_pixels_x # ground distance of camera ground position to x-coordinate on image
+        ground_w = full_distance * rat_x * frac_pixels_x # ground distance of camera ground position to x-coordinate on image
 
         # so now we have the ground distance from the camera to the point in meters (altitude units). and we need to add that distance to
         # the camera's current position. here is where we should check for which quadrant of image
