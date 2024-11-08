@@ -1,6 +1,6 @@
 # UVic Aero 2024
 
-# Boiler plate code for test output paths
+# Boiler plate code for test output and import paths
 
 from pathlib import Path
 
