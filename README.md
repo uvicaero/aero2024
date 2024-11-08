@@ -2,7 +2,10 @@
 
 # Boiler plate code for test output and import paths
 
+*import PATH*
+```
 from pathlib import Path
+```
 
 *Define the output directory relative to the root of the project*
 ```
