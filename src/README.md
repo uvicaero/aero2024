@@ -1,6 +1,6 @@
 # Useful things
 
-## Using RAM with camera
+## Using Raspberry pi RAM with camera
 
 Directory to save to RAM
 ```
