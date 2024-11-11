@@ -1,0 +1,16 @@
+services:
+  sitl:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./src:/aero2024/src
+      - ./tests:/aero2024/tests
+      - ./data:/aero2024/data
+    environment:
+      - PYTHONPATH=/aero2024/src
+    ports:
+      - "5760:5760"
+      - "14550:14550"
+    command: >
+      sim_vehicle.py -v ArduCopter --model gazebo-iris --console --map
