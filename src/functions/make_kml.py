@@ -30,10 +30,3 @@ def generate_kml(hotspot_coords): # hotspot_coords is a list of tuples
         kml_file.write(kml_content)
 
 # Example usage:
-hotspot_coords = [
-    (50.1023412, -110.7367821),
-    (50.1027845, -110.7375123),
-    (50.1031245, -110.7380123)
-]
-
-generate_kml(hotspot_coords)
