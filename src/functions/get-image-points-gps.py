@@ -1,54 +1,54 @@
-import cv2
+import cv2 as cv
 import numpy as np
 import math
 import argparse
 
 # This is all very tentative/hypothetical and pending testing.
 
-# points: list of uncorrected hotspot points (as tuples)
+# undistorted_points: numpy array of hotspot image points
 # cam_x, cam_y: camera GPS coordinates
 # pitch: EXIF tag GimbalPitch converted to radians, will always be negative
 # azimuth: angle clockwise from N, in radians. EXIF tag FlightYawDegrees
-# returns a list of tuples each containing the latitude and longitude of a hotspot
-def get_image_points_gps(points, cam_x, cam_y, altitude, pitch, azimuth):
+# returns an array containing the latitude and longitude of each hotspot
+def get_image_points_gps(distorted_points, cam_x, cam_y, altitude, pitch, azimuth):
 
     # -> find. metres to latitude/longitude conversion factors for the current location (temp values)
-    lat_factor = 1
-    long_factor = 1
+    lat_factor = 1/111230.9531021928 # 1 degree of latitude per that many meters, at 50.100 degrees latitude
+    long_factor = 1/71546.90282746412 # 1 degree of longitude per that many meters, at 50.100 degrees latitude
 
     # camera paramaters
-    focal_length = 1 #  -> find. camera focal length in mm
-    sensor_width = 1 # -> find. sensor width in mm
+    sensor_width = 1 # -> find. sensor width in mm. varies per camera
     aspect = 0.75 # aspect ratio, usually 3:4 or 9:16
-    camera_matrix = 1 # -> find. comes from cam calibration
-    dist_coeffs = 1 # -> find. comes from cam calibration
+    camera_matrix = np.array([[318.75661688, 0., 238.33096392], [0., 295.35494937, 176.03735595], [0., 0., 1.]]) # from cam calibration
+    dist_coeffs = np.array([-0.09052426, -0.04445899, 0.00651141, -0.00808592, 0.06500396]) # from cam calibration
+    focal_length = camera_matrix[0][0] # camera focal length in units from calibration
     img_half_height = 1 # -> find. number of pixels from centre of image to top of image
-    image_half_width = 1 # -> find. 
+    img_half_width = 1 # -> find. 
     rat_x = sensor_width/focal_length/2 # ratio of sensor half-width to focal length (at image centre)
     rat_y = aspect * rat_x # ditto for sensor half-height
     phi_y = math.atan(rat_y) # 1/2-FOV angle in Y direction at image centre. Will be in radians.
+    # note for above: could probably find FOV directly instead
 
-    # still to come: applying undistortion to the points
+    # undistort the points
+    dist_pts = np.fromstring(distorted_points, sep=", ").reshape((-1, 2))
+    points = cv.undistortImagePoints(dist_pts, camera_matrix, dist_coeffs)
 
+    projected = np.zeros(points.shape, np.float32)
 
-    projected = [()]
-
+    i = 0
     for point in points:
 
-        frac_pixels_y = point[1] / img_half_height # calculate fraction of the point's pixels-to-centre / total pixels from top edge to centre
-        frac_pixels_x = point[0] / image_half_width
+        frac_pixels_y = (point[0][1] - img_half_height) / img_half_height # calculate fraction of the point's pixels-to-centre / total pixels from top edge to centre
+        frac_pixels_x = (point[0][0] - img_half_width) / img_half_width
 
         # k corresponds to the y-axis direction from the image, w to the x-axis direction from the image
-        ground_k = altitude/math.tan(-pitch+frac_pixels_y*phi_y) # ground distance of camera ground projection to y-coordinate on image
-        full_distance = math.sqrt(altitude^2+ground_k^2) # full distance, hypotenuse of ground distance and altitude triangle
+        ground_k = altitude/math.tan(-1*pitch+frac_pixels_y*phi_y) # ground distance of camera ground projection to y-coordinate on image
+        full_distance = math.sqrt(altitude*altitude+ground_k*ground_k) # full distance, hypotenuse of ground distance and altitude triangle
         ground_w = full_distance * rat_x * frac_pixels_x # ground distance of camera ground position to x-coordinate on image
 
-        # so now we have the ground distance from the camera to the point in meters (altitude units). and we need to add that distance to
-        # the camera's current position. here is where we should check for which quadrant of image
-        # the point is in, then make ground_k and ground_w positive or negative accordingly.
-
         # rotate using azimuth
-        # x corresponds to latitude, y to longitude. need to convert cam GPS to meters for adding. i hope that works.
+        # x corresponds to latitude, y to longitude. need to convert cam GPS to meters for adding.
+        # add/subtract may need to be tweaked once we can visualise with real-world data
         world_x = cam_x / lat_factor + (ground_k) * math.cos(azimuth) + (ground_w) * math.sin(azimuth)
         world_y = cam_y / long_factor - (ground_k) * math.sin(azimuth) + (ground_w) * math.cos(azimuth)
         
@@ -56,7 +56,8 @@ def get_image_points_gps(points, cam_x, cam_y, altitude, pitch, azimuth):
         point_lat = lat_factor*world_x
         point_long = long_factor*world_y
 
-        projected.append((point_lat, point_long))
+        projected[i] = [point_lat, point_long]
+        i += 1
 
     return projected
 
@@ -64,7 +65,7 @@ def main():
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--points', type=list, required=True, help='List of tuples representing hotspot points on the image')
+    parser.add_argument('--distorted_points', type=str, required=True, help='1D string with list of image points eg "x1, y1, x2, y2"')
     parser.add_argument('--cam_x', type=float, required=True, help='Latitude of camera')
     parser.add_argument('--cam_y', type=float, required=True, help='Longitude of camera')
     parser.add_argument('--altitude', type=float, required=True, help='Altitude of camera in meters')
