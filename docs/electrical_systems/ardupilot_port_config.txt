@@ -1,0 +1,39 @@
+Output GLOBAL_POSITION_INT messages at 5 Hz over the GPS2 port.
+
+Send MAVLink data to a MinimOSD over the TELEM2 port.
+
+Checklist:
+
+Step 1: Hardware Connections
+TELEM2 Port:
+Connect TX (Pin 2) to RX on MinimOSD.
+Connect RX (Pin 3) to TX on MinimOSD.
+Connect GND (Pin 6) to GND on MinimOSD.
+
+GPS2 Port:
+Ensure the GPS2 port has an available UART device (or a serial-to-UART device if using for another peripheral).
+
+Step 2: Configure TELEM2 for MinimOSD
+Open Mission Planner.
+Go to Full Parameter List.
+Set:
+SERIAL2_PROTOCOL = 1 (MAVLink 1 for MinimOSD).
+SERIAL2_BAUD = 57 (for 57600 baud rate).
+
+Step 3: Configure GPS2 as UART Output for Position Data
+In Full Parameter List, set:
+SERIAL3_PROTOCOL = 2 (MAVLink 2) or 1 (MAVLink 1).
+SERIAL3_BAUD = 57 (for 57600 baud rate).
+
+Step 4: Set Message Stream Rates
+Set GLOBAL_POSITION_INT message rate for GPS2:
+SR3_POSITION = 5 (to send position data at 5 Hz over GPS2).
+Set message stream rate for TELEM2 (for OSD data):
+SR2_POSITION = 2 (default or adjust as needed).
+
+Step 5: Verify Configuration
+Connect to Mission Planner and monitor telemetry streams using the Status Tab or MAVLink Inspector.
+
+Check that:
+GLOBAL_POSITION_INT messages are sent at 5 Hz on GPS2.
+The MinimOSD is receiving the correct telemetry data from TELEM2.
