@@ -1,57 +1,39 @@
-#sample coordinates and description to test if the function is working
+# For this task write a python function that takes a list of GPS coordinates and output a KML with the GPS coordinates.
+#The function should be called with a list of GPS coordinates 
 
-gps_coordinates = [
-    (50.1023412, -110.7367821),
-    (50.1027845, -110.7375123)
-]
-# formatting of list above causes parentheses to end up in kml file
-# these are currently removed by replacing with nothing. 
-# might be more elegant to change list format to avoid the parentheses in the first place?
-
-source_descrip = "Some red balloons I guess?"
-source_coordinates = 50.1023412, -110.7367821
-
-
-def make_kml(coordinates, source_descrip, source_coordinates):
-    #creating beginning of kml file
-    kml_file = """<?xml version="1.0" encoding="UTF-8"?>
+def generate_kml(hotspot_coords): # hotspot_coords is a list of tuples 
+    # Start the KML document with the necessary XML headers and opening <Document> tag
+    kml_content = '''<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
     <Document>
+'''
+
+    # Loop through the list of hotspot coordinates and create a Placemark for each
+    for i, (lat, lon) in enumerate(hotspot_coords, start=1):
+        kml_content += f'''
         <Placemark>
-            <name>Source</name>
-            <description>""" + source_descrip + """</description>
-            <Point>\n\n
-<coordinates>"""+ str(source_coordinates) +"""</coordinates>
+            <name>Hotspot {i}</name>
+            <Point>
+                <coordinates>{lon},{lat},0</coordinates>
             </Point>
-        </Placemark>"""
+        </Placemark>
+'''
 
-    #inserting each hotspot into kml format
-    hotspot_counter = 1
-    for coordinate in coordinates:
-        kml_file = kml_file + """        <Placemark>
-            <name>Hotspot """ + (str(hotspot_counter)) + """</name>
-            <Point>\n\n<coordinates>""" + str(coordinate) + """</coordinates>
-            </Point>
-        </Placemark>\n"""
-        hotspot_counter = hotspot_counter + 1
-    
-    #closing kml file
-    kml_file = kml_file +"""     </Document>
-</kml>"""
-    #removing parentheses that don't match kml format 
-    kml_file = kml_file.replace("(", "")
-    kml_file = kml_file.replace(")", "")
+    # Close the <Document> and </kml> tags
+    kml_content += '''
+    </Document>
+</kml>
+'''
 
-    #actually name and create the file
-    file_path = "test_kml_file.kml"
-    with open(file_path, 'w') as file:
-        file.write (kml_file)
-    # i don't know what the w argument above is for; got it here:  https://www.geeksforgeeks.org/create-a-new-text-file-in-python/
-    return kml_file
-    #maybe unnecessary to return kml_file since it makes an actual file, but nice to enable printing/check format
+    # Save the KML content to a .kml file
+    with open("hotspots.kml", "w") as kml_file:
+        kml_file.write(kml_content)
 
+# Example usage:
+hotspot_coords = [
+    (50.1023412, -110.7367821),
+    (50.1027845, -110.7375123),
+    (50.1031245, -110.7380123)
+]
 
-print make_kml(gps_coordinates, source_descrip, source_coordinates)
-
-
-#is there a specific file path that should be specified, for compatibility with upload process?
+generate_kml(hotspot_coords)
