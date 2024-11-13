@@ -1,3 +1,13 @@
 # Created by venv; see https://docs.python.org/3/library/venv.html
 .venv
 
+# Ignore all files in the test_outputs directory
+# data/test_outputs/*
+
+# Ignore specific types of files (e.g., KML files, PNG images)
+data/test_outputs/**/*.kml
+data/test_outputs/**/*.png
+
+# Optional: Ignore temporary files
+*.tmp
+*.temp

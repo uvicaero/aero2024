@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+    <Document>
+
+        <Placemark>
+            <name>Hotspot 1</name>
+            <Point>
+                <coordinates>-110.7367821,50.1023412,0</coordinates>
+            </Point>
+        </Placemark>
+
+    </Document>
+</kml>
