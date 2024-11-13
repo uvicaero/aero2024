@@ -24,7 +24,7 @@ in `root/test_outputs`
 
 Once you have setup your test with all the boilerplate code, use the command 
 ```
-python -m tests.your_tester # no .py extension
+pytest tests/test_your_function.py 
 ```
 from the project root (whatever you named your clone of the repo) to start it
 
