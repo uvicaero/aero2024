@@ -11,6 +11,9 @@ services:
       - PYTHONPATH=/aero2024/src
     ports:
       - "5760:5760"
+      - "5762:5762"
+      - "5763:5763"
+      - "5501:5501"
       - "14550:14550"
     command: >
-      sim_vehicle.py -v ArduCopter --model gazebo-iris --console --map
+      /ardupilot/Tools/autotest/sim_vehicle.py -v ArduCopter --console --map -w

@@ -1,0 +1,85 @@
+# Use an official ArduPilot SITL image
+#FROM radarku/ardupilot-sitl
+FROM ubuntu:22.04
+
+ARG COPTER_TAG=Copter-4.5.7
+
+# install git 
+RUN apt-get update && apt-get install -y git; git config --global url."https://github.com/".insteadOf git://github.com/
+
+# Now grab ArduPilot from GitHub
+RUN git clone https://github.com/ArduPilot/ardupilot.git ardupilot
+WORKDIR ardupilot
+
+# Checkout the latest Copter...
+RUN git checkout ${COPTER_TAG}
+
+# Now start build instructions from http://ardupilot.org/dev/docs/setting-up-sitl-on-linux.html
+RUN git submodule update --init --recursive
+
+# Trick to get apt-get to not prompt for timezone in tzdata
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Need sudo and lsb-release for the installation prerequisites
+RUN apt-get install -y sudo lsb-release tzdata
+
+# Need USER set so usermod does not fail...
+# Install all prerequisites now
+RUN USER=nobody Tools/environment_install/install-prereqs-ubuntu.sh -y
+
+# Continue build instructions from https://github.com/ArduPilot/ardupilot/blob/master/BUILD.md
+RUN ./waf distclean
+RUN ./waf configure --board sitl
+RUN ./waf copter
+RUN ./waf rover 
+RUN ./waf plane
+RUN ./waf sub
+
+# TCP 5760 is what the sim exposes by default
+#EXPOSE 5760/tcp
+
+# Install additional dependencies for your Python scripts
+# RUN apt-get update && \
+#     apt-get install -y software-properties-common && \
+#     add-apt-repository ppa:deadsnakes/ppa && \
+#     apt-get update && apt-get install -y && \
+#     apt-get install -y python3.9 && \
+#     python3 python3-pip python3-opencv && \
+#     pip3 install pandas mavsdk && \
+#     pip3 install -r requirements.txt
+RUN apt-get update && \
+    apt-get install -y && \
+    python3 python3-pip python3-opencv && \
+    pip3 install numpy pandas mavsdk && \
+    pip3 install -r requirements.txt
+
+# Set up working directory
+WORKDIR /aero2024
+
+# Copy the source code and test files into the container
+COPY ./src /aero2024/src
+COPY ./tests /aero2024/tests
+COPY ./utils /aero2024/utils
+COPY ./data /aero2024/data
+
+# Set environment variables
+ENV PYTHONPATH=/aero2024/src
+
+# Expose SITL and MAVProxy ports
+EXPOSE 5760 14550
+
+# Command to start SITL
+CMD ["ardupilot/Tools/autotest/sim_vehicle.py", "-v", "ArduCopter", "--model", "gazebo-iris", "--console"]
+
+# Variables for simulator
+# ENV INSTANCE 0
+# ENV LAT 42.3898
+# ENV LON -71.1476
+# ENV ALT 14
+# ENV DIR 270
+# ENV MODEL +
+# ENV SPEEDUP 1
+# ENV VEHICLE ArduCopter
+
+# # Finally the command
+# ENTRYPOINT /ardupilot/Tools/autotest/sim_vehicle.py --vehicle ${VEHICLE} -I${INSTANCE} --custom-location=${LAT},${LON},${ALT},${DIR} -w --frame ${MODEL} --no-rebuild --no-mavproxy --speedup ${SPEEDUP}
