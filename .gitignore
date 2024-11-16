@@ -11,3 +11,6 @@ data/test_outputs/**/*.png
 # Optional: Ignore temporary files
 *.tmp
 *.temp
+
+# Debug files for main
+src/images

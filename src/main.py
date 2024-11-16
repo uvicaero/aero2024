@@ -31,7 +31,7 @@ def main():
 
             if debug:
                 #save the image in the "images" folder with a timestamp
-                timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                timestamp = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
                 image_path = f"images/photo_{timestamp}.jpg"
                 cv2.imwrite(image_path, image)
                 print(f"Image saved for debugging: {image_path}")

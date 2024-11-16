@@ -7,7 +7,6 @@ from matplotlib import pyplot as plt
 
 # numpy array should be grayscale
 def detect_hotspots(image_or_path, threshold=0.7, debug=False):
-    image = cv2.imread(image_or_path)
 
     if isinstance(image_or_path, str):
         #load from file path
@@ -23,11 +22,11 @@ def detect_hotspots(image_or_path, threshold=0.7, debug=False):
     thresh_val = round(255 * threshold)
     _, thresholded_image = cv2.threshold(image, thresh_val, 255, cv2.THRESH_BINARY)
 
-    if debug:
-        cv2.imshow("IR-image", image)
-        cv2.waitKey(0)
-        cv2.imshow("After Thresholding", thresholded_image)
-        cv2.waitKey(0)
+    #if debug:
+        #cv2.imshow("IR-image", image)
+        #cv2.waitKey(0)
+        #cv2.imshow("After Thresholding", thresholded_image)
+        #cv2.waitKey(0)
 
     thresholded_image = thresholded_image.astype('uint8')
 
