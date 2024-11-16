@@ -14,7 +14,7 @@ ARG DO_AP_STM_ENV=1
 ENV DEBIAN_FRONTEND=noninteractive
 
 # install git 
-RUN apt-get update && apt-get install -y git; git config --global url."https://github.com/".insteadOf git://github.com/
+RUN apt-get update && apt-get install -y git; git config --global url."https://github.com/".insteadOf git://github.com/ && apt-get install -y iproute2
 
 # Now grab ArduPilot from GitHub
 RUN git clone https://github.com/ArduPilot/ardupilot.git ardupilot
@@ -49,14 +49,19 @@ RUN SKIP_AP_EXT_ENV=$SKIP_AP_EXT_ENV SKIP_AP_GRAPHIC_ENV=$SKIP_AP_GRAPHIC_ENV SK
     Tools/environment_install/install-prereqs-ubuntu.sh -y
 
 # Install python dependencies
-RUN sudo apt-get install python3-dev python3-opencv python3-wxgtk4.0 python3-pip python3-matplotlib python3-lxml python3-pygame -y
-RUN sudo pip3 install PyYAML mavproxy --user
+#RUN sudo apt-get install python3-dev python3-opencv python3-wxgtk4.0 python3-pip python3-matplotlib python3-lxml python3-pygame -y
+RUN sudo pip3 install -U mavproxy
+#RUN export PATH=$PATH:$HOME/.local/bin
 
 # Continue build instructions from https://github.com/ArduPilot/ardupilot/blob/master/BUILD.md
 RUN ./waf distclean
 RUN ./waf configure --board sitl
 RUN ./waf copter
 
+# Install Mav SDK
+RUN sudo pip3 install -U mavsdk
+
+#RUN sudo apt install python3-matplotlib python3-serial python3-wxgtk3.0 python3-wxtools python3-lxml python3-scipy python3-opencv ccache gawk python3-pip python3-pexpect
 # Set up working directory
 WORKDIR /aero2024
 
@@ -70,14 +75,10 @@ COPY ./data /aero2024/data
 ENV PYTHONPATH=/aero2024/src
 
 # Expose SITL and MAVProxy ports
-EXPOSE 5760/tcp
-EXPOSE 5762/tcp
-EXPOSE 5763/tcp
+EXPOSE 5760
 EXPOSE 5501
-
-# Multicast
-EXPOSE 14550/tcp
-EXPOSE 14550/udp
+EXPOSE 14550
+EXPOSE 14540
 
 # Variables for simulator
 ENV INSTANCE=0
@@ -88,4 +89,5 @@ ENV VEHICLE=ArduCopter
 # Finally the command
 #ENTRYPOINT /ardupilot/Tools/autotest/sim_vehicle.py --vehicle ${VEHICLE} -I${INSTANCE} -w --model ${MODEL} --no-rebuild --speedup ${SPEEDUP}
 # Command to start SITL
-CMD ["/ardupilot/Tools/autotest/sim_vehicle.py", "-v", "ArduCopter", "--console", "--map", "-w"]
+CMD ["/ardupilot/Tools/autotest/sim_vehicle.py", "-v", "ArduCopter", "-w"]
+#CMD [ "/bin/bash" ]

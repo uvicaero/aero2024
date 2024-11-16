@@ -1,5 +1,7 @@
 services:
   sitl:
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
     build:
       context: .
       dockerfile: Dockerfile
@@ -11,9 +13,5 @@ services:
       - PYTHONPATH=/aero2024/src
     ports:
       - "5760:5760"
-      - "5762:5762"
-      - "5763:5763"
       - "5501:5501"
       - "14550:14550"
-    command: >
-      /ardupilot/Tools/autotest/sim_vehicle.py -v ArduCopter --console --map -w
