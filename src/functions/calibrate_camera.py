@@ -16,7 +16,7 @@ def calibrate_camera():
     imgpoints = [] # 2d points in image plane.
     
     # List of paths to the calibration images
-    images = glob.glob("data/calibration_images/*.jpg")
+    images = glob.glob("data/calibration_images/*.png")
     
     for fname in images:
         img = cv.imread(fname)
