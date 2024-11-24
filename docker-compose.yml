@@ -1,5 +1,5 @@
 services:
-  sitl:
+  sitl-px4:
     stdin_open: true # docker run -i
     tty: true        # docker run -t
     build:
@@ -15,3 +15,5 @@ services:
       - "5760:5760"
       - "5501:5501"
       - "14550:14550"
+      - "14556:14556"
+      - "14557:14557"
