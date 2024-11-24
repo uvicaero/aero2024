@@ -77,7 +77,7 @@ def main():
     
     args = parser.parse_args()
 
-    result = get_image_points_gps(**vars(args))
+    result = get_hotspots_gps(**vars(args))
     print(result)
 
 
