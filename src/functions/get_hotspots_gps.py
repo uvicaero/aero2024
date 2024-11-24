@@ -36,7 +36,7 @@ def get_hotspots_gps(distorted_points, cam_x, cam_y, altitude, pitch, azimuth):
         dist_pts = distorted_points
 
     points = cv.undistortImagePoints(dist_pts, camera_matrix, dist_coeffs)
-    projected = np.zeros(points.shape, np.float32)
+    projected = np.zeros(points.shape, np.float64)
 
     i = 0
     for point in points:
