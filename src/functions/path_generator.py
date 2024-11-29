@@ -116,7 +116,7 @@ green_boundary_polygon = Polygon(green_boundary_coords)
 
 
 # Parameters for Archimedean Spiral with dynamic angle adjustment
-altitude = 100              # Altitude in meters
+# altitude = 100              # Altitude in meters
 max_radius = 125            # Radius of search area in meters
 initial_radius = 12          # Initial radius to start the spiral
 radius_growth = 0.14         # Growth factor for each step in the angle
@@ -124,7 +124,7 @@ desired_distance = 20        # Desired consistent distance between waypoints in 
 camera_radius = 30          # Approximate coverage radius for Raspberry Pi Camera V2 at 50m height
 
 
-def generate_path(center_lat, center_lon):
+def generate_path(center_lat, center_lon, altitude):
 
     # Main loop for creating waypoints and adding oriented squares
     previous_lat, previous_lon = None, None  # Initialize previous waypoint
