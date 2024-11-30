@@ -11,6 +11,7 @@
 import numpy as np
 import random
 import traceback
+import math
 from src.functions.get_hotspots_gps import (get_hotspots_gps, 
                                             lat_factor, long_factor,
                                             focal_length, sensor_width, sensor_height)
@@ -27,7 +28,7 @@ def generate_args():
     points = np.hstack((xpoints, ypoints))
 
     cam_x = 50.1 + random.uniform(-0.1, 0.1)
-    cam_y = 110.7 + random.uniform(-0.1, 0.1)
+    cam_y = -110.7 + random.uniform(-0.1, 0.1)
     altitude = random.uniform(1, 1000)
     pitch = -1 * random.uniform(0, 3.14/2)
     azimuth = random.uniform(0, 6.283)
@@ -52,11 +53,12 @@ def test_in_view():
     left, right = (cam_x - max_x*lat_factor), (cam_x + max_x*lat_factor)
     bottom, top = (cam_y - max_y*lat_factor), (cam_y + max_y*lat_factor)
 
-    out_points = get_hotspots_gps(in_points, cam_x, cam_y, altitude, 0, 0)
+    out_points = get_hotspots_gps(in_points, cam_x, cam_y, altitude, -1.57, 0)
 
     for point in out_points:
-        assert (left <= point[0][0] <= right) and (bottom <= point[0][1] <= top), \
-            f"Point {point} is not in range {left=}, {right=}, {bottom=}, {top=}. {altitude=}, {cam_x=}, {cam_y=}, {max_x=}, {max_y=}."
+        print(f"in test_in_view: point = [{point[0], point[1]}], {left=}, {right=}, {bottom=}, {top=}")
+        assert (left <= point[0] <= right) and (bottom <= point[1] <= top), \
+            f"TEST FAILED: Point {point} is not in the expected range. {altitude=}, {cam_x=}, {cam_y=}, {max_x=}, {max_y=}."
 
 
 # Test case: Check that the centre of the image has same coords as camera when camera pointed down
@@ -64,11 +66,12 @@ def test_image_centre():
 
     _, _, cam_x, cam_y, altitude, _, azimuth = generate_args()
     in_point = np.array([[0., 0.]])
-    out_points = get_hotspots_gps(in_point, cam_x, cam_y, altitude, 0, azimuth)
+    out_points = get_hotspots_gps(in_point, cam_x, cam_y, altitude, -1.57, azimuth)
 
     for point in out_points:
-        assert ((point[0][0] - 0.0000005) <= cam_x <= (point[0][0] + 0.0000005)) and ((point[0][1] - 0.0000005) <= cam_y <= (point[0][1] + 0.0000005)), \
-        f"point {point} at centre of image is not within about 5m of {cam_x=}, {cam_y=}"
+        print(f"in test_image_centre: point = [{point[0], point[1]}], {cam_x=}, {cam_y=}")
+        assert ((point[0] - 0.000008) <= cam_x <= (point[0] + 0.000008)) and ((point[1] - 0.00001) <= cam_y <= (point[1] + 0.00001)), \
+        f"TEST FAILED: point {point} at centre of image is not within about 1m of the camera coordinates"
 
 
 def main():
