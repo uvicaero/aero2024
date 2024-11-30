@@ -56,8 +56,8 @@ def test_in_view():
     out_points = get_hotspots_gps(in_points, cam_x, cam_y, altitude, -1.57, 0)
 
     for point in out_points:
-        print(f"in test_in_view: point = [{point[0], point[1]}], {left=}, {right=}, {bottom=}, {top=}")
-        assert (left <= point[0] <= right) and (bottom <= point[1] <= top), \
+        print(f"in test_in_view: point = [{point[0][0], point[0][1]}], {left=}, {right=}, {bottom=}, {top=}")
+        assert (left <= point[0][0] <= right) and (bottom <= point[0][1] <= top), \
             f"TEST FAILED: Point {point} is not in the expected range. {altitude=}, {cam_x=}, {cam_y=}, {max_x=}, {max_y=}."
 
 
@@ -69,8 +69,8 @@ def test_image_centre():
     out_points = get_hotspots_gps(in_point, cam_x, cam_y, altitude, -1.57, azimuth)
 
     for point in out_points:
-        print(f"in test_image_centre: point = [{point[0], point[1]}], {cam_x=}, {cam_y=}")
-        assert ((point[0] - 0.000008) <= cam_x <= (point[0] + 0.000008)) and ((point[1] - 0.00001) <= cam_y <= (point[1] + 0.00001)), \
+        print(f"in test_image_centre: point = [{point[0][0], point[0][1]}], {cam_x=}, {cam_y=}")
+        assert ((point[0][0] - 0.000008) <= cam_x <= (point[0][0] + 0.000008)) and ((point[0][1] - 0.00001) <= cam_y <= (point[0][1] + 0.00001)), \
         f"TEST FAILED: point {point} at centre of image is not within about 1m of the camera coordinates"
 
 
