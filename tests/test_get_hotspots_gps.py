@@ -23,8 +23,8 @@ def generate_args():
     num_points = random.randint(1,10)
     rng = np.random.default_rng()
 
-    xpoints = rng.uniform(low=-500, high=500, size=(num_points,1))
-    ypoints = rng.uniform(low=-600, high=600, size=(num_points,1))
+    xpoints = rng.uniform(low=0, high=3280, size=(num_points,1))
+    ypoints = rng.uniform(low=0, high=2464, size=(num_points,1))
     points = np.hstack((xpoints, ypoints))
 
     cam_x = 50.1 + random.uniform(-0.1, 0.1)
@@ -65,7 +65,7 @@ def test_in_view():
 def test_image_centre():
 
     _, _, cam_x, cam_y, altitude, _, azimuth = generate_args()
-    in_point = np.array([[0., 0.]])
+    in_point = np.array([[1640., 1232.]])
     out_points = get_hotspots_gps(in_point, cam_x, cam_y, altitude, -1.57, azimuth)
 
     for point in out_points:
