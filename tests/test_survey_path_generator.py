@@ -96,7 +96,7 @@ def test_generate_kml():
     for i in range(3):
         center_lat, center_lon = random_point_within_boundary(green_boundary_polygon)
         centers.append((center_lat, center_lon))
-        waypoints = generate_path(center_lat, center_lon)
+        waypoints = generate_path(center_lat, center_lon, altitude)
         all_waypoints.append(waypoints)
 
     # Generate a unique output file
@@ -116,7 +116,7 @@ def test_generate_plot():
     for i in range(3):
         center_lat, center_lon = random_point_within_boundary(green_boundary_polygon)
         centers.append((center_lat, center_lon))
-        waypoints = generate_path(center_lat, center_lon)
+        waypoints = generate_path(center_lat, center_lon, altitude)
         all_waypoints.append(waypoints)
 
     # Generate a plot and save it to a file

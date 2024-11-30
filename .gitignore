@@ -14,3 +14,6 @@ data/test_outputs/**/*.png
 
 # Debug files for main
 src/images
+
+# All pycache directories and contents
+__pycache__/
