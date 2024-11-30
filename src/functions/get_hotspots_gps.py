@@ -14,8 +14,8 @@ camera_matrix = np.array([[2398.54998, 0., 1696.02043],
                             [0., 0., 1.]]) # from cam calibration
 dist_coeffs = np.array([0.220794232, -0.522929233, -0.000112948804, 0.00213028546, 0.292007192]) # from cam calibration
 focal_length = 3.04 #in mm. camera_matrix[0][0] camera focal length in units from calibration. USUALLY. but calibration needs work
-img_half_height = 3280 / 2 # number of pixels from centre of image to top of image
-img_half_width = 2464 / 2 # number of pixels from centre to side of image
+img_half_height = 2464 / 2 # number of pixels from centre of image to top of image
+img_half_width = 3280 / 2 # number of pixels from centre to side of image
 rat_x = (sensor_width/focal_length)/2 # ratio of sensor half-width to focal length (at image centre)
 rat_y = (sensor_height/focal_length)/2 # ditto for sensor half-height
 phi_y = math.atan(rat_y) # 1/2-FOV angle in Y direction at image centre. Will be in radians.
