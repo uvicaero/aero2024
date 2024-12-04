@@ -27,8 +27,8 @@ def generate_args():
     ypoints = rng.uniform(low=0, high=2464, size=(num_points,1))
     points = np.hstack((xpoints, ypoints))
 
-    cam_x = 50.1 + random.uniform(-0.1, 0.1)
-    cam_y = -110.7 + random.uniform(-0.1, 0.1)
+    cam_x = -110.7 + random.uniform(-0.1, 0.1)
+    cam_y = 50.1 + random.uniform(-0.1, 0.1)
     altitude = random.uniform(1, 1000)
     pitch = -1 * random.uniform(0, 3.14/2)
     azimuth = random.uniform(0, 6.283)
@@ -50,14 +50,14 @@ def test_in_view():
     max_x = sensor_width * altitude / (2 * focal_length)
     max_y = sensor_height * altitude / (2 * focal_length)
 
-    left, right = (cam_x - max_x*lat_factor), (cam_x + max_x*lat_factor)
+    left, right = (cam_x - max_x*long_factor), (cam_x + max_x*long_factor)
     bottom, top = (cam_y - max_y*lat_factor), (cam_y + max_y*lat_factor)
 
     out_points = get_hotspots_gps(in_points, cam_x, cam_y, altitude, -1.57, 0)
 
     for point in out_points:
         print(f"in test_in_view: point = [{point[0][0], point[0][1]}], {left=}, {right=}, {bottom=}, {top=}")
-        assert (left <= point[0][0] <= right) and (bottom <= point[0][1] <= top), \
+        assert (bottom <= point[0][0] <= top) and (left <= point[0][1] <= right), \
             f"TEST FAILED: Point {point} is not in the expected range. {altitude=}, {cam_x=}, {cam_y=}, {max_x=}, {max_y=}."
 
 
@@ -70,7 +70,7 @@ def test_image_centre():
 
     for point in out_points:
         print(f"in test_image_centre: point = [{point[0][0], point[0][1]}], {cam_x=}, {cam_y=}")
-        assert ((point[0][0] - 0.000008) <= cam_x <= (point[0][0] + 0.000008)) and ((point[0][1] - 0.00001) <= cam_y <= (point[0][1] + 0.00001)), \
+        assert ((point[0][1] - 0.000008) <= cam_x <= (point[0][1] + 0.000008)) and ((point[0][0] - 0.00001) <= cam_y <= (point[0][0] + 0.00001)), \
         f"TEST FAILED: point {point} at centre of image is not within about 1m of the camera coordinates"
 
 

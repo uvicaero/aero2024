@@ -52,12 +52,12 @@ def get_hotspots_gps(distorted_points, cam_x, cam_y, altitude, pitch, azimuth):
         # rotate using azimuth
         # x corresponds to latitude, y to longitude. need to convert cam GPS to meters for adding.
         # add/subtract may need to be tweaked once we can visualise with real-world data
-        world_x = cam_x / lat_factor + (ground_k) * math.cos(azimuth) + (ground_w) * math.sin(azimuth)
-        world_y = cam_y / long_factor - (ground_k) * math.sin(azimuth) + (ground_w) * math.cos(azimuth)
+        world_x = (cam_x / long_factor) + (ground_k * math.cos(azimuth)) + (ground_w * math.sin(azimuth))
+        world_y = (cam_y / lat_factor) - (ground_k * math.sin(azimuth)) + (ground_w * math.cos(azimuth))
         
         # convert from meters to lat/long degrees
-        point_lat = lat_factor*world_x
-        point_long = long_factor*world_y
+        point_lat = lat_factor*world_y
+        point_long = long_factor*world_x
 
         projected[i] = [point_lat, point_long]
         i += 1
