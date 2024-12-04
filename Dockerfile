@@ -84,6 +84,9 @@ RUN ./waf copter
 # Install Mav SDK
 RUN sudo pip3 install -U mavsdk
 
+# Fix could not load QT
+RUN sudo pip3 uninstall opencv-python
+RUN sudo pip3 install opencv-python-headless
 
 #Enter Aero2024 Directory
 WORKDIR /aero2024

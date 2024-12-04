@@ -1,24 +1,29 @@
-import asyncio
-from mavsdk import System
 
-async def run():
-    print("Test2")
-    drone = System()
-    print("Test3")
-    await drone.connect(system_address="udp://:14550")
-    #await drone.connect()
+from pymavlink import mavutil
+#from src.functions.mav_utils import get_latest_gps, send_waypoint, send_waypoints, set_auto_mode
 
-    print("Waiting for drone to connect...")
-    async for state in drone.core.connection_state():
-        if state.is_connected:
-            print("Drone connected!")
-            break
+def run():
+    print("Running...")
+    # connect to SITL
+    connection = mavutil.mavlink_connection('tcp:127.0.0.1:5762')
+    #tcp:127.0.0.1:5762
+    #udpin:localhost:14540
 
-    # Example action: Arm the drone
-    print("Arming the drone...")
-    await drone.action.arm()
-    print("Drone armed.")
+    # wait for a heartbeat
+    connection.wait_heartbeat()
+
+    # inform user
+    print("Connected to system:", connection.target_system, ", component:", connection.target_component)
+
+    print("Connected: ")
+    print(connection)
+
+    # Get current location
+    #lat, lon, alt = get_latest_gps(connection)
+
+    #print("Alt:")
+    #print(alt)
 
 if __name__ == "__main__":
     print("Test1")
-    asyncio.run(run())
+    run()
