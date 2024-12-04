@@ -5,24 +5,28 @@ import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 
-def detect_hotspots(img_path, threshold=0.5, debug=False):
-    image = cv2.imread(img_path)
+# numpy array should be grayscale
+def detect_hotspots(image_or_path, threshold=0.7, debug=False):
 
-    #check if image is loaded correctly
-    if image is None:
-        print(f"Error: Unable to load image from {img_path}")
-        return
-
-    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    if isinstance(image_or_path, str):
+        #load from file path
+        image = cv2.imread(image_or_path)
+        if image is None:
+            print(f"Error: Unable to load image from {image_or_path}")
+            return
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    else:
+        #assume input is a NumPy array (image in memory)
+        image = image_or_path
 
     thresh_val = round(255 * threshold)
-    _, thresholded_image = cv2.threshold(gray_image, thresh_val, 255, cv2.THRESH_BINARY)
+    _, thresholded_image = cv2.threshold(image, thresh_val, 255, cv2.THRESH_BINARY)
 
-    if debug:
-        cv2.imshow("IR-image", gray_image)
-        k = cv2.waitKey(0)
-        cv2.imshow("After Thresholding", thresholded_image)
-        k = cv2.waitKey(0)
+    #if debug:
+        #cv2.imshow("IR-image", image)
+        #cv2.waitKey(0)
+        #cv2.imshow("After Thresholding", thresholded_image)
+        #cv2.waitKey(0)
 
     thresholded_image = thresholded_image.astype('uint8')
 
@@ -40,7 +44,7 @@ def detect_hotspots(img_path, threshold=0.5, debug=False):
 def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--img_path', type=str, required=True, help='Path to image to run inference on')
+    parser.add_argument('--image_or_path', type=str, required=True, help='Path to image to run inference on or numpy array in memory')
     parser.add_argument('--threshold', type=float, default=0.5, help='Threshold for binary threshold (between 0 and 1)')
     parser.add_argument('--debug', action='store_true', help='Shows images if set to true')
     

@@ -24,15 +24,58 @@ in `root/test_outputs`
 
 Once you have setup your test with all the boilerplate code, use the command 
 ```
-python -m tests.your_tester # no .py extension
+pytest tests/test_your_function.py 
 ```
 from the project root (whatever you named your clone of the repo) to start it
 
 # Test setup
 
+### **Testing with `pytest`**
+
+In `pytest`, you write **test files** and **test functions** to check if your code works correctly. The quick rundown:
+
+1. **Test File Naming**:
+   - Your test files should start with `test_` or end with `_test.py`.
+   - Example: `test_math_functions.py`.
+
+2. **Test Function Naming**:
+   - Each test function should start with `test_`.
+   - Example: `test_addition()`.
+
+3. **Assertions**:
+   - Inside each test function, you use **assertions** to check if the code produces the expected result.
+   - Example: `assert 2 + 2 == 4`.
+
+### **Example Code**
+
+#### **File: `math_functions.py` (The functions you want to test)**
+
+```python
+def add(a, b):
+    return a + b
+
+def subtract(a, b):
+    return a - b
+```
+
+#### **File: `test_math_functions.py` (The test functions)**
+
+```python
+from math_functions import add, subtract
+
+def test_add():
+    assert add(2, 3) == 5
+
+def test_subtract():
+    assert subtract(5, 3) == 2
+```
+
+---
+# Some Boilerplate Code
+
 For tests to work in the directory strucuture there is some boiler plate code to include
 
-# Boiler plate code for test output and import paths
+#### **Boiler plate code for test output and import paths**
 
 This is how you make the function accesible to your test
 
