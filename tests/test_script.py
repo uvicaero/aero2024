@@ -4,10 +4,8 @@ from pymavlink import mavutil
 
 def run():
     print("Running...")
-    # connect to SITL
+    # connect to SITL over tcp:127.0.0.1:5762
     connection = mavutil.mavlink_connection('tcp:127.0.0.1:5762')
-    #tcp:127.0.0.1:5762
-    #udpin:localhost:14540
 
     # wait for a heartbeat
     connection.wait_heartbeat()
