@@ -8,12 +8,30 @@ from picamzero import Camera
 import cv2
 import sys
 from pymavlink import mavutil
-from src.functions.mav_utils import get_latest_gps, send_waypoint, send_waypoints, set_auto_mode
+from src.functions.mav_utils import get_latest_gps, send_waypoints, set_auto_mode
 from src.functions.path_generator import generate_path
-
+from src.functions.detect_hotspots import detect_hotspots
+from src.functions.make_kml import make_kml
+from src.functions.upload_kml import upload_kml
+from src.functions.get_hotspots_gps import get_hotspots_gps
 
 sys.path.append("./utils")
-from functions.detect_hotspots import detect_hotspots
+
+def eliminate_duplicates(hotspots):
+    """Eliminate duplicate hotspots."""
+    unique_hotspots = []
+    for i, hotspot in enumerate(hotspots):
+        found = False
+        for existing in unique_hotspots:
+            if abs(existing["lat"] - hotspot["lat"]) < 0.0001 and abs(existing["lon"] - hotspot["lon"]) < 0.0001:
+                found = True
+                existing["count"] += 1
+                existing["lat"] = (existing["lat"] * (existing["count"] - 1) + hotspot["lat"]) / existing["count"]
+                existing["lon"] = (existing["lon"] * (existing["count"] - 1) + hotspot["lon"]) / existing["count"]
+                break
+        if not found:
+            unique_hotspots.append({"lat": hotspot["lat"], "lon": hotspot["lon"], "count": 1, "index": hotspot["index"]})
+    return unique_hotspots
 
 def main():
     # Create the MAVLink connection
@@ -28,38 +46,8 @@ def main():
     # Program pixhawk with waypoints
     send_waypoints(connection, waypoints)
 
-    #Start automatic mission
+    # Start automatic mission
     set_auto_mode(connection)
-
-    # TODO
-    #
-    # Loop:
-    # 
-    #   Stop when MAVLink connection says it is done with waypoints
-    #
-    #   Take a photo every N seconds (3 for now)
-    #
-    #   Run detect_hotspots() on latest photo
-    #
-    #   Run get_latest_gps()
-    #
-    #   Run get_hotspots_gps()
-    #
-    #   Add any detected hotspots to a list with an index for the photo it was in
-    #
-    # Function:
-    #
-    #   Eliminate duplicate hotspots in list
-    #   Mark duplicate hotspots that are close together
-    #
-    #       If they appear in the same index: Treat them as separate hotspots
-    #       If they never appear in the same index: Average them into one
-    #
-    # make_kml with new list
-    #
-    # upload_kml
-
-
 
     parser = argparse.ArgumentParser(description="Capture images and detect hotspots.")
     parser.add_argument("--debug", action="store_true", help="Save captured images for debugging.")
@@ -68,30 +56,60 @@ def main():
     cam = Camera()
     debug = args.debug
 
-    #create the "images" folder if debug mode is enabled
+    # Create the "images" folder if debug mode is enabled
     if debug:
         os.makedirs("images", exist_ok=True)
 
+    # Initialize hotspots list
+    detected_hotspots = []
+
     try:
         while True:
-            #capture image as NumPy array stored in memory
-            image = cam.capture_array()  #assuming picamzero supports this
-            image_gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)  #convert to one channel
+            # Check if the mission is complete
+            if connection.recv_match(type="MISSION_ITEM_REACHED", blocking=True):
+                print("Mission completed.")
+                break
 
+            # Capture image as NumPy array stored in memory
+            image = cam.capture_array()  # Assuming picamzero supports this
+            image_gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)  # Convert to one channel
+
+            # Save the image in the "images" folder with a timestamp if debugging
             if debug:
-                #save the image in the "images" folder with a timestamp
-                timestamp = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+                timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
                 image_path = f"images/photo_{timestamp}.jpg"
                 cv2.imwrite(image_path, image)
                 print(f"Image saved for debugging: {image_path}")
 
-            #pass the in-memory image to detect_hotspots
+            # Detect hotspots in the image
             hotspots = detect_hotspots(image_gray, threshold=0.9, debug=debug)
             print(f"Detected hotspots: {hotspots}")
 
-            time.sleep(3)
+            # Get the latest GPS coordinates from drone
+            lat, lon, alt = get_latest_gps(connection)
+
+            # Map hotspots to GPS coordinates using `get_hotspots_gps`
+            if hotspots:
+                distorted_points = [[x, y] for x, y in hotspots]
+                pitch = 0.0  # Replace with actual pitch reading
+                azimuth = 0.0  # Replace with actual azimuth reading
+                gps_hotspots = get_hotspots_gps(distorted_points, lon, lat, alt, pitch, azimuth)
+                for gps_point in gps_hotspots:
+                    detected_hotspots.append({"lat": gps_point[0], "lon": gps_point[1]})
+
+        # Eliminate duplicates and refine hotspots
+        refined_hotspots = eliminate_duplicates(detected_hotspots)
+
+        # Generate KML file with refined hotspots
+        kml_path = make_kml(refined_hotspots, filename="hotspots.kml")
+        print(f"KML file generated: {kml_path}")
+
+        # Upload KML file
+        upload_kml(kml_path)
+        print("KML file uploaded.")
+
     except KeyboardInterrupt:
-        print("Camera stopped.")
+        print("Mission stopped by user.")
 
 if __name__ == "__main__":
     main()

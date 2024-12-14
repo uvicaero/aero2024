@@ -25,8 +25,12 @@ def generate_kml(hotspot_coords): # hotspot_coords is a list of tuples
 </kml>
 '''
 
-    # Save the KML content to a .kml file
-    with open("hotspots.kml", "w") as kml_file:
+    # Define the file path
+    kml_path = "hotspots.kml"
+
+    # Save the KML content to the specified file path
+    with open(kml_path, "w") as kml_file:
         kml_file.write(kml_content)
 
-# Example usage:
+    return kml_path
+
