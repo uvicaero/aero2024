@@ -30,6 +30,54 @@ print("Heartbeat received from system (system %u component %u)" %
 heartbeat_thread = threading.Thread(target=send_heartbeat, args=(the_connection,), daemon=True)
 heartbeat_thread.start()
 
+def wait_for_waypoint(the_connection, desired_waypoint, timeout=360):
+    """
+    Waits until the drone reaches the specified waypoint.
+
+    Args:
+        the_connection: MAVLink connection object.
+        desired_waypoint: The waypoint number to wait for.
+        timeout: Maximum time to wait in seconds (default: 120).
+
+    Returns:
+        True if the waypoint is reached within the timeout, False otherwise.
+    """
+    print(f"Waiting for waypoint {desired_waypoint}...")
+    start_time = time.time()
+    
+    while time.time() - start_time < timeout:
+        # Receive the MISSION_CURRENT message
+        msg = the_connection.recv_match(type='MISSION_CURRENT', blocking=True, timeout=1)
+        
+        if msg:
+            current_waypoint = msg.seq
+            print(f"Current waypoint: {current_waypoint}")
+            
+            # Check if the desired waypoint is reached
+            if current_waypoint == desired_waypoint:
+                print(f"Reached waypoint {desired_waypoint}.")
+                return True
+        else:
+            print("Timeout waiting for MISSION_CURRENT message.")
+    
+    print(f"Failed to reach waypoint {desired_waypoint} within {timeout} seconds.")
+    return False
+
+def get_latest_gps(connection):
+    """
+    Fetches the latest GPS message from the MAVLink connection.
+    """
+    try:
+        msg = connection.recv_match(type='GLOBAL_POSITION_INT', blocking=True)
+        if msg:
+            lat = msg.lat / 1e7
+            lon = msg.lon / 1e7
+            alt = msg.alt / 1e3
+            print(f"Latitude: {lat}, Longitude: {lon}, Altitude: {alt} meters")
+            return lat, lon, alt
+    except Exception as e:
+        print(f"Error fetching GPS: {e}")
+        return None, None, None
 
 def load_waypoints_via_mavlink(waypoints):
     """
@@ -110,70 +158,6 @@ def wait_for_takeoff_completion(target_altitude):
         time.sleep(1)
     return True
 
-def wait_for_loiter_mode():
-    """
-    Wait until the drone enters LOITER mode.
-    """
-    # Mapping ArduPilot custom_mode values to their names
-    ARDUPILOT_MODES = {
-        0: "STABILIZE",
-        1: "ACRO",
-        2: "ALT_HOLD",
-        3: "AUTO",
-        4: "GUIDED",
-        5: "LOITER",
-        6: "RTL",
-        7: "CIRCLE",
-        9: "LAND",
-        11: "DRIFT",
-        13: "SPORT",
-        14: "FLIP",
-        15: "AUTOTUNE",
-        16: "POSHOLD",
-        17: "BRAKE",
-        18: "THROW",
-        19: "AVOID_ADSB",
-        20: "GUIDED_NOGPS",
-        21: "SMART_RTL",
-        22: "FLOWHOLD",
-        23: "FOLLOW",
-        24: "ZIGZAG",
-        25: "SYSTEMID",
-        26: "AUTOROTATE",
-        27: "AUTO_RTL",
-    }
-
-    print("Waiting for the drone to enter LOITER mode...")
-    while True:
-        # Receive HEARTBEAT messages
-        msg = the_connection.recv_match(type='HEARTBEAT', blocking=True, timeout=5)
-        if msg:
-            custom_mode = msg.custom_mode
-            base_mode = msg.base_mode
-
-            print(msg)
-
-            # Debug: Print base_mode and custom_mode
-            print(f"Base mode: {base_mode}, Custom mode: {custom_mode}")
-
-            # Get the mode string using the ARDUPILOT_MODES mapping
-            mode_string = ARDUPILOT_MODES.get(custom_mode, "UNKNOWN")
-            print(f"Current mode: {mode_string}")
-
-            # Check if the drone is in LOITER mode
-            if mode_string == "LOITER":
-                print("Drone is now in LOITER mode.")
-                break
-        else:
-            print("Timeout waiting for HEARTBEAT.")
-            return False
-
-        # Wait for a second before checking againimport threading
-        time.sleep(1)
-
-
-    return True
-
 
 def start_mission():
     """
@@ -216,8 +200,10 @@ def main():
 
     boundary_polygon = Polygon(boundary_coords)
 
+    current_lat, current_lon, current_alt = get_latest_gps(the_connection)
+
     # spiral_waypoint_values = generate_path_custom_boundary(48.516066,-123.376373,20,boundary_polygon)
-    spiral_waypoint_values = generate_path_custom_boundary_custom_radii(48.516087,-123.376277,20,boundary_polygon,1,20,5,0.15,6)
+    spiral_waypoint_values = generate_path_custom_boundary_custom_radii(current_lat,current_lon,20,boundary_polygon,1,20,5,0.15,6)
 
     print(spiral_waypoint_values)
 
@@ -228,7 +214,7 @@ def main():
         waypoints.append({"lat": value[0], "lon": value[1], "alt": value[2], "command": mavutil.mavlink.MAV_CMD_NAV_WAYPOINT})
 
 
-    # Set mode
+    # Set mode GUIDED
     the_connection.mav.command_long_send(
         the_connection.target_system,
         the_connection.target_component,
@@ -244,32 +230,7 @@ def main():
         print("Failed to upload waypoints. Exiting.")
         return
 
-    # Arm the vehicle
-    the_connection.mav.command_long_send(
-        the_connection.target_system,
-        the_connection.target_component,
-        mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,
-        0,
-        1,  # Arm
-        0, 0, 0, 0, 0, 0
-    )
-    print("Vehicle armed.")
-
-    # Takeoff to an altitude of 20 meters
-    the_connection.mav.command_long_send(
-        the_connection.target_system,
-        the_connection.target_component,
-        mavutil.mavlink.MAV_CMD_NAV_TAKEOFF,
-        0,
-        0, 0, 0, float('nan'),
-        0, 0,
-        20  # Target altitude in meters
-    )
-    print("Takeoff command sent.")
-
-    wait_for_ack(mavutil.mavlink.MAV_CMD_NAV_TAKEOFF)
-
-    wait_for_takeoff_completion(20)
+    time.sleep(5)
 
     # Start the mission
     if not start_mission():
@@ -278,10 +239,23 @@ def main():
 
     time.sleep(5)
 
-    # Wait for loiter mode
-    wait_for_loiter_mode()
+    if wait_for_waypoint(the_connection, len(waypoints)-1):
+        print(f"Final Waypoint reached successfully!")
+    else:
+        print(f"Failed to reach final waypoint")
 
-    print("Waypoints have been uploaded and the mission is ready.")
+    # Set mode RTL
+    the_connection.mav.command_long_send(
+        the_connection.target_system,
+        the_connection.target_component,
+        mavutil.mavlink.MAV_CMD_DO_SET_MODE,
+        0,
+        1,  # Base mode
+        6, 0, 0, 0, 0, 0  # Custom mode for GUIDED
+    )
+    wait_for_ack(mavutil.mavlink.MAV_CMD_DO_SET_MODE)
+    
+
 
 
 if __name__ == "__main__":

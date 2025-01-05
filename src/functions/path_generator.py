@@ -241,3 +241,66 @@ def generate_path_custom_boundary(center_lat, center_lon, altitude, boundary_pol
         angle += angle_increment
         radius = initial_radius + radius_growth * angle
     return waypoints
+
+def generate_path_custom_boundary_custom_radii(center_lat, center_lon, altitude, boundary_polygon, custom_start_radius, custom_max_radius, custom_desired_distance, custom_radius_growth, custom_radius_factor):
+
+    # Main loop for creating waypoints and adding oriented squares
+    previous_lat, previous_lon = None, None  # Initialize previous waypoint
+
+    # Track the last in-bound waypoint and out-of-bound flag
+    previous_inbound_lat, previous_inbound_lon = None, None
+    out_of_bounds_flag = False
+
+    # Generate waypoints using the Archimedean Spiral pattern for this center point
+    waypoints = []
+    angle = 0
+    radius = custom_start_radius
+
+
+    while radius <= custom_max_radius:
+        lat, lon = calculate_offset(center_lat, center_lon, angle, radius)
+        print(f"Point (current): Latitude = {lat}, Longitude = {lon}\n\n")
+        if boundary_polygon.contains(Point(lat, lon)):
+            print(f"Point (current in-bound): Latitude = {lat}, Longitude = {lon}\n\n")
+            # If we re-enter the boundary and the out-of-bounds flag is set
+            if out_of_bounds_flag and previous_inbound_lat is not None and previous_inbound_lon is not None:
+                # Generate boundary-following waypoints from previous in-bound point to current point
+                #print("Re-entering boundary. Calling create_boundary_waypoints...\n\n")
+                start_point = Point(previous_inbound_lat, previous_inbound_lon)
+                end_point = Point(lat, lon)
+                #print(f"Start Point (last in-bound): Latitude = {previous_inbound_lat}, Longitude = {previous_inbound_lon}\n\n")
+                #print(f"End Point (current in-bound): Latitude = {lat}, Longitude = {lon}\n\n")
+                boundary_waypoints = create_boundary_constrained_path(start_point, end_point, boundary_polygon)
+                #print("Boundary waypoints generated:")
+                #for idx, (wpt_lat, wpt_lon) in enumerate(boundary_waypoints):
+                    #print(f"Boundary Waypoint {idx + 1}: Latitude = {wpt_lat}, Longitude = {wpt_lon}")
+
+                
+                # Add each boundary-following waypoint to the waypoints list in reverse order
+                for wpt_lat, wpt_lon in reversed(boundary_waypoints):
+                    waypoints.append((wpt_lat, wpt_lon, altitude))
+                
+            # Reset the out-of-bounds flag
+            out_of_bounds_flag = False
+            print("Appending waypoint")
+            waypoints.append((lat, lon, altitude))
+
+                # Update previous waypoint
+            previous_lat, previous_lon = lat, lon
+            previous_inbound_lat, previous_inbound_lon = lat, lon
+        else:
+            # Set the out-of-bounds flag and continue to the next iteration
+            print(f"Point is OUTSIDE the boundary: lat={lat}, lon={lon}")
+            out_of_bounds_flag = True
+
+        print(radius)
+        print(custom_desired_distance)
+        # Calculate angle increment based on radius for consistent waypoint spacing
+        angle_increment = math.degrees(custom_desired_distance / radius)  # Convert radians to degrees
+        print(angle_increment)
+        #print(f"Iteration: Radius = {radius:.2f} m, Angle Increment = {angle_increment:.2f} degrees")
+        angle += angle_increment
+        radius = custom_start_radius + custom_radius_growth * (angle/custom_radius_factor)
+        print(angle)
+        print(radius)
+    return waypoints
