@@ -3,18 +3,18 @@ import os
 from upload_kml import upload_kml
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload
 from googleapiclient.errors import HttpError
 from dotenv import load_dotenv
 
-# Constants
-folder_link1 = 'https://drive.google.com/drive/folders/1RyA5BjFD-eE4Z9Jcc-jNJ7HxZouXefeW'
-folder_link2 = '1xPBJi6q_UhtB8LAh_deeMOY8DTaesOHS'
+load_dotenv()
 
-kml1 = 'empty.kml'
-kml2 = 'full.kml'
-kml3 = '../yo.kml'
-kml4 = '../../huh.kml'
+# Constants
+folder_link1 = os.environ.get('TEST_FOLDER_1')
+folder_link2 = os.environ.get('TEST_FOLDER_2')
+kml1 = os.environ.get('TEST_FILE_1')
+kml2 = os.environ.get('TEST_FILE_2')
+kml3 = os.environ.get('TEST_FILE_3')
+kml4 = os.environ.get('TEST_FILE_4')
 
 # Helper function: returns user credentials
 def get_credentials():
@@ -22,7 +22,6 @@ def get_credentials():
     scopes = ['https://www.googleapis.com/auth/drive']
 
     # Loading service account key from .env file
-    load_dotenv()
     service_account_key = os.environ.get('SERVICE_ACCOUNT_KEY')
 
     # Use the service account details to create user credentials
