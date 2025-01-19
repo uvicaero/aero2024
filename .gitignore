@@ -17,3 +17,6 @@ src/images
 
 # All pycache directories and contents
 __pycache__/
+
+# Ignore environment variables
+.env

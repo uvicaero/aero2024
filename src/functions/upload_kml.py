@@ -1,23 +1,31 @@
-#! /usr/bin/env python3
-import sys
-
+import os
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from googleapiclient.errors import HttpError
+from dotenv import load_dotenv
 
-def upload_kml(kml, drive_link):
+# Uploads a given KML file to a given folder, assuming the service account associated with SERVICE_ACCOUNT_KEY in the .env file has been given access to said folder.
 
-    # Defining Google Drive API scopes and the location of the service account details
+# The folder ID is pulled off the end of the given link.
+# The ID can also be passed into the function in place of the link.
+def upload_kml(kml, folder_link):
+
+    # Defining Google Drive API scopes
     scopes = ['https://www.googleapis.com/auth/drive']
-    service_account_json_key = '/home/user/service_acc_key.json' # This is not a real key, need to find a secure way to access one
+
+    # Loading service account key from .env file
+    load_dotenv()
+    service_account_key = os.environ.get('SERVICE_ACCOUNT_KEY')
 
     # Seperating folder id from folder URL
-    parent_folder_id = (drive_link.split("/"))[-1]
+    folder_id = (folder_link.split("/"))[-1]
+
     # Seperating the kml file's name from its filepath
     file_name = (kml.split("/"))[-1]
+
     # Use the service account details to create user credentials
-    credentials = service_account.Credentials.from_service_account_file(filename=service_account_json_key, scopes=scopes)
+    credentials = service_account.Credentials.from_service_account_info(info=service_account_key, scopes=scopes)
 
     file = None
     try:
@@ -27,7 +35,7 @@ def upload_kml(kml, drive_link):
         # Specify file name and destination
         file_metadata = {
             'name': file_name,
-            'parents': [parent_folder_id]
+            'parents': [folder_id]
         }
 
         # Specify file type and contents
@@ -39,7 +47,7 @@ def upload_kml(kml, drive_link):
     except HttpError as error:
         print(f"An error occurred uploading KML file to drive:\n {error}")
 
-    if file != None:
+    if file is not None:
         return file.get("id")
     else:
         return None
