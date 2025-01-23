@@ -192,8 +192,6 @@ def wait_for_waypoint(the_connection, desired_waypoint, timeout=360):
     print(f"Failed to reach waypoint {desired_waypoint} within {timeout} seconds.")
     return False
 
-
-
 def get_latest_gps(connection):
     """
     Fetches the latest GPS message from the MAVLink connection.
@@ -311,7 +309,6 @@ def wait_for_loiter_mode():
 
     return True
 
-
 def start_mission():
     """
     Sends the MAV_CMD_MISSION_START command to start executing the mission.
@@ -328,83 +325,95 @@ def start_mission():
     )
     return wait_for_ack(mavutil.mavlink.MAV_CMD_MISSION_START)
 
+def get_current_location(connection):
+    """
+    Retrieves the current latitude and longitude of the vehicle.
+
+    Args:
+        connection (mavutil.mavlink_connection): MAVLink connection object.
+
+    Returns:
+        tuple: (latitude, longitude, altitude) in degrees and meters.
+    """
+    # Wait for a GLOBAL_POSITION_INT message
+    msg = connection.recv_match(type='GLOBAL_POSITION_INT', blocking=True)
+    if msg:
+        latitude = msg.lat / 1e7  # Convert from microdegrees to degrees
+        longitude = msg.lon / 1e7  # Convert from microdegrees to degrees
+        altitude = msg.relative_alt / 1000.0  # Convert from mm to meters
+        return latitude, longitude, altitude
+    else:
+        raise RuntimeError("Unable to retrieve vehicle location")
+
+def send_reposition_command(connection, latitude, longitude, altitude, ground_speed=5, yaw_angle=-1):
+    """
+    Sends a MAV_CMD_DO_REPOSITION command to reposition the vehicle.
+
+    Args:
+        connection (mavutil.mavlink_connection): MAVLink connection object.
+        latitude (float): Target latitude in degrees.
+        longitude (float): Target longitude in degrees.
+        altitude (float): Target altitude in meters.
+        ground_speed (float): Ground speed in m/s (default: 5 m/s).
+        yaw_angle (float): Yaw angle in degrees, -1 to maintain current yaw (default: -1).
+    """
+    connection.mav.command_long_send(
+        connection.target_system,  # Target system
+        connection.target_component,  # Target component
+        mavutil.mavlink.MAV_CMD_DO_REPOSITION,  # Command ID
+        0,  # Confirmation
+        0,  # Unused
+        ground_speed,  # Ground speed
+        yaw_angle,  # Yaw angle
+        0,  # Reserved
+        latitude,  # Target latitude
+        longitude,  # Target longitude
+        altitude  # Target altitude
+    )
+    wait_for_ack(mavutil.mavlink.MAV_CMD_DO_REPOSITION)
+    print(f"Reposition command sent to ({latitude}, {longitude}, {altitude})")
+
+def send_set_position_target_global_int(connection, latitude, longitude, altitude, coordinate_frame=6):
+    """
+    Sends a SET_POSITION_TARGET_GLOBAL_INT command to reposition the vehicle.
+
+    Args:
+        connection (mavutil.mavlink_connection): MAVLink connection object.
+        latitude (float): Target latitude in degrees.
+        longitude (float): Target longitude in degrees.
+        altitude (float): Target altitude in meters.
+        coordinate_frame (int): MAV_FRAME_GLOBAL_RELATIVE_ALT_INT (default: 6).
+    """
+    connection.mav.set_position_target_global_int_send(
+        connection.target_system,  # Target system
+        connection.target_component,  # Target component
+        0,  # Time boot ms (not used)
+        coordinate_frame,  # Coordinate frame (relative altitude)
+        0b0000111111111000,  # Type mask (ignore velocity, acceleration, and yaw)
+        int(latitude * 1e7),  # Latitude in 1E7 degrees
+        int(longitude * 1e7),  # Longitude in 1E7 degrees
+        altitude,  # Altitude in meters
+        0, 0, 0,  # Velocity (not used)
+        0, 0, 0,  # Acceleration (not used)
+        0, 0  # Yaw and yaw rate (not used)
+    )
+    print(f"Set position target global int sent to ({latitude}, {longitude}, {altitude})")
+
 
 def main():
-    """Main function for uploading and executing waypoints"""
-    # Define the waypoints
 
-    boundary_coords = [
-        (48.5168217, -123.3756456),
-        (48.5168892, -123.3761606),
-        (48.5167258, -123.3764235),
-        (48.5158658, -123.3771691),
-        (48.5156384, -123.3771423),
-        (48.5155212, -123.3769653),
-        (48.5154181, -123.3766273),
-        (48.5154465, -123.3763698),
-        (48.515578, -123.3761552),
-        (48.5164486, -123.3754364),
-        (48.5166796, -123.3755008)
-    ]
+    # Get the current location
+    current_lat, current_lon, current_alt = get_current_location(the_connection)
+    print(f"Current Location: Lat={current_lat}, Lon={current_lon}, Alt={current_alt}")
 
-    boundary_polygon = Polygon(boundary_coords)
+    # Calculate new position 1 meter north
+    north_offset = -0.05  # Offset in meters
+    new_lat = current_lat + (north_offset / 111111)  # Latitude offset
+    new_lon = current_lon  # No change in longitude
 
-    current_lat, current_lon, current_alt = get_latest_gps(the_connection)
+    # Send reposition command
+    send_set_position_target_global_int(the_connection, new_lat, new_lon, current_alt)
 
-    # spiral_waypoint_values = generate_path_custom_boundary(48.516066,-123.376373,20,boundary_polygon)
-    spiral_waypoint_values = generate_path_custom_boundary_custom_radii(current_lat,current_lon,20,boundary_polygon,1,20,5,0.15,6)
-
-    print(spiral_waypoint_values)
-
-    waypoints = []
-
-    waypoints = []
-    for value in spiral_waypoint_values:
-        print(f"Appending {value}")
-        waypoints.append((value[0], value[1], value[2]))  # lat, lon, alt as a tuple
-
-
-
-    # Set mode GUIDED
-    the_connection.mav.command_long_send(
-        the_connection.target_system,
-        the_connection.target_component,
-        mavutil.mavlink.MAV_CMD_DO_SET_MODE,
-        0,
-        1,  # Base mode
-        4, 0, 0, 0, 0, 0  # Custom mode for GUIDED
-    )
-    wait_for_ack(mavutil.mavlink.MAV_CMD_DO_SET_MODE)
-
-    # Load waypoints
-    if not load_waypoints_via_mavlink(waypoints):
-        print("Failed to upload waypoints. Exiting.")
-        return
-
-    time.sleep(5)
-
-    # Start the mission
-    if not start_mission():
-        print("Failed to start the mission. Exiting.")
-        return
-
-    time.sleep(5)
-
-    if wait_for_waypoint(the_connection, len(waypoints)-1):
-        print(f"Final Waypoint reached successfully!")
-    else:
-        print(f"Failed to reach final waypoint")
-
-    # Set mode RTL
-    the_connection.mav.command_long_send(
-        the_connection.target_system,
-        the_connection.target_component,
-        mavutil.mavlink.MAV_CMD_DO_SET_MODE,
-        0,
-        1,  # Base mode
-        6, 0, 0, 0, 0, 0  # Custom mode for GUIDED
-    )
-    wait_for_ack(mavutil.mavlink.MAV_CMD_DO_SET_MODE)
 
 
 
