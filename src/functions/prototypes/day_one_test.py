@@ -19,6 +19,7 @@ def send_heartbeat(the_connection):
 
 # Connect to the MAVLink device via USB (replace with your actual port)
 the_connection = mavutil.mavlink_connection('tcp:127.0.0.1:5763')
+# the_connection = mavutil.mavlink_connection('/dev/serial0', baud=57600)
 
 # Wait for the first heartbeat to confirm the connection
 print("Waiting for heartbeat...")
