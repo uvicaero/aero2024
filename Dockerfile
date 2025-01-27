@@ -98,6 +98,6 @@ COPY ./utils /aero2024/utils
 COPY ./data /aero2024/data
 
 # Set environment variables
-ENV PYTHONPATH=/aero2024/src
+ENV PYTHONPATH="${PYTHONPATH}: /aero2024"
 
 CMD ["/ardupilot/Tools/autotest/sim_vehicle.py", "-v", "ArduCopter", "-w"]

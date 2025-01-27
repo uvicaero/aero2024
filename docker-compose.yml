@@ -10,7 +10,7 @@ services:
       - ./tests:/aero2024/tests
       - ./data:/aero2024/data
     environment:
-      - PYTHONPATH=/aero2024/src
+      - PYTHONPATH=/aero2024
     ports:
       - "5760:5760"
       - "5501:5501"

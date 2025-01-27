@@ -1,6 +1,6 @@
 
 from pymavlink import mavutil
-#from src.functions.mav_utils import get_latest_gps, send_waypoint, send_waypoints, set_auto_mode
+from src.functions.mav_utils import get_latest_gps, send_waypoint, send_waypoints, set_auto_mode
 
 def run():
     print("Running...")
@@ -17,10 +17,10 @@ def run():
     print(connection)
 
     # Get current location
-    #lat, lon, alt = get_latest_gps(connection)
+    lat, lon, alt = get_latest_gps(connection)
 
-    #print("Alt:")
-    #print(alt)
+    print("Alt:")
+    print(alt)
 
 if __name__ == "__main__":
     print("Test1")
