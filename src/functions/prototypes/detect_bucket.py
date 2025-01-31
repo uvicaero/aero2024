@@ -7,6 +7,9 @@ def detectBucket(videoLength):
     print("Detection Started")
     start = time.time()
     timePassed = 0
+
+    listOfCenters = []
+
     cam = cv.VideoCapture(0)
     
     while timePassed < videoLength:
@@ -31,6 +34,7 @@ def detectBucket(videoLength):
                 center = (i[0], i[1])
                 # circle center
                 cv.circle(src, center, 1, (0, 100, 100), 3)
+                listOfCenters.append(center)
                 # circle outline
                 radius = i[2]
                 cv.circle(src, center, radius, (255, 0, 255), 3)
@@ -44,6 +48,23 @@ def detectBucket(videoLength):
         end = time.time()
         timePassed = end - start
 
+    return averageCenters(listOfCenters)
 
-detectBucket(3)
+def averageCenters(centers):
+    sumX = 0
+    sumY = 0
+    size = 0
+    for c in centers:
+        size += 1
+        sumX += c[0]
+        sumY += c[1]
+    
+    print(size)
+
+    return (int(sumX/size), int(sumY/size))
+
+
+
+
+print(detectBucket(3))
 
