@@ -14,14 +14,17 @@ while True:
     
     
     rows = gray.shape[0]
-    circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1, rows / 8,
-                               param1=100, param2=30,
-                               minRadius=1, maxRadius=80)
+    # HOUGH_GRADIENT_ALT is an variation of the algorithm which is sometimes more accurate
+    # For this variation, param2 is the "accuracy threshold" with 1 being a perfect circle.
+    circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT_ALT, dp=1.5, minDist=rows / 8,
+                               param1=300, param2=0.92,
+                               minRadius=0, maxRadius=0)
     
     
     if circles is not None:
         circles = np.uint16(np.around(circles))
         for i in circles[0, :]:
+            print(i)
             center = (i[0], i[1])
             # circle center
             cv.circle(src, center, 1, (0, 100, 100), 3)
