@@ -3,8 +3,12 @@ from pymavlink import mavutil
 import pymavlink.dialects.v20.all as dialect
 import threading
 import subprocess
+import simplekml
 from shapely.geometry import Point, Polygon, LineString
 import os
+import math
+import numpy as np
+import cv2
 import xml.etree.ElementTree as ET
 from src.functions.prototypes.emitter_detection_prototypes.detect_hotspots_with_mask import detect_hotspots_with_mask
 from src.functions.get_hotspots_gps import get_hotspots_gps
@@ -316,8 +320,10 @@ def extract_coordinates_to_dict(subdir, filename):
 
 def create_mission_waypoints(coordinates_dict):
     """
-    Create waypoints for the mission, generating only one waypoint per bucket with autocontinue set to 0.
-    
+    Create waypoints for the mission, ensuring that each bucket has two waypoints:
+    - First waypoint: Moves to the bucket with autocontinue set to 1.
+    - Second waypoint: Holds at the bucket with autocontinue set to 0.
+
     Args:
         coordinates_dict (dict): Dictionary with names as keys and lat/lon/alt as values.
                                  Example: {'Reservoir': {'latitude': 48.4928683, 'longitude': -123.3092024, 'altitude': 0.0}}
@@ -341,16 +347,21 @@ def create_mission_waypoints(coordinates_dict):
     # Define reservoir coordinates
     reservoir_lat, reservoir_lon = reservoir['latitude'], reservoir['longitude']
     
-    # Loop through each bucket and add a single waypoint with autocontinue = 0
+    # Loop through each bucket and add two waypoints
     for bucket_name, bucket_coords in sorted_buckets:
         bucket_lat, bucket_lon = bucket_coords['latitude'], bucket_coords['longitude']
         
-        # Single waypoint for the current bucket
-        bucket_waypoint = {'lat': bucket_lat, 'lon': bucket_lon, 'alt': 5, 'autocontinue': 0}
-        waypoints.append(bucket_waypoint)
+        # First waypoint: Move to bucket with autocontinue = 1
+        waypoints.append({'lat': bucket_lat, 'lon': bucket_lon, 'alt': 25, 'autocontinue': 1})
+
+        # Second waypoint: Same location but autocontinue = 0 (pauses)
+        waypoints.append({'lat': bucket_lat, 'lon': bucket_lon, 'alt': 20, 'autocontinue': 0})
+
+        # Store autohold index (the second waypoint)
         autohold_indices.append(len(waypoints) - 1)
     
     return waypoints, autohold_indices
+
 
 def wait_for_autohold(master, autohold_indices):
     """
@@ -372,8 +383,9 @@ def wait_for_autohold(master, autohold_indices):
         print(f"Current waypoint: {current_wp}")
         
         # Check if the current waypoint is in the autohold list
-        if current_wp-3 in autohold_indices:
+        if current_wp-2 in autohold_indices:
             print(f"Drone has reached autohold waypoint {current_wp} (autocontinue = 0).")
+            autohold_indices.remove(current_wp-2)
             return
             
 def is_mission_completed(master, total_waypoints):
@@ -423,9 +435,9 @@ def continue_mission_from_current(master):
     master.mav.mission_set_current_send(
         master.target_system,   # Target system (e.g., drone)
         master.target_component,  # Target component (e.g., autopilot)
-        current_wp+1  # Index of the current waypoint
+        current_wp  # Index of the current waypoint
     )
-    print(f"Mission resumed at waypoint {current_wp+1}.")
+    print(f"Mission resumed at waypoint {current_wp}.")
 
 def set_servo_pwm(master, servo_channel, pwm_value):
     """
@@ -531,16 +543,19 @@ def main():
 
     filename = "vantreight_buckets.kml"
 
-    image_path = "data/field_data/ir_detection_test_images/photo_alt_20m_run_1.jpg"
+    image_path = "data/field_data/ir_detection_test_images/aerial3.jpg"
 
     output_kml_path = "data/kml_source_files/hotspots.kml"
 
     coordinates_dict = extract_coordinates_to_dict(subdir, filename)
 
     waypoints,autohold_indices = create_mission_waypoints(coordinates_dict)
+    
+    print(autohold_indices)
 
     # Initialize hotspots list
     detected_hotspots = []
+    get_gps_points = []
 
     # Set mode GUIDED
     the_connection.mav.command_long_send(
@@ -570,30 +585,50 @@ def main():
     time.sleep(5)
 
     while True:
-        if is_mission_completed(the_connection, len(waypoints)+1):
+        if is_mission_completed(the_connection, len(waypoints)):
             break
         wait_for_autohold(the_connection, autohold_indices)
         pause_mission(the_connection)
         time.sleep(3)
-        hotspots = detect_hotspots_with_mask(image_path, threshold=0.7)
+        image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        hotspots = detect_hotspots_with_mask(image, threshold=0.7)
         print(f"Detected hotspots: {hotspots}")
         # Get the latest GPS coordinates from drone
         lat, lon, alt = get_latest_gps(the_connection)
+        get_gps_points.append({"lat": lat, "lon": lon})
 
         # Map hotspots to GPS coordinates using `get_hotspots_gps`
-        if hotspots:
+        if hotspots.size > 0:
             distorted_points = [[x, y] for x, y in hotspots]
-            pitch = 0.0  # Replace with actual pitch reading
+            dist_pts = np.array(distorted_points, dtype=np.float32)
+            pitch = math.radians(-90)
             azimuth = 0.0  # Replace with actual azimuth reading
-            gps_hotspots = get_hotspots_gps(distorted_points, lon, lat, alt, pitch, azimuth)
-            for gps_point in gps_hotspots:
-                detected_hotspots.append({"lat": gps_point[0], "lon": gps_point[1]})
+            gps_hotspots = get_hotspots_gps(dist_pts, lon, lat, alt, pitch, azimuth)
+
+            # Fix shape if necessary: Convert (N, 1, 2) ? (N, 2)
+            if gps_hotspots.ndim == 3 and gps_hotspots.shape[1] == 1 and gps_hotspots.shape[2] == 2:
+                gps_hotspots = gps_hotspots.reshape(-1, 2)
+
+            # Ensure valid data before appending
+            if gps_hotspots.size > 0 and gps_hotspots.shape[1] == 2:
+                for gps_point in gps_hotspots:
+                    detected_hotspots.append({"lat": gps_point[0], "lon": gps_point[1]})
+            else:
+                print(f"Error: Invalid GPS hotspots output {gps_hotspots}")
+
         resume_mission(the_connection)
 
+    hotspot_count = 1
     # Generate KML file
     kml = simplekml.Kml()
-    for point in gps_hotspots:
-        kml.newpoint(name="Hotspot", coords=[(point[1], point[0])])  # Lon, Lat
+    for point in detected_hotspots:
+        kml.newpoint(name=f"Hotspot {hotspot_count}", coords=[(point["lon"], point["lat"])])  # Lon, Lat
+        hotspot_count += 1
+    
+    gps_point_count = 1
+    for point in get_gps_points:
+        kml.newpoint(name=f"Get GPS point {hotspot_count}", coords=[(point["lon"], point["lat"])])  # Lon, Lat
+        gps_point_count += 1
     
     # Save KML file
     os.makedirs(os.path.dirname(output_kml_path), exist_ok=True)

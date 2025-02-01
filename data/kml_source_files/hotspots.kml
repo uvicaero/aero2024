@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="1">
+        <Placemark id="3">
+            <name>Hotspot 1</name>
+            <Point id="2">
+                <coordinates>-123.3094482421875,48.493072509765625,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="5">
+            <name>Hotspot 2</name>
+            <Point id="4">
+                <coordinates>-123.3099365234375,48.492923736572266,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="7">
+            <name>Hotspot 3</name>
+            <Point id="6">
+                <coordinates>-123.30951690673828,48.4927978515625,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="9">
+            <name>Get GPS point 4</name>
+            <Point id="8">
+                <coordinates>-123.3094671,48.4930961,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="11">
+            <name>Get GPS point 4</name>
+            <Point id="10">
+                <coordinates>-123.3099492,48.4929475,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="13">
+            <name>Get GPS point 4</name>
+            <Point id="12">
+                <coordinates>-123.3095238,48.4928236,0.0</coordinates>
+            </Point>
+        </Placemark>
+    </Document>
+</kml>

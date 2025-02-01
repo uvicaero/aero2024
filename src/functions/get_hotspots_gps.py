@@ -34,6 +34,12 @@ def get_hotspots_gps(distorted_points, cam_x, cam_y, altitude, pitch, azimuth):
         dist_pts = np.fromstring(distorted_points, sep=", ").reshape((-1, 2))
     else:
         dist_pts = distorted_points
+    # Ensure the correct shape for OpenCV function
+    if len(dist_pts.shape) == 2 and dist_pts.shape[1] == 2:
+        dist_pts = dist_pts.reshape(-1, 1, 2)  # Reshape to (N, 1, 2)
+    else:
+        print(f"Invalid shape for undistortion: {dist_pts.shape}")
+        return np.array([])  # Return empty array to prevent further errors
 
     points = cv.undistortImagePoints(dist_pts, camera_matrix, dist_coeffs)
     projected = np.zeros(points.shape, np.float64)
@@ -52,8 +58,8 @@ def get_hotspots_gps(distorted_points, cam_x, cam_y, altitude, pitch, azimuth):
         # rotate using azimuth
         # x corresponds to latitude, y to longitude. need to convert cam GPS to meters for adding.
         # add/subtract may need to be tweaked once we can visualise with real-world data
-        world_x = (cam_x / long_factor) + (ground_k * math.cos(azimuth)) + (ground_w * math.sin(azimuth))
-        world_y = (cam_y / lat_factor) - (ground_k * math.sin(azimuth)) + (ground_w * math.cos(azimuth))
+        world_x = (cam_x / long_factor) - (ground_k * math.sin(azimuth)) + (ground_w * math.cos(azimuth))
+        world_y = (cam_y / lat_factor) + (ground_k * math.cos(azimuth)) + (ground_w * math.sin(azimuth))
         
         # convert from meters to lat/long degrees
         point_lat = lat_factor*world_y
@@ -61,6 +67,10 @@ def get_hotspots_gps(distorted_points, cam_x, cam_y, altitude, pitch, azimuth):
 
         projected[i] = [point_lat, point_long]
         i += 1
+        
+    print(f"Projected shape: {projected.shape}")
+    print(f"Projected data: {projected}")
+
 
     return projected
 
