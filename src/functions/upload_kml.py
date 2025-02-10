@@ -25,7 +25,7 @@ def upload_kml(kml, folder_link):
     file_name = (kml.split("/"))[-1]
 
     # Use the service account details to create user credentials
-    credentials = service_account.Credentials.from_service_account_info(info=service_account_key, scopes=scopes)
+    credentials = service_account.Credentials.from_service_account_file('credentials.json', scopes=scopes)
 
     file = None
     try:

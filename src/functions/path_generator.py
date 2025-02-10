@@ -159,7 +159,7 @@ def generate_path(center_lat, center_lon, altitude):
 
                 
                 # Add each boundary-following waypoint to the waypoints list in reverse order
-                for wpt_lat, wpt_lon in reversed(boundary_waypoints):
+                for wpt_lat, wpt_lon in boundary_waypoints:
                     waypoints.append((wpt_lat, wpt_lon, altitude))
                 
             # Reset the out-of-bounds flag
@@ -218,7 +218,7 @@ def generate_path_custom_boundary(center_lat, center_lon, altitude, boundary_pol
 
                 
                 # Add each boundary-following waypoint to the waypoints list in reverse order
-                for wpt_lat, wpt_lon in reversed(boundary_waypoints):
+                for wpt_lat, wpt_lon in boundary_waypoints:
                     waypoints.append((wpt_lat, wpt_lon, altitude))
                 
             # Reset the out-of-bounds flag
@@ -277,7 +277,7 @@ def generate_path_custom_boundary_custom_radii(center_lat, center_lon, altitude,
 
                 
                 # Add each boundary-following waypoint to the waypoints list in reverse order
-                for wpt_lat, wpt_lon in reversed(boundary_waypoints):
+                for wpt_lat, wpt_lon in boundary_waypoints:
                     waypoints.append((wpt_lat, wpt_lon, altitude))
                 
             # Reset the out-of-bounds flag

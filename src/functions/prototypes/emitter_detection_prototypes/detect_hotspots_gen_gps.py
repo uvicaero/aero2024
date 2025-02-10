@@ -210,8 +210,9 @@ def get_latest_gps(connection):
             lat = msg.lat / 1e7
             lon = msg.lon / 1e7
             alt = msg.alt / 1e3
-            print(f"Latitude: {lat}, Longitude: {lon}, Altitude: {alt} meters")
-            return lat, lon, alt
+            yaw = msg.hdg / 100.0 if msg.hdg != 65535 else None  # Convert centidegrees to degrees, handle invalid value
+            print(f"Latitude: {lat}, Longitude: {lon}, Altitude: {alt} meters, Yaw: {yaw} degrees")
+            return lat, lon, alt, yaw
     except Exception as e:
         print(f"Error fetching GPS: {e}")
         return None, None, None
@@ -594,7 +595,7 @@ def main():
         hotspots = detect_hotspots_with_mask(image, threshold=0.7)
         print(f"Detected hotspots: {hotspots}")
         # Get the latest GPS coordinates from drone
-        lat, lon, alt = get_latest_gps(the_connection)
+        lat, lon, alt, yaw = get_latest_gps(the_connection)
         get_gps_points.append({"lat": lat, "lon": lon})
 
         # Map hotspots to GPS coordinates using `get_hotspots_gps`
@@ -602,7 +603,7 @@ def main():
             distorted_points = [[x, y] for x, y in hotspots]
             dist_pts = np.array(distorted_points, dtype=np.float32)
             pitch = math.radians(-90)
-            azimuth = 0.0  # Replace with actual azimuth reading
+            azimuth = yaw  # Replace with actual azimuth reading
             gps_hotspots = get_hotspots_gps(dist_pts, lon, lat, alt, pitch, azimuth)
 
             # Fix shape if necessary: Convert (N, 1, 2) ? (N, 2)
@@ -627,8 +628,13 @@ def main():
     
     gps_point_count = 1
     for point in get_gps_points:
-        kml.newpoint(name=f"Get GPS point {hotspot_count}", coords=[(point["lon"], point["lat"])])  # Lon, Lat
+        kml.newpoint(name=f"Get GPS point {gps_point_count}", coords=[(point["lon"], point["lat"])])  # Lon, Lat
         gps_point_count += 1
+
+    waypoint_count = 1
+    for point in waypoints:
+        kml.newpoint(name=f"Waypoint location {waypoint_count}", coords=[(point["lon"], point["lat"])])  # Lon, Lat
+        waypoint_count += 1
     
     # Save KML file
     os.makedirs(os.path.dirname(output_kml_path), exist_ok=True)
