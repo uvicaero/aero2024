@@ -3,6 +3,8 @@ import cv2 as cv
 import numpy as np
 import time
 
+# Params: videoLength - Number of seconds camera runs for to get avg. position
+# Return: (x_avg, y_avg, rad_avg) as a Tuple
 def detectBucket(videoLength):
     print("Detection Started")
     start = time.time()
@@ -44,39 +46,43 @@ def detectBucket(videoLength):
         if cv.waitKey(1) == ord('q'):
             break
 
-
         end = time.time()
         timePassed = end - start
 
     return averageCenters(listOfCircles)
 
+# Params: centers - List of all the circles detected and their info [x, y, rad]
+# Return: (x_avg, y_avg, rad_avg) as a Tuple
 def averageCenters(centers):
     if len(centers) < 1:
         return (-1, -1, -1) # error return value
     
-    x_values = []
-    y_values = []
     radius_values = []
     for c in centers:
         radius_values.append(c[2])
 
-    # Not factor in any circles less than the biggest rad
     rad_max = max(radius_values)
-    rad_max_thresh = rad_max*0.9 #90% of the max radius
+    rad_max_thresh = rad_max*0.9 # 90% of the max radius
+
+    x_values = []
+    y_values = []
     radius_values = []
     for c in centers:
+        # Not factor in any circles less than the biggest rad
         if c[2] > rad_max_thresh:
             x_values.append(c[0])
             y_values.append(c[1])
             radius_values.append(c[2])
     print("Mean: ", rad_max)
-    print("Meran Thresh: ", rad_max_thresh)
+    print("Mean Thresh: ", rad_max_thresh)
 
     # Possible idea to calculate average again and 
     # not factor in any values outside of the std dev
 
     return (int(np.mean(x_values)), int(np.mean(y_values)), int(np.mean(radius_values)))
 
+# Params: circle_params - A tuple (x, y, rad) to print on the video window
+# Return: void - This function simply displays a visual of the average circle data on the image
 def displayAverage(circle_params):
     cam = cv.VideoCapture(0)
     ret, src = cam.read()
