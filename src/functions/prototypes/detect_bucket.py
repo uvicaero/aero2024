@@ -8,7 +8,7 @@ def detectBucket(videoLength):
     start = time.time()
     timePassed = 0
 
-    listOfCenters = []
+    listOfCircles = []
 
     cam = cv.VideoCapture(0)
     
@@ -30,11 +30,11 @@ def detectBucket(videoLength):
         if circles is not None:
             circles = np.uint16(np.around(circles))
             for i in circles[0, :]:
-                print(i)
                 center = (i[0], i[1])
+                circle_info = (i[0], i[1], i[2])
                 # circle center
                 cv.circle(src, center, 1, (0, 100, 100), 3)
-                listOfCenters.append(center)
+                listOfCircles.append(circle_info)
                 # circle outline
                 radius = i[2]
                 cv.circle(src, center, radius, (255, 0, 255), 3)
@@ -48,23 +48,55 @@ def detectBucket(videoLength):
         end = time.time()
         timePassed = end - start
 
-    return averageCenters(listOfCenters)
+    return averageCenters(listOfCircles)
 
 def averageCenters(centers):
-    sumX = 0
-    sumY = 0
-    size = 0
-    for c in centers:
-        size += 1
-        sumX += c[0]
-        sumY += c[1]
+    if len(centers) < 1:
+        return (-1, -1, -1) # error return value
     
-    print(size)
+    x_values = []
+    y_values = []
+    radius_values = []
+    for c in centers:
+        radius_values.append(c[2])
 
-    return (int(sumX/size), int(sumY/size))
+    # Not factor in any circles less than the biggest rad
+    rad_max = max(radius_values)
+    rad_max_thresh = rad_max*0.9 #90% of the max radius
+    radius_values = []
+    for c in centers:
+        if c[2] > rad_max_thresh:
+            x_values.append(c[0])
+            y_values.append(c[1])
+            radius_values.append(c[2])
+    print("Mean: ", rad_max)
+    print("Meran Thresh: ", rad_max_thresh)
+
+    # Possible idea to calculate average again and 
+    # not factor in any values outside of the std dev
+
+    return (int(np.mean(x_values)), int(np.mean(y_values)), int(np.mean(radius_values)))
+
+def displayAverage(circle_params):
+    cam = cv.VideoCapture(0)
+    ret, src = cam.read()
+    center = (circle_params[0], circle_params[1])
+    radius = circle_params[2]
+
+    print("Center: ", center)
+    print("Radius: ", radius)
+
+    while True:
+        # circle center
+        cv.circle(src, center, 1, (0, 100, 100), 3)
+        # circle outline
+        cv.circle(src, center, radius, (0, 200, 150), 3)
+
+        cv.imshow("average circle center", src)
+        if cv.waitKey(1) == ord('q'):
+            break
 
 
-
-
-print(detectBucket(3))
+# Circle Info: (0, 0) is top left of frame
+displayAverage(detectBucket(3))
 
