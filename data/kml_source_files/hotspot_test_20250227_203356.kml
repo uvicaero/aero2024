@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="1">
+        <Style id="4">
+            <IconStyle id="5">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="6">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="9">
+            <IconStyle id="10">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="11">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Placemark id="3">
+            <name>Hotspot 1</name>
+            <styleUrl>#4</styleUrl>
+            <Point id="2">
+                <coordinates>-123.30911254882812,48.49272155761719,0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="8">
+            <name>Hotspot 2</name>
+            <styleUrl>#9</styleUrl>
+            <Point id="7">
+                <coordinates>-123.30904388427734,48.492698669433594,0</coordinates>
+            </Point>
+        </Placemark>
+    </Document>
+</kml>

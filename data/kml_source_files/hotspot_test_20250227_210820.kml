@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="1">
+        <Style id="4">
+            <IconStyle id="5">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="6">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/blu-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="9">
+            <IconStyle id="10">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="11">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/blu-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="14">
+            <IconStyle id="15">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="16">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/blu-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="19">
+            <IconStyle id="20">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="21">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/blu-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="24">
+            <IconStyle id="25">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="26">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="29">
+            <IconStyle id="30">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="31">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="34">
+            <IconStyle id="35">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="36">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="39">
+            <IconStyle id="40">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="41">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="44">
+            <IconStyle id="45">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="46">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Placemark id="3">
+            <name>Capture point 1</name>
+            <styleUrl>#4</styleUrl>
+            <Point id="2">
+                <coordinates>-123.3089382,48.4927915,0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="8">
+            <name>Capture point 2</name>
+            <styleUrl>#9</styleUrl>
+            <Point id="7">
+                <coordinates>-123.3089382,48.4927915,0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="13">
+            <name>Capture point 3</name>
+            <styleUrl>#14</styleUrl>
+            <Point id="12">
+                <coordinates>-123.3089382,48.4927915,0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="18">
+            <name>Capture point 4</name>
+            <styleUrl>#19</styleUrl>
+            <Point id="17">
+                <coordinates>-123.3089382,48.4927915,0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="23">
+            <name>Hotspot 1</name>
+            <styleUrl>#24</styleUrl>
+            <Point id="22">
+                <coordinates>-123.30894470214844,48.49269485473633,0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="28">
+            <name>Hotspot 2</name>
+            <styleUrl>#29</styleUrl>
+            <Point id="27">
+                <coordinates>-123.30884552001953,48.492759704589844,0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="33">
+            <name>Hotspot 3</name>
+            <styleUrl>#34</styleUrl>
+            <Point id="32">
+                <coordinates>-123.30894470214844,48.49284744262695,0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="38">
+            <name>Hotspot 4</name>
+            <styleUrl>#39</styleUrl>
+            <Point id="37">
+                <coordinates>-123.30894470214844,48.492855072021484,0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="43">
+            <name>Hotspot 5</name>
+            <styleUrl>#44</styleUrl>
+            <Point id="42">
+                <coordinates>-123.30902862548828,48.492801666259766,0</coordinates>
+            </Point>
+        </Placemark>
+    </Document>
+</kml>

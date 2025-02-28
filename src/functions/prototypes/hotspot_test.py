@@ -16,6 +16,11 @@ import xml.etree.ElementTree as ET
 from src.functions.prototypes.emitter_detection_prototypes.detect_hotspots_with_mask import detect_hotspots_with_mask
 from src.functions.get_hotspots_gps import get_hotspots_gps
 from src.functions.upload_kml import upload_kml
+from picamera2 import Picamera2
+from src.functions.detect_hotspots import detect_hotspots
+from src.functions.get_hotspots_gps import get_hotspots_gps
+import matplotlib.pyplot as plt
+
 
 def send_heartbeat(the_connection):
     while True:
@@ -30,16 +35,54 @@ def send_heartbeat(the_connection):
 
 latest_gps = None
 
-def gps_listener(connection):
+latest_attitude = None  # Stores latest attitude data (pitch, roll, yaw)
+
+def mavlink_listener(the_connection):
     """
-    Background thread to continuously listen for new GPS data.
-    Updates `latest_gps` whenever a new message is received.
+    Single background thread that alternates between listening for GPS and Attitude messages.
+    Updates `latest_gps` and `latest_attitude` whenever new data is received.
     """
-    global latest_gps
+    global latest_gps, latest_attitude
+
+    #print("[DEBUG] MAVLink Listener thread started.")
+
+    gps_toggle = True  # Toggle flag to alternate between GPS and Attitude
+
     while True:
-        msg = connection.recv_match(type='GLOBAL_POSITION_INT', blocking=True)
-        if msg:
-            latest_gps = (msg.lat / 1e7, msg.lon / 1e7, msg.alt / 1e3)
+        try:
+            if not the_connection or not the_connection.port:
+                #print("[ERROR] MAVLink connection lost. Retrying in 2 seconds...")
+                time.sleep(2)
+                continue  # Skip iteration until connection is restored
+
+            # Alternate between fetching GPS and Attitude
+            if gps_toggle:
+                msg_type = "GLOBAL_POSITION_INT"
+            else:
+                msg_type = "ATTITUDE"
+
+            msg = the_connection.recv_match(type=msg_type, blocking=True, timeout=5)
+
+            if msg:
+                timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+                if msg_type == "GLOBAL_POSITION_INT":
+                    latest_gps = (msg.lat / 1e7, msg.lon / 1e7, msg.relative_alt / 1e3)
+                    #print(f"[DEBUG] {timestamp} - GPS Update: Lat={latest_gps[0]}, Lon={latest_gps[1]}, Alt={latest_gps[2]}m")
+
+                elif msg_type == "ATTITUDE":
+                    latest_attitude = (msg.pitch, msg.roll, msg.yaw)
+                    #print(f"[DEBUG] {timestamp} - Attitude Update: Pitch={latest_attitude[0]} rad, Roll={latest_attitude[1]} rad, Azimuth={latest_attitude[2]} rad")
+
+                gps_toggle = not gps_toggle  # Flip flag to fetch the other message type next time
+
+            else:
+                print(f"[WARNING] No {msg_type} data received within timeout (5s). Retrying...")
+
+        except Exception as e:
+            print(f"[ERROR] Exception in MAVLink Listener: {e}")
+            time.sleep(2)  # Prevent excessive logging
+
 
 
 # Connect to the MAVLink device via USB (replace with your actual port)
@@ -55,9 +98,9 @@ print("Heartbeat received from system (system %u component %u)" %
 heartbeat_thread = threading.Thread(target=send_heartbeat, args=(the_connection,), daemon=True)
 heartbeat_thread.start()
 
-# Start the GPS thread
-gps_thread = threading.Thread(target=gps_listener, args=(the_connection,), daemon=True)
-gps_thread.start()
+mav_thread = threading.Thread(target=mavlink_listener, args=(the_connection,), daemon=True)
+mav_thread.start()
+
 
 # Pin configuration
 GPIO_PIN = 18
@@ -69,28 +112,39 @@ GPIO.setup(GPIO_PIN, GPIO.IN)
 
 def retrieve_gps():
     """
-    Retrieves the most recent GPS data.
+    Retrieves the most recent GPS and Attitude data.
+    Returns (lat, lon, rel_alt, pitch, yaw).
     """
-    return latest_gps if latest_gps else (None, None, None)
+    global latest_gps, latest_attitude
 
-def get_latest_gps(connection):
+    lat, lon, rel_alt = latest_gps if latest_gps else (None, None, None)
+
+    # Extract only pitch and yaw (ignore roll)
+    if latest_attitude:
+        pitch, _, yaw = latest_attitude  # Ignore roll using `_`
+    else:
+        pitch, yaw = None, None  # Default values if attitude is missing
+
+    return lat, lon, rel_alt, pitch, yaw
+
+def get_latest_gps(the_connection):
     """
     Fetches the latest GPS message from the MAVLink connection.
     """
     try:
         # Flush buffer to remove old messages
         while True:
-            old_msg = connection.recv_match(type='GLOBAL_POSITION_INT', blocking=False)
+            old_msg = the_connection.recv_match(type='GLOBAL_POSITION_INT', blocking=False)
             if old_msg is None:
                 break  # Exit loop when buffer is empty
         # Now, wait for a fresh GPS message
-        msg = connection.recv_match(type='GLOBAL_POSITION_INT', blocking=True)
+        msg = the_connection.recv_match(type='GLOBAL_POSITION_INT', blocking=True)
         
         if msg:
             lat = msg.lat / 1e7
             lon = msg.lon / 1e7
             alt = msg.alt / 1e3
-            print(f"Latitude: {lat}, Longitude: {lon}, Altitude: {alt} meters")
+            #print(f"Latitude: {lat}, Longitude: {lon}, Altitude: {alt} meters")
             return lat, lon, alt
 
     except Exception as e:
@@ -411,61 +465,116 @@ def calculate_gps_distances(landmark_points, get_gps_points):
     elif len(gps_list) > num_pairs:
         print(f"?? {len(gps_list) - num_pairs} extra GPS points not compared.")
 
-
-
 def main():
-
+    # Timestamp for KML output
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_kml_path = f"data/kml_source_files/hotspot_test_{timestamp}.kml"
+    
     subdir = "data/kml_source_files"
 
     filename = "vantreight_landmarks.kml"
 
-    landmark_points = extract_coordinates_to_dict(subdir, filename)
+    detected_hotspots = {}
+    capture_spots = []
+    true_hotspot_points = extract_coordinates_to_dict(subdir, filename)
 
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    # Initialize camera
+    picam2 = Picamera2()
+    config = picam2.create_still_configuration(
+        main={"format": "RGB888", "size": (3280, 2464)}  # Maximum resolution
+    )
+    picam2.configure(config)
+    picam2.start()
+
+    print("\nReady to capture images for hotspot detection.")
+    print("Press Enter to capture each image. Capture 3 images in total.\n")
+
+    for i in range(3):  # Take 3 images manually
+        input(f"Press Enter to capture image {i + 1}...")
+
+        print("\nCapturing image...")
+        rgb_image = picam2.capture_array("main")
+        gray_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
+
+        # Get current GPS location, altitude, pitch, and azimuth
+        lat, lon, rel_alt, pitch, azimuth = retrieve_gps()
+        capture_spots.append({"lat": lat, "lon": lon})
+        print(f"GPS: lat={lat}, lon={lon}, rel_alt={rel_alt}m, pitch={pitch} rad, azimuth={azimuth} rad")
+
+        print("Running hotspot detection...")
+        hotspots = detect_hotspots(gray_image, threshold=0.9)
+        # Display the image with detected hotspots
+        plt.figure(figsize=(6, 5))
+        plt.imshow(gray_image, cmap="gray")
+        plt.axis("off")
+
+        if hotspots.size > 0:
+            plt.scatter(hotspots[:, 0], hotspots[:, 1], color='red', marker='x', label="Detected Hotspots")
+
+        plt.legend()
+        plt.title(f"Hotspots Detected in Image {i + 1}")
+        plt.show()  # Show the preview
+
+        # Map hotspots to GPS coordinates using `get_hotspots_gps`
+        if hotspots.size > 0:
+            distorted_points = np.array([[x, y] for x, y in hotspots], dtype=np.float32)
+            camera_pitch = pitch - math.radians(90)
+            gps_hotspots = get_hotspots_gps(distorted_points, lon, lat, rel_alt, camera_pitch, azimuth)
+
+            # ? Ensure output shape is (N,2)
+            gps_hotspots = gps_hotspots.reshape(-1, 2) if gps_hotspots.ndim > 2 else gps_hotspots
+
+            # ? Validate before appending
+            if gps_hotspots.size > 0 and gps_hotspots.shape[1] == 2:
+                for gps_point in gps_hotspots:
+                    for j, gps_point in enumerate(gps_hotspots):
+                        hotspot_name = f"Hotspot_{i+1}_{j+1}"
+                        detected_hotspots[hotspot_name] = {"lat": gps_point[0],"lon": gps_point[1]}
+            else:
+                print(f"[ERROR] Invalid GPS hotspots output: {gps_hotspots.shape} - Data: {gps_hotspots}")
+
+        print(f"Image {i + 1} processed.\n")
+
+    picam2.stop()
     
-    output_kml_path = f"data/kml_source_files/landmark_test_{timestamp}.kml"
+    print(f"[DEBUG] Detected Hotspots: {detected_hotspots}")
+    
+    calculate_gps_distances(true_hotspot_points, detected_hotspots)
 
-    get_gps_points = {}
-    for i in range(3):
-        wait_for_switch()
-        lat, lon, alt = retrieve_gps()
-        print(f"Lat: {lat:.8f}, Lon: {lon:.8f}, Alt: {alt:.2f}")
-        waypoint_name = f"Waypoint {i+1}"
-        get_gps_points[waypoint_name] = {"lat": lat, "lon": lon}
-
-    print("Collected GPS points:")
-    for idx, point in enumerate(get_gps_points, start=1):
-        print(f"Point {idx}: {point}")
-        
-    calculate_gps_distances(landmark_points, get_gps_points)
-        
-    # Define icon URLs for each group
-    landmark_icon = "http://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png"
-    gps_icon = "http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png"
-
+    # Define icon URLs for visualization
+    true_hotspot_icon = "http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png"
+    hotspot_icon = "http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png"
+    gps_icon = "http://maps.google.com/mapfiles/kml/pushpin/blu-pushpin.png"
 
     # Generate KML file
     kml = simplekml.Kml()
-
-    landmark_count = 1
-    for marker_name, coords in landmark_points.items():
-        pnt = kml.newpoint(name=f"Landmark {landmark_count}", coords=[(coords['lon'], coords['lat'])])  # Lon, Lat
-        pnt.style.iconstyle.icon.href = landmark_icon
-        landmark_count += 1
-
     
-    gps_point_count = 1
-    for point in get_gps_points.values():  # Only iterate over coordinates
-        pnt = kml.newpoint(name=f"Get GPS point {gps_point_count}", coords=[(point["lon"], point["lat"])])  # Lon, Lat
+    # Plot true hotspot points
+    true_hotspot_count = 1
+    for marker_name, coords in true_hotspot_points.items():
+        pnt = kml.newpoint(name=f"True hotspot {true_hotspot_count}", coords=[(coords['lon'], coords['lat'])])  # Lon, Lat
+        pnt.style.iconstyle.icon.href = true_hotspot_icon
+        true_hotspot_count += 1
+    
+    # Plot capture points
+    for i, point in enumerate(capture_spots, start=1):
+        pnt = kml.newpoint(name=f"Capture point {i}", coords=[(point["lon"], point["lat"], 0)])  # Lon, Lat, Alt
         pnt.style.iconstyle.icon.href = gps_icon
-        gps_point_count += 1
     
+    detected_hotspot_count = 1
+    # Plot detected hotspots
+    for marker_name, coords in detected_hotspots.items():
+        pnt = kml.newpoint(name=f"Detected Hotspot {detected_hotspot_count}", coords=[(coords["lon"], coords["lat"], 0)])  # Lon, Lat, Alt
+        pnt.style.iconstyle.icon.href = hotspot_icon
+        detected_hotspot_count += 1
+
     # Save KML file
     os.makedirs(os.path.dirname(output_kml_path), exist_ok=True)
     kml.save(output_kml_path)
+
+    # Upload KML file to Google Drive
     upload_kml(output_kml_path, 'https://drive.google.com/drive/folders/1GW56sU4zJuf8If8B6NgVultpZ_C2QT2V')
     print(f"KML file saved to {output_kml_path}")
-
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="1">
+        <Style id="4">
+            <IconStyle id="5">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="6">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="9">
+            <IconStyle id="10">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="11">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="14">
+            <IconStyle id="15">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="16">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="19">
+            <IconStyle id="20">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="21">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="24">
+            <IconStyle id="25">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="26">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="29">
+            <IconStyle id="30">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="31">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Placemark id="3">
+            <name>Landmark 1</name>
+            <styleUrl>#4</styleUrl>
+            <Point id="2">
+                <coordinates>-123.308699,48.4927038,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="8">
+            <name>Landmark 2</name>
+            <styleUrl>#9</styleUrl>
+            <Point id="7">
+                <coordinates>-123.3085715,48.4925329,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="13">
+            <name>Landmark 3</name>
+            <styleUrl>#14</styleUrl>
+            <Point id="12">
+                <coordinates>-123.3086059,48.492992,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="18">
+            <name>Get GPS point 1</name>
+            <styleUrl>#19</styleUrl>
+            <Point id="17">
+                <coordinates>-123.3087028,48.4926762,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="23">
+            <name>Get GPS point 2</name>
+            <styleUrl>#24</styleUrl>
+            <Point id="22">
+                <coordinates>-123.3085755,48.4925138,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="28">
+            <name>Get GPS point 3</name>
+            <styleUrl>#29</styleUrl>
+            <Point id="27">
+                <coordinates>-123.3086033,48.4929803,0.0</coordinates>
+            </Point>
+        </Placemark>
+    </Document>
+</kml>
