@@ -577,8 +577,8 @@ def get_offset(connection, image, fov_x=62.2, fov_y=48.8, image_width=3280, imag
     meters_per_pixel_x = (2 * rel_alt * math.tan(fov_x_rad / 2)) / image_width
     meters_per_pixel_y = (2 * rel_alt * math.tan(fov_y_rad / 2)) / image_height
     
-    x_offset = (target_hotspot[0] - img_center_x) * meters_per_pixel_x
-    y_offset = (target_hotspot[1] - img_center_y) * meters_per_pixel_y
+    x_offset = -(target_hotspot[1] - img_center_y) * meters_per_pixel_y  # Forward/Backward (NED X)
+    y_offset = (target_hotspot[0] - img_center_x) * meters_per_pixel_x  # Left/Right (NED Y)
     z_offset = 0
 
     print(f"Offset to hotspot: {x_offset:.2f}m forward/backward, {y_offset:.2f}m right/left")
@@ -627,7 +627,7 @@ def main():
     
         input("Press enter")  # Wait for user to press Enter
         
-        threshold = 0.5  # Replace with actual pitch value
+        threshold = 0.5  # Replace with actual threshold value
         
         reposition_drone_over_hotspot(the_connection, picam2, threshold)
         

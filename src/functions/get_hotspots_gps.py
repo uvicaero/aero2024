@@ -47,7 +47,7 @@ def get_hotspots_gps(distorted_points, cam_x, cam_y, altitude, pitch, azimuth):
     i = 0
     for point in points:
 
-        frac_pixels_y = (point[0][1] - img_half_height) / img_half_height # calculate fraction of the point's pixels-to-centre / total pixels from top edge to centre
+        frac_pixels_y = -(point[0][1] - img_half_height) / img_half_height # calculate fraction of the point's pixels-to-centre / total pixels from top edge to centre
         frac_pixels_x = (point[0][0] - img_half_width) / img_half_width
 
         # k corresponds to the y-axis direction from the image, w to the x-axis direction from the image

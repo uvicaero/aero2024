@@ -456,20 +456,34 @@ def send_body_offset_local_position(connection, x_offset, y_offset, z_offset):
 
 
 def main():
+    """
+    Moves the drone forward, right, back, and left in sequence.
+    Waits for user input (Enter key press) before each movement.
+    """
+   
+    # Start test sequence
+    print("\n--- Drone Orientation Test ---")
+    print("Press Enter to move FORWARD (10m)...")
+    input()
+    send_body_offset_local_position(the_connection, 5, 0, 0)
+    time.sleep(5)  # Allow time for movement
 
-    # Get the current location
-    current_lat, current_lon, current_alt = get_current_location(the_connection)
-    print(f"Current Location: Lat={current_lat}, Lon={current_lon}, Alt={current_alt}")
+    print("Press Enter to move RIGHT (10m)...")
+    input()
+    send_body_offset_local_position(the_connection, 0, 5, 0)
+    time.sleep(5)
 
-    # Calculate new position 1 meter north
-    x_offset = -10  # Offset in meters
+    print("Press Enter to move BACKWARD (10m)...")
+    input()
+    send_body_offset_local_position(the_connection, -5, 0, 0)
+    time.sleep(5)
 
-    # Send reposition command
-    # send_set_position_target_global_int(the_connection, new_lat, new_lon, current_alt)
-    send_body_offset_local_position(the_connection, x_offset, 0, 0)
+    print("Press Enter to move LEFT (10m)...")
+    input()
+    send_body_offset_local_position(the_connection, 0, -5, 0)
+    time.sleep(5)
 
-
-
+    print("\nTest complete. The drone should have moved in a square pattern.")
 
 if __name__ == "__main__":
     main()
