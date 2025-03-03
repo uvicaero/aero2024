@@ -661,17 +661,6 @@ def main():
     send_body_offset_local_position(the_connection, 0, 5, 0)
     time.sleep(5)  # Allow time for movement
 
-    
-    for i in range(3):
-    
-        input("Press enter")  # Wait for user to press Enter
-        
-        threshold = 0.5  # Replace with actual threshold value
-        
-        reposition_drone_over_hotspot(the_connection, picam2, threshold)
-        
-        print("Process completed.")
-
 
     picam2.stop()
 
