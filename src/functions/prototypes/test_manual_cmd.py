@@ -468,20 +468,36 @@ def main():
     send_body_offset_local_position(the_connection, 5, 0, 0)
     time.sleep(5)  # Allow time for movement
 
+    input()
+    send_body_offset_local_position(the_connection, -5, 0, 0)
+    time.sleep(5)  # Allow time for movement
+
     print("Press Enter to move RIGHT (10m)...")
     input()
     send_body_offset_local_position(the_connection, 0, 5, 0)
     time.sleep(5)
+
+    input()
+    send_body_offset_local_position(the_connection, 0, -5, 0)
+    time.sleep(5)  # Allow time for movement
 
     print("Press Enter to move BACKWARD (10m)...")
     input()
     send_body_offset_local_position(the_connection, -5, 0, 0)
     time.sleep(5)
 
+    input()
+    send_body_offset_local_position(the_connection, 5, 0, 0)
+    time.sleep(5)  # Allow time for movement
+
     print("Press Enter to move LEFT (10m)...")
     input()
     send_body_offset_local_position(the_connection, 0, -5, 0)
     time.sleep(5)
+
+    input()
+    send_body_offset_local_position(the_connection, 0, 5, 0)
+    time.sleep(5)  # Allow time for movement
 
     print("\nTest complete. The drone should have moved in a square pattern.")
 

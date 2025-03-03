@@ -622,6 +622,45 @@ def main():
     )
     picam2.configure(config)
     picam2.start()
+
+    threshold = 0.5  # Replace with actual threshold value
+
+    # Start test sequence
+    print("\n--- Drone Orientation Test ---")
+    print("Press Enter to move FORWARD (10m)...")
+    input()
+    send_body_offset_local_position(the_connection, 5, 0, 0)
+    time.sleep(5)  # Allow time for movement
+
+    input()
+    reposition_drone_over_hotspot(the_connection, picam2, threshold)
+
+    print("Press Enter to move RIGHT (10m)...")
+    input()
+    send_body_offset_local_position(the_connection, 0, 5, 0)
+    time.sleep(5)
+
+    input()
+    reposition_drone_over_hotspot(the_connection, picam2, threshold)
+
+    print("Press Enter to move BACKWARD (10m)...")
+    input()
+    send_body_offset_local_position(the_connection, -5, 0, 0)
+    time.sleep(5)
+
+    input()
+    send_body_offset_local_position(the_connection, 0, 5, 0)
+    time.sleep(5)  # Allow time for movement
+
+    print("Press Enter to move LEFT (10m)...")
+    input()
+    send_body_offset_local_position(the_connection, 0, -5, 0)
+    time.sleep(5)
+
+    input()
+    send_body_offset_local_position(the_connection, 0, 5, 0)
+    time.sleep(5)  # Allow time for movement
+
     
     for i in range(3):
     
