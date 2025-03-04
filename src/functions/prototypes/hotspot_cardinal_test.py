@@ -549,7 +549,7 @@ def main():
         plt.scatter(hotspots[:, 0], hotspots[:, 1], color='red', marker='x', label="Detected Hotspots")
 
     plt.legend()
-    plt.title(f"Hotspots Detected in Image {i + 1}")
+    plt.title(f"Hotspots Detected in Image 1")
     plt.show()  # Show the preview
 
     # Map hotspots to GPS coordinates using `get_hotspots_gps`
@@ -599,7 +599,7 @@ def main():
         plt.scatter(hotspots[:, 0], hotspots[:, 1], color='red', marker='x', label="Detected Hotspots")
 
     plt.legend()
-    plt.title(f"Hotspots Detected in Image {i + 1}")
+    plt.title(f"Hotspots Detected in Image 2")
     plt.show()  # Show the preview
 
     # Map hotspots to GPS coordinates using `get_hotspots_gps`
@@ -648,7 +648,7 @@ def main():
         plt.scatter(hotspots[:, 0], hotspots[:, 1], color='red', marker='x', label="Detected Hotspots")
 
     plt.legend()
-    plt.title(f"Hotspots Detected in Image {i + 1}")
+    plt.title(f"Hotspots Detected in Image 3")
     plt.show()  # Show the preview
 
     # Map hotspots to GPS coordinates using `get_hotspots_gps`
@@ -698,7 +698,7 @@ def main():
         plt.scatter(hotspots[:, 0], hotspots[:, 1], color='red', marker='x', label="Detected Hotspots")
 
     plt.legend()
-    plt.title(f"Hotspots Detected in Image {i + 1}")
+    plt.title(f"Hotspots Detected in Image 4")
     plt.show()  # Show the preview
 
     # Map hotspots to GPS coordinates using `get_hotspots_gps`
