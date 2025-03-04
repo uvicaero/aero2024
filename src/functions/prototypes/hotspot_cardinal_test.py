@@ -486,14 +486,15 @@ def send_body_offset_local_position(connection, x_offset, y_offset, z_offset):
 
     # Get current time in milliseconds (wraps at 2^32)
     time_boot_ms = int(round(time.time() * 1000)) & 0xFFFFFFFF
-
+    # MAV_FRAME_BODY_OFFSET_NED UPLR
+    # MAV_FRAME_LOCAL_OFFSET_NED NESW
     # IMPORTANT: Note the argument order below matches the expected order:
     # time_boot_ms, target_system, target_component, coordinate_frame, type_mask, ...
     connection.mav.set_position_target_local_ned_send(
         time_boot_ms,                                   # time_boot_ms (uint32_t)
         connection.target_system,                       # target_system (uint8_t)
         connection.target_component,                    # target_component (uint8_t)
-        mavutil.mavlink.MAV_FRAME_LOCAL_OFFSET_NED ,        # coordinate frame (uint8_t)
+        mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED ,        # coordinate frame (uint8_t)
         type_mask,                                      # type_mask (uint16_t)
         x_offset,                                       # x position (meters)
         y_offset,                                       # y position (meters)
@@ -564,7 +565,7 @@ def main():
         if gps_hotspots.size > 0 and gps_hotspots.shape[1] == 2:
             for gps_point in gps_hotspots:
                 for j, gps_point in enumerate(gps_hotspots):
-                    hotspot_name = f"Hotspot_{i+1}_{j+1}"
+                    hotspot_name = f"Hotspot_North_{j+1}"
                     detected_hotspots[hotspot_name] = {"lat": gps_point[0],"lon": gps_point[1]}
         else:
             print(f"[ERROR] Invalid GPS hotspots output: {gps_hotspots.shape} - Data: {gps_hotspots}")
@@ -614,7 +615,7 @@ def main():
         if gps_hotspots.size > 0 and gps_hotspots.shape[1] == 2:
             for gps_point in gps_hotspots:
                 for j, gps_point in enumerate(gps_hotspots):
-                    hotspot_name = f"Hotspot_{i+1}_{j+1}"
+                    hotspot_name = f"Hotspot_east_{j+1}"
                     detected_hotspots[hotspot_name] = {"lat": gps_point[0],"lon": gps_point[1]}
         else:
             print(f"[ERROR] Invalid GPS hotspots output: {gps_hotspots.shape} - Data: {gps_hotspots}")
@@ -663,7 +664,7 @@ def main():
         if gps_hotspots.size > 0 and gps_hotspots.shape[1] == 2:
             for gps_point in gps_hotspots:
                 for j, gps_point in enumerate(gps_hotspots):
-                    hotspot_name = f"Hotspot_{i+1}_{j+1}"
+                    hotspot_name = f"Hotspot_south_{j+1}"
                     detected_hotspots[hotspot_name] = {"lat": gps_point[0],"lon": gps_point[1]}
         else:
             print(f"[ERROR] Invalid GPS hotspots output: {gps_hotspots.shape} - Data: {gps_hotspots}")
@@ -713,7 +714,7 @@ def main():
         if gps_hotspots.size > 0 and gps_hotspots.shape[1] == 2:
             for gps_point in gps_hotspots:
                 for j, gps_point in enumerate(gps_hotspots):
-                    hotspot_name = f"Hotspot_{i+1}_{j+1}"
+                    hotspot_name = f"Hotspot_west_{j+1}"
                     detected_hotspots[hotspot_name] = {"lat": gps_point[0],"lon": gps_point[1]}
         else:
             print(f"[ERROR] Invalid GPS hotspots output: {gps_hotspots.shape} - Data: {gps_hotspots}")
