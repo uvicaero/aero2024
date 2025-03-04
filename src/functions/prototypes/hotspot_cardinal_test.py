@@ -748,7 +748,11 @@ def main():
         detected_hotspot_count += 1
 
     # Save KML file
+    lat, lon, rel_alt, pitch, azimuth = retrieve_gps()
+    output_kml_path = f"data/kml_source_files/hotspot_cardinal_test_{rel_alt}m_{timestamp}.kml"
+    
     os.makedirs(os.path.dirname(output_kml_path), exist_ok=True)
+    
     kml.save(output_kml_path)
 
     # Upload KML file to Google Drive
