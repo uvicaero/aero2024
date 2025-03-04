@@ -513,7 +513,6 @@ def main():
     
     detected_hotspots = {}
     capture_spots = []
-    true_hotspot_points = extract_coordinates_to_dict(subdir, filename)
 
     # Initialize camera
     picam2 = Picamera2()

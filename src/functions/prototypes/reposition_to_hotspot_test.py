@@ -611,6 +611,44 @@ def send_body_offset_local_position(connection, x_offset, y_offset, z_offset):
     )
     print(f"Sent reposition command: x={x_offset}, y={y_offset}, z={z_offset}")
 
+def send_body_offset_local_position(connection, x_offset, y_offset, z_offset):
+    """
+    Sends a SET_POSITION_TARGET_LOCAL_NED command with the MAV_FRAME_BODY_OFFSET_NED frame.
+    
+    This command moves the vehicle relative to its current orientation:
+      - x_offset: forward/backward offset in meters (positive is forward)
+      - y_offset: right/left offset in meters (positive is right)
+      - z_offset: down/up offset in meters (positive is down)
+    
+    Args:
+        connection (mavutil.mavlink_connection): The MAVLink connection object.
+        x_offset (float): Desired offset in the vehicle's forward direction (meters).
+        y_offset (float): Desired offset in the vehicle's right direction (meters).
+        z_offset (float): Desired offset in the vehicle's down direction (meters).
+    """
+    # Bitmask to ignore velocity (bits 3,4,5), acceleration (bits 6,7,8),
+    # yaw (bit 10), and yaw rate (bit 11) fields.
+    type_mask = 0xDF8  # (in decimal, 3576)
+
+    # Get current time in milliseconds (wraps at 2^32)
+    time_boot_ms = int(round(time.time() * 1000)) & 0xFFFFFFFF
+
+    # IMPORTANT: Note the argument order below matches the expected order:
+    # time_boot_ms, target_system, target_component, coordinate_frame, type_mask, ...
+    connection.mav.set_position_target_local_ned_send(
+        time_boot_ms,                                   # time_boot_ms (uint32_t)
+        connection.target_system,                       # target_system (uint8_t)
+        connection.target_component,                    # target_component (uint8_t)
+        mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED,        # coordinate frame (uint8_t)
+        type_mask,                                      # type_mask (uint16_t)
+        x_offset,                                       # x position (meters)
+        y_offset,                                       # y position (meters)
+        z_offset,                                       # z position (meters)
+        0, 0, 0,                                        # vx, vy, vz (ignored)
+        0, 0, 0,                                        # afx, afy, afz (ignored)
+        0, 0                                            # yaw, yaw_rate (ignored)
+    )
+    print(f"Body offset position command sent: x={x_offset}, y={y_offset}, z={z_offset}")
 
 
 def main():
@@ -622,44 +660,16 @@ def main():
     )
     picam2.configure(config)
     picam2.start()
-
-    threshold = 0.5  # Replace with actual threshold value
-
-    # Start test sequence
-    print("\n--- Drone Orientation Test ---")
-    print("Press Enter to move FORWARD (10m)...")
-    input()
-    send_body_offset_local_position(the_connection, 5, 0, 0)
-    time.sleep(5)  # Allow time for movement
-
-    input()
-    reposition_drone_over_hotspot(the_connection, picam2, threshold)
-
-    print("Press Enter to move RIGHT (10m)...")
-    input()
-    send_body_offset_local_position(the_connection, 0, 5, 0)
-    time.sleep(5)
-
-    input()
-    reposition_drone_over_hotspot(the_connection, picam2, threshold)
-
-    print("Press Enter to move BACKWARD (10m)...")
-    input()
-    send_body_offset_local_position(the_connection, -5, 0, 0)
-    time.sleep(5)
-
-    input()
-    send_body_offset_local_position(the_connection, 0, 5, 0)
-    time.sleep(5)  # Allow time for movement
-
-    print("Press Enter to move LEFT (10m)...")
-    input()
-    send_body_offset_local_position(the_connection, 0, -5, 0)
-    time.sleep(5)
-
-    input()
-    send_body_offset_local_position(the_connection, 0, 5, 0)
-    time.sleep(5)  # Allow time for movement
+    
+    for i in range(3):
+    
+        input("Press enter")  # Wait for user to press Enter
+        
+        threshold = 0.5  # Replace with actual threshold value
+        
+        reposition_drone_over_hotspot(the_connection, picam2, threshold)
+        
+        print("Process completed.")
 
 
     picam2.stop()
