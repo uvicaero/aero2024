@@ -611,11 +611,15 @@ def detectBucket(videoLength, camera):
             circles = np.uint16(np.around(circles))
             for i in circles[0, :]:
                 print(f"Detected circle: Center={i[0], i[1]}, Radius={i[2]}")
+                circle_info = (i[0], i[1], i[2])
+                
+                # circle center
                 center = (i[0], i[1])
-                listOfCenters.append(center)
+                cv2.circle(src_display, center, 1, (0, 100, 100), 3)
+                listOfCenters.append(circle_info)
+                # circle outline
                 radius = i[2]
-                cv2.circle(src_display, center, 1, (0, 255, 0), 3)  # Circle center
-                cv2.circle(src_display, center, radius, (255, 0, 255), 3)  # Circle outline
+                cv2.circle(src_display, center, radius, (255, 0, 255), 3)
 
         # Update Matplotlib display
         #im_display.set_data(src_display)
@@ -628,17 +632,36 @@ def detectBucket(videoLength, camera):
 
     return averageCenters(listOfCenters)
 
+# Params: centers - List of all the circles detected and their info [x, y, rad]
+# Return: (x_avg, y_avg) as a Tuple
 def averageCenters(centers):
-    if not centers:
-        return (None, None)  # Return None if no circles detected
+    if len(centers) < 1:
+        return (-1, -1, -1) # error return value
+    
+    radius_values = []
+    for c in centers:
+        radius_values.append(c[2])
 
-    sumX = sum(c[0] for c in centers)
-    sumY = sum(c[1] for c in centers)
-    size = len(centers)
+    rad_max = max(radius_values)
+    rad_max_thresh = rad_max*0.9 # 90% of the max radius
 
-    print(f"Detected {size} circles over time.")
+    x_values = []
+    y_values = []
+    radius_values = []
+    for c in centers:
+        # Not factor in any circles less than the biggest rad
+        if c[2] > rad_max_thresh:
+            x_values.append(c[0])
+            y_values.append(c[1])
+            radius_values.append(c[2])
+    print("Mean: ", rad_max)
+    print("Mean Thresh: ", rad_max_thresh)
 
-    return (int(sumX / size), int(sumY / size))
+    # Possible idea to calculate average again and 
+    # not factor in any values outside of the std dev
+
+    #return (int(np.mean(x_values)), int(np.mean(y_values)), int(np.mean(radius_values))) # Return with radius
+    return (int(np.mean(x_values)), int(np.mean(y_values)))
 
 def main():
     # Initialize camera for main drone operations
