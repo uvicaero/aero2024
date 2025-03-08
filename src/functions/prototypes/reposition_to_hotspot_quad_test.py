@@ -510,16 +510,21 @@ def reposition_drone_over_hotspot(connection, camera, threshold=0.5):
             print("Error retrieving local position.")
             return False
 
+         # Apply proportional control (scaled movement)
+        move_x = k_p * x_offset  # Scale movement
+        move_y = k_p * y_offset
+        move_z = k_p * z_offset
+
         # Convert yaw to radians
         yaw_rad = float(yaw)
 
         # Rotate offsets from body frame to NED frame
-        target_x = current_x + (x_offset * math.cos(yaw_rad) - y_offset * math.sin(yaw_rad))
-        target_y = current_y + (x_offset * math.sin(yaw_rad) + y_offset * math.cos(yaw_rad))
+        target_x = current_x + (move_x * math.cos(yaw_rad) - move_y * math.sin(yaw_rad))
+        target_y = current_y + (move_x * math.sin(yaw_rad) + move_y * math.cos(yaw_rad))
         target_z = current_z + z_offset
         
         # Send reposition command in body-relative frame
-        send_body_offset_local_position(connection, x_offset, y_offset, z_offset)
+        send_body_offset_local_position(connection, move_x, move_y, move_z)
         
         wait_for_position_target_local(connection, target_x, target_y, target_z)
 
