@@ -565,7 +565,7 @@ def main():
     kml.save(output_kml_path)
 
     # Upload KML file to Google Drive
-    upload_kml(output_kml_path, 'https://drive.google.com/drive/folders/1GW56sU4zJuf8If8B6NgVultpZ_C2QT2V')
+    upload_kml(output_kml_path, 'https://drive.google.com/drive/u/0/folders/1Nc0sSJF1-gshAaj4k81v2x1kxkqtnhiA')
     print(f"KML file saved to {output_kml_path}")
 
 if __name__ == "__main__":
