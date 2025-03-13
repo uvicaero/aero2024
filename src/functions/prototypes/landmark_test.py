@@ -427,7 +427,7 @@ def main():
 
     get_gps_points = {}
     for i in range(3):
-        wait_for_switch()
+        input()
         lat, lon, alt = retrieve_gps()
         print(f"Lat: {lat:.8f}, Lon: {lon:.8f}, Alt: {alt:.2f}")
         waypoint_name = f"Waypoint {i+1}"
