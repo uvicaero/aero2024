@@ -20,6 +20,8 @@ rat_x = (sensor_width/focal_length)/2 # ratio of sensor half-width to focal leng
 rat_y = (sensor_height/focal_length)/2 # ditto for sensor half-height
 phi_y = math.atan(rat_y) # 1/2-FOV angle in Y direction at image centre. Will be in radians.
 # note for above: could probably find FOV directly instead
+fov_x_radians = 1.0856
+fov_y_radians = 0.8518
 
 
 # distorted_points: hotspot image points as 2xN numpy array OR comma-separated string of alternating x, y values
@@ -47,20 +49,18 @@ def get_hotspots_gps(distorted_points, cam_x, cam_y, altitude, pitch, azimuth):
  i = 0
  for point in points:
 
-     frac_pixels_y = (point[0][1] - img_half_height) / img_half_height # calculate fraction of the point's pixels-to-centre / total pixels from top edge to centre
      frac_pixels_y = -(point[0][1] - img_half_height) / img_half_height # calculate fraction of the point's pixels-to-centre / total pixels from top edge to centre
      frac_pixels_x = (point[0][0] - img_half_width) / img_half_width
 
      # k corresponds to the y-axis direction from the image, w to the x-axis direction from the image
-     ground_k = altitude/math.tan(-1*pitch+frac_pixels_y*phi_y) # ground distance of camera ground projection to y-coordinate on image
-     full_distance = math.sqrt(altitude*altitude+ground_k*ground_k) # full distance, hypotenuse of ground distance and altitude triangle
-     ground_w = full_distance * rat_x * frac_pixels_x # ground distance of camera ground position to x-coordinate on image
+     y_offset = altitude*math.tan(frac_pixels_y*fov_y_radians*0.5)
+     x_offset = altitude*math.tan(frac_pixels_x*fov_x_radians*0.5)
 
      # rotate using azimuth
      # x corresponds to latitude, y to longitude. need to convert cam GPS to meters for adding.
      # add/subtract may need to be tweaked once we can visualise with real-world data
-     world_x = (cam_x / long_factor) - (ground_k * math.sin(azimuth)) + (ground_w * math.cos(azimuth))
-     world_y = (cam_y / lat_factor) + (ground_k * math.cos(azimuth)) + (ground_w * math.sin(azimuth))
+     world_x = (cam_x / long_factor) + (y_offset * math.sin(azimuth)) + (x_offset * math.cos(azimuth))
+     world_y = (cam_y / lat_factor) + (y_offset * math.cos(azimuth)) - (x_offset * math.sin(azimuth))
 
      # convert from meters to lat/long degrees
      point_lat = lat_factor*world_y
