@@ -65,7 +65,7 @@ def mavlink_listener(the_connection):
                 timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
                 if msg_type == "GLOBAL_POSITION_INT":
-                    latest_gps = (msg.lat / 1e7, msg.lon / 1e7, msg.relative_alt / 1e3)
+                    latest_gps = (msg.lat / 1e7, msg.lon / 1e7, msg.relative_alt / 1e3, msg.vx / 100, msg.vy / 100, msg.vz / 100)
 
                 elif msg_type == "ATTITUDE":
                     latest_attitude = (msg.pitch, msg.roll, msg.yaw)
@@ -114,7 +114,7 @@ def retrieve_gps():
     """
     global latest_gps, latest_attitude
 
-    lat, lon, rel_alt = latest_gps if latest_gps else (None, None, None)
+    lat, lon, rel_alt, vx, vy, vz = latest_gps if latest_gps else (None, None, None)
 
     # Extract only pitch and yaw (ignore roll)
     if latest_attitude:
@@ -122,7 +122,7 @@ def retrieve_gps():
     else:
         pitch, yaw = None, None  # Default values if attitude is missing
 
-    return lat, lon, rel_alt, pitch, yaw
+    return lat, lon, rel_alt, vx, vy, vz, pitch, yaw
 
 def retrieve_local():
     """
@@ -144,30 +144,6 @@ def retrieve_local():
         yaw = None  # Default value if attitude is missing
 
     return x, y, z, vx, vy, vz, yaw
-
-def get_latest_gps(the_connection):
-    """
-    Fetches the latest GPS message from the MAVLink connection.
-    """
-    try:
-        # Flush buffer to remove old messages
-        while True:
-            old_msg = the_connection.recv_match(type='GLOBAL_POSITION_INT', blocking=False)
-            if old_msg is None:
-                break  # Exit loop when buffer is empty
-        # Now, wait for a fresh GPS message
-        msg = the_connection.recv_match(type='GLOBAL_POSITION_INT', blocking=True)
-        
-        if msg:
-            lat = msg.lat / 1e7
-            lon = msg.lon / 1e7
-            alt = msg.alt / 1e3
-            #print(f"Latitude: {lat}, Longitude: {lon}, Altitude: {alt} meters")
-            return lat, lon, alt
-
-    except Exception as e:
-        print(f"Error fetching GPS: {e}")
-        return None, None, None
 
 def wait_for_ack(command):
     """Wait for COMMAND_ACK and verify the result"""
@@ -302,7 +278,7 @@ def extract_coordinates_to_dict(subdir, filename):
     
     return coordinates_dict
 
-def send_set_position_target_global_int(connection, latitude, longitude, altitude, coordinate_frame=11):
+def send_set_position_target_global_int(connection, latitude, longitude, altitude, vel = 2, coordinate_frame=11):
     """
     Sends a SET_POSITION_TARGET_GLOBAL_INT command to reposition the vehicle.
 
@@ -313,18 +289,20 @@ def send_set_position_target_global_int(connection, latitude, longitude, altitud
         altitude (float): Target altitude in meters.
         coordinate_frame (int): MAV_FRAME_GLOBAL_RELATIVE_ALT_INT (default: 6).
     """
+    _, _, _, _, _, _, _, yaw = retrieve_gps()
+
     connection.mav.set_position_target_global_int_send(
         connection.target_system,  # Target system
         connection.target_component,  # Target component
         0,  # Time boot ms (not used)
         coordinate_frame,  # Coordinate frame (relative altitude)
-        0b0000111111111000,  # Type mask (ignore velocity, acceleration, and yaw)
+        0b000111111000,  # Type mask 
         int(latitude * 1e7),  # Latitude in 1E7 degrees
         int(longitude * 1e7),  # Longitude in 1E7 degrees
         altitude,  # Altitude in meters
-        0, 0, 0,  # Velocity (not used)
+        vel, vel, 1.5,  # Velocity (not used)
         0, 0, 0,  # Acceleration (not used)
-        0, 0  # Yaw and yaw rate (not used)
+        yaw, math.radians(20)  # Yaw and yaw rate (not used)
     )
     print(f"Set position target global int sent to ({latitude}, {longitude}, {altitude})")
 
@@ -390,7 +368,6 @@ def wait_for_position_target(connection, target_lat, target_lon, target_alt, thr
                 break
         
         time.sleep(0.5)  # Reduce CPU usage
-
 
 def takeoff(connection, target_alt):
    
@@ -509,7 +486,7 @@ def reposition_drone_over_hotspot(connection, camera, threshold=0.5, k_p=0.8):
     """
     while True:
         # Use the new get_offset (which calls detectBucket) with a 5-second video
-        x_offset, y_offset, z_offset = get_offset(connection, camera, videoLength=5)
+        x_offset, y_offset, z_offset = get_offset(connection, camera, videoLength=0.5)
         if x_offset is None or y_offset is None:
             print("Error retrieving offset")
             return False
@@ -549,12 +526,12 @@ def wait_for_position_target_local(connection, target_x, target_y, target_z, thr
             return True
         time.sleep(interval)
 
-def get_offset(connection, camera, videoLength=1, fov_x=62.2, fov_y=48.8, image_width=1280 , image_height=720):
+def get_offset(connection, camera, videoLength=1, fov_x=102, fov_y=66, image_width=1280 , image_height=720):
     """
     Uses bucket detection to determine the target’s pixel center and calculates
     the corresponding movement offsets based on the camera’s field of view and altitude.
     """
-    lat, lon, rel_alt, pitch, azimuth = retrieve_gps()
+    lat, lon, rel_alt, vx, vy, vz, pitch, azimuth = retrieve_gps()
     if rel_alt is None:
         print("Failed to retrieve relative altitude.")
         return None, None, 0
@@ -711,8 +688,7 @@ def wait_until_reached(connection, target_lat, target_lon, target_alt, tolerance
     stable_start = None
 
     while True:
-        current_lat, current_lon, current_alt, _, _ = retrieve_gps()
-        _, _, _, vx, vy, vz, _ = retrieve_local()
+        current_lat, current_lon, current_alt, vx, vy, vz, _, _ = retrieve_gps()
 
         horizontal_distance = distance_between_gps(current_lat, current_lon, target_lat, target_lon)
         vertical_distance = abs(current_alt - target_alt)
@@ -743,8 +719,7 @@ def wait_until_altitude(target_alt, alt_tolerance=0.5, velocity_threshold=0.2, s
     stable_start = None
 
     while True:
-        _, _, current_alt, _, _ = retrieve_gps()
-        _, _, _, _, _, vz, _ = retrieve_local()
+        _, _, current_alt, _, _, vz, _, _ = retrieve_gps()
 
         vertical_distance = abs(current_alt - target_alt)
         vertical_velocity = abs(vz)
@@ -781,7 +756,7 @@ def main():
     issue_altitude_change_agl(the_connection, 5, 1)
     wait_until_altitude(5)
     #reposition to within 10cm
-    reposition_drone_over_hotspot(the_connection, picam2, 0.1)
+    reposition_drone_over_hotspot(the_connection, picam2, 0.1) 
     issue_altitude_change_agl(the_connection, 2, 1)
     wait_until_altitude(5)
     #reposition to within 5cm
