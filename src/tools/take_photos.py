@@ -19,7 +19,6 @@ elif camera_type == 'wide':
     RESOLUTION = (1280, 720)
     IMAGE_DIR = '/data/calibration_images/wide'
 
-os.makedirs(IMAGE_DIR, exist_ok=True)
 
 # Function to generate an unused filename
 def get_unused_filename(directory, prefix='image', ext='jpg'):
