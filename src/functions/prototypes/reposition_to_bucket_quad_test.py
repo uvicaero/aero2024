@@ -593,7 +593,7 @@ def detectBucket(videoLength, camera):
 
     while timePassed < videoLength:
         # Capture grayscale image directly from PiCamera
-        gray = camera.capture_array("main")
+        gray = cv2.cvtColor(camera.capture_array("main"), cv2.COLOR_BGR2GRAY)
 
         # Apply median blur
         gray = cv2.medianBlur(gray, 5)

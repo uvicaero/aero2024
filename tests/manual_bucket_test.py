@@ -21,6 +21,42 @@ from src.functions.detect_hotspots import detect_hotspots
 from src.functions.get_hotspots_gps import get_hotspots_gps
 import matplotlib.pyplot as plt
 
+# --- Camera Module 3 Wide calibration details ---
+
+# Sensor size (in mm)
+sensor_width = 5.6
+sensor_height = 3.2
+
+# Intrinsic matrix (from calibration)
+camera_matrix = np.array([[841.00476052, 0., 650.92250826],
+                          [0., 841.71812287, 352.50791704],
+                          [0., 0., 1.]])
+
+# Distortion coefficients (from calibration)
+dist_coeffs = np.array([-0.06503654, 0.21176427, -0.0041874, 0.00183475, -0.19964036])
+
+# Derived values
+pixel_size_x = sensor_width / 1280  # mm/px
+pixel_size_y = sensor_height / 720  # mm/px
+
+focal_length_mm_x = camera_matrix[0, 0] * pixel_size_x  # fx in mm
+focal_length_mm_y = camera_matrix[1, 1] * pixel_size_y  # fy in mm
+focal_length = (focal_length_mm_x + focal_length_mm_y) / 2  # average focal length
+
+# Image dimensions
+img_half_width = 1280 / 2
+img_half_height = 720 / 2
+
+# Half FOV angle at image center
+rat_x = (sensor_width / focal_length) / 2
+rat_y = (sensor_height / focal_length) / 2
+
+phi_x = math.atan(rat_x)
+phi_y = math.atan(rat_y)
+
+# Full field of view
+fov_x_radians = 2 * phi_x
+fov_y_radians = 2 * phi_y
 
 def send_heartbeat(the_connection):
     while True:
@@ -483,124 +519,87 @@ def calculate_gps_distances(landmark_points, get_gps_points):
     elif len(gps_list) > num_pairs:
         print(f"?? {len(gps_list) - num_pairs} extra GPS points not compared.")
 
-def reposition_drone_over_hotspot(connection, camera, threshold=0.5, k_p = 0.8):
+def reposition_drone_over_hotspot(connection, camera, threshold=0.5, k_p=0.8):
     """
-    Grabs location based on image,
-    call reposition function untill within acceptable distance from hotspot
+    Grabs the bucket location via bucket detection and repositions the drone until
+    it is within an acceptable distance from the bucket.
     """
     while True:
-        # Capture image from camera
-        image = camera.capture_array()
-
-        x_offset, y_offset, z_offset = get_offset(connection=connection, image=image)
-
+        # Use the new get_offset (which calls detectBucket) with a 5-second video
+        x_offset, y_offset, z_offset = get_offset(connection, camera, videoLength=1)
         if x_offset is None or y_offset is None:
-            print("Error retreiving offset")
+            print("Error retrieving offset")
             return False
         
         distance = math.sqrt(x_offset**2 + y_offset**2)
-        print(f"Distance to target: {distance:.2f} meters")
-
+        print(f"Distance to target: {distance:.2f} m")
         if distance < threshold:
             return True
         
         current_x, current_y, current_z, _, _, _, yaw = retrieve_local()
-        
         if current_x is None or current_y is None or current_z is None:
             print("Error retrieving local position.")
             return False
 
-         # Apply proportional control (scaled movement)
-        move_x = k_p * x_offset  # Scale movement
+        move_x = k_p * x_offset
         move_y = k_p * y_offset
         move_z = k_p * z_offset
-
-        # Convert yaw to radians
         yaw_rad = float(yaw)
-
-        # Rotate offsets from body frame to NED frame
         target_x = current_x + (move_x * math.cos(yaw_rad) - move_y * math.sin(yaw_rad))
         target_y = current_y + (move_x * math.sin(yaw_rad) + move_y * math.cos(yaw_rad))
         target_z = current_z + z_offset
         
-        # Send reposition command in body-relative frame
         send_body_offset_local_position(connection, move_x, move_y, move_z)
-        
         wait_for_position_target_local(connection, target_x, target_y, target_z)
 
-def wait_for_position_target_local(connection, target_x, target_y, target_z, threshold=0.5,interval=0.5, speed_threshold=0.05):
-    #Do Stuff to check current local position and compare it to target
+def wait_for_position_target_local(connection, target_x, target_y, target_z, threshold=0.5, interval=0.5, speed_threshold=0.05):
     while True:
-
         updated_x, updated_y, updated_z, vx, vy, vz, _ = retrieve_local()
         speed = math.sqrt(vx**2 + vy**2 + vz**2)
-
         x_distance = abs(updated_x - target_x)
         y_distance = abs(updated_y - target_y)
         z_distance = abs(updated_z - target_z)
-
         distance = math.sqrt(x_distance**2 + y_distance**2 + z_distance**2)
-        print(f"[DEBUG] Distance to target: {distance:.2f}m, Speed: {speed:.2f}m/s")
-
-        # Check if the drone is within the threshold and moving slowly enough
+        print(f"[DEBUG] Distance to target: {distance:.2f} m, Speed: {speed:.2f} m/s")
         if distance < threshold and speed < speed_threshold:
             print("[SUCCESS] Target position reached.")
             return True
-        
         time.sleep(interval)
 
-def get_offset(connection, image, fov_x=62.2, fov_y=48.8, image_width=3280, image_height=2464):
+def get_offset(connection, camera, videoLength=1, fov_x=62.2, fov_y=48.8, image_width=1280 , image_height=720):
     """
-    Detects a hotspot in the image, estimates its offset from the drone
+    Uses bucket detection to determine the target’s pixel center and calculates
+    the corresponding movement offsets based on the camera’s field of view and altitude.
     """
-    # Get altitude relative to ground (AGL)
     lat, lon, rel_alt, pitch, azimuth = retrieve_gps()
     if rel_alt is None:
         print("Failed to retrieve relative altitude.")
         return None, None, 0
-    
-    # Convert to grayscale
-    gray_image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-    
-    # Detect hotspots
-    hotspots = detect_hotspots(gray_image, threshold=0.9)
-    if hotspots is None or len(hotspots) == 0:
-        print("No hotspots detected.")
-        return None, None, 0 
-    
-    # Assume the largest detected hotspot is the target
-    target_hotspot = hotspots[0]  # Selecting the first hotspot detected
-    print(f"Detected hotspot at: {target_hotspot}")
-    
-    # Convert image coordinates to movement offsets
+    center = detectBucket(videoLength, camera)
+    if center == (None, None):
+        print("No circles detected.")
+        return None, None, 0
+    target_hotspot = center
+    # Undistort the center point
+    dist_center = np.array(center, dtype=np.float32).reshape(-1, 1, 2)
+    undist_center = cv2.undistortPoints(dist_center, camera_matrix, dist_coeffs, P=camera_matrix)
+    x_undist, y_undist = undist_center[0][0]
+    print(f"Detected averaged center: {target_hotspot}")
     img_center_x = image_width / 2
     img_center_y = image_height / 2
-    
-    # Compute meters per pixel scale dynamically based on altitude
-    fov_x_rad = math.radians(fov_x)
-    fov_y_rad = math.radians(fov_y)
-    meters_per_pixel_x = (2 * rel_alt * math.tan(fov_x_rad / 2)) / image_width
-    meters_per_pixel_y = (2 * rel_alt * math.tan(fov_y_rad / 2)) / image_height
-    
-    x_offset = -(target_hotspot[1] - img_center_y) * meters_per_pixel_y  # Forward/Backward (NED X)
-    y_offset = (target_hotspot[0] - img_center_x) * meters_per_pixel_x  # Left/Right (NED Y)
+    meters_per_pixel_x = (2 * rel_alt * math.tan(fov_x_radians / 2)) / image_width
+    meters_per_pixel_y = (2 * rel_alt * math.tan(fov_y_radians / 2)) / image_height
+    x_offset = -(y_undist - img_center_y) * meters_per_pixel_y
+    y_offset = (x_undist - img_center_x) * meters_per_pixel_x
     z_offset = 0
-
-    print(f"Offset to hotspot: {x_offset:.2f}m forward/backward, {y_offset:.2f}m right/left")
-
+    print(f"Offset to bucket: {x_offset:.2f} m forward/backward, {y_offset:.2f} m right/left")
     return x_offset, y_offset, z_offset
 
 def send_body_offset_local_position(connection, x_offset, y_offset, z_offset):
-    """
-    Sends a SET_POSITION_TARGET_LOCAL_NED command to reposition the vehicle.
-    """
     time_boot_ms = int(round(time.time() * 1000)) & 0xFFFFFFFF
-    
-    # Ensure offsets are floats
     x_offset = float(x_offset)
     y_offset = float(y_offset)
     z_offset = float(z_offset)
-    
     connection.mav.set_position_target_local_ned_send(
         time_boot_ms,
         connection.target_system,
@@ -616,58 +615,113 @@ def send_body_offset_local_position(connection, x_offset, y_offset, z_offset):
     )
     print(f"Sent reposition command: x={x_offset}, y={y_offset}, z={z_offset}")
 
+def detectBucket(videoLength, camera):
+    print("Detection Started")
+    start = time.time()
+    timePassed = 0
 
+    listOfCenters = []
+
+
+    # Set up Matplotlib interactive mode
+    #plt.ion()
+    #fig, ax = plt.subplots()
+    #im_display = ax.imshow(np.zeros((480, 640), dtype=np.uint8), cmap="gray")  # Empty image placeholder
+    #plt.axis("off")  # Hide axes
+
+    while timePassed < videoLength:
+        # Capture grayscale image directly from PiCamera
+        gray = cv2.cvtColor(camera.capture_array("main"), cv2.COLOR_BGR2GRAY)
+
+        # Apply median blur
+        gray = cv2.medianBlur(gray, 5)
+
+        # Detect circles using HoughCircles
+        rows = gray.shape[0]
+        circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT_ALT, dp=1.5, minDist=rows / 8,
+                                  param1=300, param2=0.92,
+                                  minRadius=0, maxRadius=0)
+
+        # Convert grayscale to 3-channel image for drawing circles
+        src_display = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+
+        if circles is not None:
+            circles = np.uint16(np.around(circles))
+            for i in circles[0, :]:
+                print(f"Detected circle: Center={i[0], i[1]}, Radius={i[2]}")
+                circle_info = (i[0], i[1], i[2])
+                
+                # circle center
+                center = (i[0], i[1])
+                cv2.circle(src_display, center, 1, (0, 100, 100), 3)
+                listOfCenters.append(circle_info)
+                # circle outline
+                radius = i[2]
+                cv2.circle(src_display, center, radius, (255, 0, 255), 3)
+
+        # Update Matplotlib display
+        #im_display.set_data(src_display)
+        #plt.pause(0.01)  # Allow time for the image to refresh
+
+        # Update time
+        timePassed = time.time() - start
+    #plt.ioff()  # Turn off interactive mode
+    #plt.show()  # Show final frame
+
+    return averageCenters(listOfCenters)
+
+# Params: centers - List of all the circles detected and their info [x, y, rad]
+# Return: (x_avg, y_avg) as a Tuple
+def averageCenters(centers):
+    if len(centers) < 1:
+        return (-1, -1, -1) # error return value
+    
+    radius_values = []
+    for c in centers:
+        radius_values.append(c[2])
+
+    rad_max = max(radius_values)
+    rad_max_thresh = rad_max*0.9 # 90% of the max radius
+
+    x_values = []
+    y_values = []
+    radius_values = []
+    for c in centers:
+        # Not factor in any circles less than the biggest rad
+        if c[2] > rad_max_thresh:
+            x_values.append(c[0])
+            y_values.append(c[1])
+            radius_values.append(c[2])
+    print("Mean: ", rad_max)
+    print("Mean Thresh: ", rad_max_thresh)
+
+    # Possible idea to calculate average again and 
+    # not factor in any values outside of the std dev
+
+    #return (int(np.mean(x_values)), int(np.mean(y_values)), int(np.mean(radius_values))) # Return with radius
+    return (int(np.mean(x_values)), int(np.mean(y_values)))
 
 def main():
-
-    # Initialize camera
+    # Initialize camera for main drone operations
     picam2 = Picamera2()
     config = picam2.create_still_configuration(
-        main={"format": "RGB888", "size": (3280, 2464)}  # Maximum resolution
+        main={"format": "RGB888", "size": (1280 , 720 )}
     )
     picam2.configure(config)
     picam2.start()
 
-    threshold = 0.02  # Replace with actual threshold value
+    threshold = 0.5  # Replace with an appropriate threshold
 
-    # Start test sequence
-    print("\n--- Drone Orientation Test ---")
-    print("Press Enter to move FORWARD (10m)...")
-    #input()
-    #send_body_offset_local_position(the_connection, 5, 0, 0)
-    #time.sleep(5)  # Allow time for movement
+    while True:
+        user_input = input(f"Press Enter to relocate over bucket (or type 's' to finish)...")
+        
+        if user_input.lower() == "s":
+            print("Stopping relocation capture.")
+            break  # Exit the loop
 
-    input()
-    reposition_drone_over_hotspot(the_connection, picam2, threshold)
-
-    #print("Press Enter to move RIGHT (10m)...")
-    #input()
-    #send_body_offset_local_position(the_connection, 0, 5, 0)
-    #time.sleep(5)
-
-    input()
-    reposition_drone_over_hotspot(the_connection, picam2, threshold)
-
-    #print("Press Enter to move BACKWARD (10m)...")
-    #input()
-    #send_body_offset_local_position(the_connection, -5, 0, 0)
-    #time.sleep(5)
-
-    input()
-    reposition_drone_over_hotspot(the_connection, picam2, threshold)
-
-    #print("Press Enter to move LEFT (10m)...")
-    #input()
-    #send_body_offset_local_position(the_connection, 0, -5, 0)
-    #time.sleep(5)
-
-    input()
-    reposition_drone_over_hotspot(the_connection, picam2, threshold)
-    #time.sleep(5)  # Allow time for movement
-
+        reposition_drone_over_hotspot(the_connection, picam2, 0.03, 0.7)
 
     picam2.stop()
-
 
 if __name__ == "__main__":
     main()

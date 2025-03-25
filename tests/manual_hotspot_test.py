@@ -33,31 +33,33 @@ def send_heartbeat(the_connection):
         )
         time.sleep(1)  # Send heartbeat every second
 
-import time
-import datetime
+latest_gps = None
 
-latest_gps = None  # Stores latest GPS data (lat, lon, alt)
 latest_attitude = None  # Stores latest attitude data (pitch, roll, yaw)
-latest_local = None  # Stores latest LOCAL_POSITION_NED data (x, y, z)
-
-latest_local = None  # Now stores (x, y, z, vx, vy, vz)
 
 def mavlink_listener(the_connection):
-    global latest_gps, latest_attitude, latest_local
-    toggle_state = 0  # 0: GPS, 1: Attitude, 2: Local Position
+    """
+    Single background thread that alternates between listening for GPS and Attitude messages.
+    Updates `latest_gps` and `latest_attitude` whenever new data is received.
+    """
+    global latest_gps, latest_attitude
+
+    #print("[DEBUG] MAVLink Listener thread started.")
+
+    gps_toggle = True  # Toggle flag to alternate between GPS and Attitude
 
     while True:
         try:
             if not the_connection or not the_connection.port:
+                #print("[ERROR] MAVLink connection lost. Retrying in 2 seconds...")
                 time.sleep(2)
-                continue
+                continue  # Skip iteration until connection is restored
 
-            if toggle_state == 0:
+            # Alternate between fetching GPS and Attitude
+            if gps_toggle:
                 msg_type = "GLOBAL_POSITION_INT"
-            elif toggle_state == 1:
-                msg_type = "ATTITUDE"
             else:
-                msg_type = "LOCAL_POSITION_NED"
+                msg_type = "ATTITUDE"
 
             msg = the_connection.recv_match(type=msg_type, blocking=True, timeout=5)
 
@@ -66,21 +68,22 @@ def mavlink_listener(the_connection):
 
                 if msg_type == "GLOBAL_POSITION_INT":
                     latest_gps = (msg.lat / 1e7, msg.lon / 1e7, msg.relative_alt / 1e3)
+                    #print(f"[DEBUG] {timestamp} - GPS Update: Lat={latest_gps[0]}, Lon={latest_gps[1]}, Alt={latest_gps[2]}m")
 
                 elif msg_type == "ATTITUDE":
                     latest_attitude = (msg.pitch, msg.roll, msg.yaw)
+                    #print(f"[DEBUG] {timestamp} - Attitude Update: Pitch={latest_attitude[0]} rad, Roll={latest_attitude[1]} rad, Azimuth={latest_attitude[2]} rad")
 
-                elif msg_type == "LOCAL_POSITION_NED":
-                    latest_local = (msg.x, msg.y, msg.z, msg.vx, msg.vy, msg.vz)
-
-                toggle_state = (toggle_state + 1) % 3  # Cycle through states
+                gps_toggle = not gps_toggle  # Flip flag to fetch the other message type next time
 
             else:
                 print(f"[WARNING] No {msg_type} data received within timeout (5s). Retrying...")
 
         except Exception as e:
             print(f"[ERROR] Exception in MAVLink Listener: {e}")
-            time.sleep(2)
+            time.sleep(2)  # Prevent excessive logging
+
+
 
 # Connect to the MAVLink device via USB (replace with your actual port)
 the_connection = mavutil.mavlink_connection('/dev/serial0', baud=57600)
@@ -123,27 +126,6 @@ def retrieve_gps():
         pitch, yaw = None, None  # Default values if attitude is missing
 
     return lat, lon, rel_alt, pitch, yaw
-
-def retrieve_local():
-    """
-    Retrieves the most recent local position, velocity, and yaw.
-    Returns (x, y, z, vx, vy, vz, yaw).
-    """
-    global latest_local, latest_attitude
-
-    # Extract latest local position and velocity (x, y, z, vx, vy, vz)
-    if latest_local:
-        x, y, z, vx, vy, vz = latest_local
-    else:
-        x, y, z, vx, vy, vz = None, None, None, None, None, None
-
-    # Extract yaw from latest attitude (ignore pitch and roll)
-    if latest_attitude:
-        _, _, yaw = latest_attitude  # Ignore pitch and roll
-    else:
-        yaw = None  # Default value if attitude is missing
-
-    return x, y, z, vx, vy, vz, yaw
 
 def get_latest_gps(the_connection):
     """
@@ -483,142 +465,15 @@ def calculate_gps_distances(landmark_points, get_gps_points):
     elif len(gps_list) > num_pairs:
         print(f"?? {len(gps_list) - num_pairs} extra GPS points not compared.")
 
-def reposition_drone_over_hotspot(connection, camera, threshold=0.5, k_p = 0.8):
-    """
-    Grabs location based on image,
-    call reposition function untill within acceptable distance from hotspot
-    """
-    while True:
-        # Capture image from camera
-        image = camera.capture_array()
-
-        x_offset, y_offset, z_offset = get_offset(connection=connection, image=image)
-
-        if x_offset is None or y_offset is None:
-            print("Error retreiving offset")
-            return False
-        
-        distance = math.sqrt(x_offset**2 + y_offset**2)
-        print(f"Distance to target: {distance:.2f} meters")
-
-        if distance < threshold:
-            return True
-        
-        current_x, current_y, current_z, _, _, _, yaw = retrieve_local()
-        
-        if current_x is None or current_y is None or current_z is None:
-            print("Error retrieving local position.")
-            return False
-
-         # Apply proportional control (scaled movement)
-        move_x = k_p * x_offset  # Scale movement
-        move_y = k_p * y_offset
-        move_z = k_p * z_offset
-
-        # Convert yaw to radians
-        yaw_rad = float(yaw)
-
-        # Rotate offsets from body frame to NED frame
-        target_x = current_x + (move_x * math.cos(yaw_rad) - move_y * math.sin(yaw_rad))
-        target_y = current_y + (move_x * math.sin(yaw_rad) + move_y * math.cos(yaw_rad))
-        target_z = current_z + z_offset
-        
-        # Send reposition command in body-relative frame
-        send_body_offset_local_position(connection, move_x, move_y, move_z)
-        
-        wait_for_position_target_local(connection, target_x, target_y, target_z)
-
-def wait_for_position_target_local(connection, target_x, target_y, target_z, threshold=0.5,interval=0.5, speed_threshold=0.05):
-    #Do Stuff to check current local position and compare it to target
-    while True:
-
-        updated_x, updated_y, updated_z, vx, vy, vz, _ = retrieve_local()
-        speed = math.sqrt(vx**2 + vy**2 + vz**2)
-
-        x_distance = abs(updated_x - target_x)
-        y_distance = abs(updated_y - target_y)
-        z_distance = abs(updated_z - target_z)
-
-        distance = math.sqrt(x_distance**2 + y_distance**2 + z_distance**2)
-        print(f"[DEBUG] Distance to target: {distance:.2f}m, Speed: {speed:.2f}m/s")
-
-        # Check if the drone is within the threshold and moving slowly enough
-        if distance < threshold and speed < speed_threshold:
-            print("[SUCCESS] Target position reached.")
-            return True
-        
-        time.sleep(interval)
-
-def get_offset(connection, image, fov_x=62.2, fov_y=48.8, image_width=3280, image_height=2464):
-    """
-    Detects a hotspot in the image, estimates its offset from the drone
-    """
-    # Get altitude relative to ground (AGL)
-    lat, lon, rel_alt, pitch, azimuth = retrieve_gps()
-    if rel_alt is None:
-        print("Failed to retrieve relative altitude.")
-        return None, None, 0
-    
-    # Convert to grayscale
-    gray_image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-    
-    # Detect hotspots
-    hotspots = detect_hotspots(gray_image, threshold=0.9)
-    if hotspots is None or len(hotspots) == 0:
-        print("No hotspots detected.")
-        return None, None, 0 
-    
-    # Assume the largest detected hotspot is the target
-    target_hotspot = hotspots[0]  # Selecting the first hotspot detected
-    print(f"Detected hotspot at: {target_hotspot}")
-    
-    # Convert image coordinates to movement offsets
-    img_center_x = image_width / 2
-    img_center_y = image_height / 2
-    
-    # Compute meters per pixel scale dynamically based on altitude
-    fov_x_rad = math.radians(fov_x)
-    fov_y_rad = math.radians(fov_y)
-    meters_per_pixel_x = (2 * rel_alt * math.tan(fov_x_rad / 2)) / image_width
-    meters_per_pixel_y = (2 * rel_alt * math.tan(fov_y_rad / 2)) / image_height
-    
-    x_offset = -(target_hotspot[1] - img_center_y) * meters_per_pixel_y  # Forward/Backward (NED X)
-    y_offset = (target_hotspot[0] - img_center_x) * meters_per_pixel_x  # Left/Right (NED Y)
-    z_offset = 0
-
-    print(f"Offset to hotspot: {x_offset:.2f}m forward/backward, {y_offset:.2f}m right/left")
-
-    return x_offset, y_offset, z_offset
-
-def send_body_offset_local_position(connection, x_offset, y_offset, z_offset):
-    """
-    Sends a SET_POSITION_TARGET_LOCAL_NED command to reposition the vehicle.
-    """
-    time_boot_ms = int(round(time.time() * 1000)) & 0xFFFFFFFF
-    
-    # Ensure offsets are floats
-    x_offset = float(x_offset)
-    y_offset = float(y_offset)
-    z_offset = float(z_offset)
-    
-    connection.mav.set_position_target_local_ned_send(
-        time_boot_ms,
-        connection.target_system,
-        connection.target_component,
-        mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED,
-        0b100111111000,
-        x_offset,
-        y_offset,
-        z_offset,
-        0, 0, 0,
-        0, 0, 0,
-        0, 0
-    )
-    print(f"Sent reposition command: x={x_offset}, y={y_offset}, z={z_offset}")
-
-
-
 def main():
+    # Timestamp for KML output
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_kml_path = f"data/kml_source_files/manual_hotspot_test_{timestamp}.kml"
+    
+    subdir = "data/kml_source_files"
+
+    detected_hotspots = {}
+    capture_spots = []
 
     # Initialize camera
     picam2 = Picamera2()
@@ -628,46 +483,90 @@ def main():
     picam2.configure(config)
     picam2.start()
 
-    threshold = 0.02  # Replace with actual threshold value
+    print("\nReady to capture images for hotspot detection.")
+    print("Press Enter to capture each image.\n")
+    i = 0  # Counter for images
+    while True:
+        user_input = input(f"Press Enter to capture image {i + 1} (or type 's' to finish)...")
+        
+        if user_input.lower() == "s":
+            print("Stopping image capture.")
+            break  # Exit the loop
 
-    # Start test sequence
-    print("\n--- Drone Orientation Test ---")
-    print("Press Enter to move FORWARD (10m)...")
-    #input()
-    #send_body_offset_local_position(the_connection, 5, 0, 0)
-    #time.sleep(5)  # Allow time for movement
+        print("\nCapturing image...")
+        rgb_image = picam2.capture_array("main")
+        gray_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
 
-    input()
-    reposition_drone_over_hotspot(the_connection, picam2, threshold)
+        # Get current GPS location, altitude, pitch, and azimuth
+        lat, lon, rel_alt, pitch, azimuth = retrieve_gps()
+        capture_spots.append({"lat": lat, "lon": lon})
+        print(f"GPS: lat={lat}, lon={lon}, rel_alt={rel_alt}m, pitch={pitch} rad, azimuth={azimuth} rad")
 
-    #print("Press Enter to move RIGHT (10m)...")
-    #input()
-    #send_body_offset_local_position(the_connection, 0, 5, 0)
-    #time.sleep(5)
+        print("Running hotspot detection...")
+        hotspots = detect_hotspots(gray_image, threshold=0.9)
 
-    input()
-    reposition_drone_over_hotspot(the_connection, picam2, threshold)
+        # Display the image with detected hotspots
+        plt.figure(figsize=(6, 5))
+        plt.imshow(gray_image, cmap="gray")
+        plt.axis("off")
 
-    #print("Press Enter to move BACKWARD (10m)...")
-    #input()
-    #send_body_offset_local_position(the_connection, -5, 0, 0)
-    #time.sleep(5)
+        if hotspots.size > 0:
+            plt.scatter(hotspots[:, 0], hotspots[:, 1], color='red', marker='x', label="Detected Hotspots")
 
-    input()
-    reposition_drone_over_hotspot(the_connection, picam2, threshold)
+        plt.legend()
+        plt.title(f"Hotspots Detected in Image {i + 1}")
+        plt.show()  # Show the preview
 
-    #print("Press Enter to move LEFT (10m)...")
-    #input()
-    #send_body_offset_local_position(the_connection, 0, -5, 0)
-    #time.sleep(5)
+        # Map hotspots to GPS coordinates using `get_hotspots_gps`
+        if hotspots.size > 0:
+            distorted_points = np.array([[x, y] for x, y in hotspots], dtype=np.float32)
+            camera_pitch = pitch - math.radians(90)
+            gps_hotspots = get_hotspots_gps(distorted_points, lon, lat, rel_alt, camera_pitch, azimuth)
 
-    input()
-    reposition_drone_over_hotspot(the_connection, picam2, threshold)
-    #time.sleep(5)  # Allow time for movement
+            # Ensure output shape is (N,2)
+            gps_hotspots = gps_hotspots.reshape(-1, 2) if gps_hotspots.ndim > 2 else gps_hotspots
 
+            # Validate before appending
+            if gps_hotspots.size > 0 and gps_hotspots.shape[1] == 2:
+                for j, gps_point in enumerate(gps_hotspots):
+                    hotspot_name = f"Hotspot_{i+1}_{j+1}"
+                    detected_hotspots[hotspot_name] = {"lat": gps_point[0], "lon": gps_point[1]}
+            else:
+                print(f"[ERROR] Invalid GPS hotspots output: {gps_hotspots.shape} - Data: {gps_hotspots}")
+
+        print(f"Image {i + 1} processed.\n")
+        i += 1  # Increment image count
 
     picam2.stop()
+    
+    print(f"[DEBUG] Detected Hotspots: {detected_hotspots}")
 
+    # Define icon URLs for visualization
+    hotspot_icon = "http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png"
+    gps_icon = "http://maps.google.com/mapfiles/kml/pushpin/blu-pushpin.png"
+
+    # Generate KML file
+    kml = simplekml.Kml()
+    
+    # Plot capture points
+    for i, point in enumerate(capture_spots, start=1):
+        pnt = kml.newpoint(name=f"Capture point {i}", coords=[(point["lon"], point["lat"], 0)])  # Lon, Lat, Alt
+        pnt.style.iconstyle.icon.href = gps_icon
+    
+    detected_hotspot_count = 1
+    # Plot detected hotspots
+    for marker_name, coords in detected_hotspots.items():
+        pnt = kml.newpoint(name=f"Detected Hotspot {detected_hotspot_count}", coords=[(coords["lon"], coords["lat"], 0)])  # Lon, Lat, Alt
+        pnt.style.iconstyle.icon.href = hotspot_icon
+        detected_hotspot_count += 1
+
+    # Save KML file
+    os.makedirs(os.path.dirname(output_kml_path), exist_ok=True)
+    kml.save(output_kml_path)
+
+    # Upload KML file to Google Drive
+    upload_kml(output_kml_path, 'https://drive.google.com/drive/u/0/folders/1Nc0sSJF1-gshAaj4k81v2x1kxkqtnhiA')
+    print(f"KML file saved to {output_kml_path}")
 
 if __name__ == "__main__":
     main()

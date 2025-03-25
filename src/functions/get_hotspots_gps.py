@@ -9,17 +9,26 @@ long_factor = 1/71546.90282746412 # 1 degree of longitude per that many meters, 
 
 sensor_width = 3.674 # sensor width in mm 
 sensor_height = 2.760 # sensor height in mm
-camera_matrix = np.array([[2398.54998, 0., 1696.02043],
-                            [0., 2406.88752, 1322.32359],
-                            [0., 0., 1.]]) # from cam calibration
-dist_coeffs = np.array([0.220794232, -0.522929233, -0.000112948804, 0.00213028546, 0.292007192]) # from cam calibration
-focal_length = 3.04 #in mm. camera_matrix[0][0] camera focal length in units from calibration. USUALLY. but calibration needs work
+# camera_matrix = np.array([[2398.54998, 0., 1696.02043],
+#                          [0., 2406.88752, 1322.32359],
+#                          [0., 0., 1.]]) # from cam calibration
+camera_matrix = np.array([[2594.41327, 0., 1676.02864],
+                         [0., 2588.72278, 1269.79813],
+                         [0., 0., 1.]]) # from cam calibration
+
+# dist_coeffs = np.array([0.220794232, -0.522929233, -0.000112948804, 0.00213028546, 0.292007192]) # from cam calibration
+dist_coeffs = np.array([0.134406320, 0.0713514047, 0.000213103847, 0.00544771710, -1.18013691]) # from cam calibration
+pixel_size_x = 3.68 / 3280  # mm/px sensor width over pixel width
+focal_length_mm = 2594.41327 * pixel_size_x
+focal_length = focal_length_mm #3.04 #in mm. camera_matrix[0][0] camera focal length in units from calibration. USUALLY. but calibration needs work
 img_half_height = 2464 / 2 # number of pixels from centre of image to top of image
 img_half_width = 3280 / 2 # number of pixels from centre to side of image
 rat_x = (sensor_width/focal_length)/2 # ratio of sensor half-width to focal length (at image centre)
 rat_y = (sensor_height/focal_length)/2 # ditto for sensor half-height
 phi_y = math.atan(rat_y) # 1/2-FOV angle in Y direction at image centre. Will be in radians.
 # note for above: could probably find FOV directly instead
+fov_x_radians = 1.0856
+fov_y_radians = 0.8518
 
 
 # distorted_points: hotspot image points as 2xN numpy array OR comma-separated string of alternating x, y values
@@ -29,77 +38,66 @@ phi_y = math.atan(rat_y) # 1/2-FOV angle in Y direction at image centre. Will be
 # returns an array containing the latitude and longitude of each hotspot
 def get_hotspots_gps(distorted_points, cam_x, cam_y, altitude, pitch, azimuth):
 
-    # undistort the points
-    if isinstance(distorted_points, str):
-        dist_pts = np.fromstring(distorted_points, sep=", ").reshape((-1, 2))
-    else:
-        dist_pts = distorted_points
-    # Ensure the correct shape for OpenCV function
-    if len(dist_pts.shape) == 2 and dist_pts.shape[1] == 2:
-        dist_pts = dist_pts.reshape(-1, 1, 2)  # Reshape to (N, 1, 2)
-    else:
-        print(f"Invalid shape for undistortion: {dist_pts.shape}")
-        return np.array([])  # Return empty array to prevent further errors
+ # undistort the points
+ if isinstance(distorted_points, str):
+     dist_pts = np.fromstring(distorted_points, sep=", ").reshape((-1, 2))
+ else:
+     dist_pts = distorted_points
+ # Ensure the correct shape for OpenCV function
+ if len(dist_pts.shape) == 2 and dist_pts.shape[1] == 2:
+     dist_pts = dist_pts.reshape(-1, 1, 2)  # Reshape to (N, 1, 2)
+ else:
+     print(f"Invalid shape for undistortion: {dist_pts.shape}")
+     return np.array([])  # Return empty array to prevent further errors
 
-    points = cv.undistortImagePoints(dist_pts, camera_matrix, dist_coeffs)
-    projected = np.zeros(points.shape, np.float64)
+ points = cv.undistortImagePoints(dist_pts, camera_matrix, dist_coeffs)
+ projected = np.zeros(points.shape, np.float64)
 
-    i = 0
-    for point in points:
+ i = 0
+ for point in points:
 
-        frac_pixels_y = -(point[0][1] - img_half_height) / img_half_height # calculate fraction of the point's pixels-to-centre / total pixels from top edge to centre
-        frac_pixels_x = (point[0][0] - img_half_width) / img_half_width
+     frac_pixels_y = -(point[0][1] - img_half_height) / img_half_height # calculate fraction of the point's pixels-to-centre / total pixels from top edge to centre
+     frac_pixels_x = (point[0][0] - img_half_width) / img_half_width
 
-        # # k corresponds to the y-axis direction from the image, w to the x-axis direction from the image
-        # ground_k = altitude/math.tan(-1*pitch+frac_pixels_y*phi_y) # ground distance of camera ground projection to y-coordinate on image
-        # full_distance = math.sqrt(altitude*altitude+ground_k*ground_k) # full distance, hypotenuse of ground distance and altitude triangle
-        # ground_w = full_distance * rat_x * frac_pixels_x # ground distance of camera ground position to x-coordinate on image
+     # k corresponds to the y-axis direction from the image, w to the x-axis direction from the image
+     y_offset = altitude*math.tan(frac_pixels_y*fov_y_radians*0.5)
+     x_offset = altitude*math.tan(frac_pixels_x*fov_x_radians*0.5)
 
-        # Compute `ground_k` (forward ground distance)
-        ground_k = altitude * math.tan(pitch + frac_pixels_y * phi_y)
+     # rotate using azimuth
+     # x corresponds to latitude, y to longitude. need to convert cam GPS to meters for adding.
+     # add/subtract may need to be tweaked once we can visualise with real-world data
+     world_x = (cam_x / long_factor) + (y_offset * math.sin(azimuth)) + (x_offset * math.cos(azimuth))
+     world_y = (cam_y / lat_factor) + (y_offset * math.cos(azimuth)) - (x_offset * math.sin(azimuth))
 
-        # Compute the ground displacement angle
-        ground_angle = math.atan2(frac_pixels_x, -frac_pixels_y)  # Flip Y-axis
+     # convert from meters to lat/long degrees
+     point_lat = lat_factor*world_y
+     point_long = long_factor*world_x
 
-        # Compute `ground_w` using the correct angle
-        ground_w = ground_k * math.tan(ground_angle)
+     projected[i] = [point_lat, point_long]
+     i += 1
 
-        # rotate using azimuth
-        # x corresponds to latitude, y to longitude. need to convert cam GPS to meters for adding.
-        # add/subtract may need to be tweaked once we can visualise with real-world data
-        world_x = (cam_x / long_factor) + (ground_k * math.cos(azimuth)) - (ground_w * math.sin(azimuth))
-        world_y = (cam_y / lat_factor) + (ground_k * math.sin(azimuth)) + (ground_w * math.cos(azimuth))
-
-        
-        # convert from meters to lat/long degrees
-        point_lat = lat_factor*world_y
-        point_long = long_factor*world_x
-
-        projected[i] = [point_lat, point_long]
-        i += 1
-        
-    print(f"Projected shape: {projected.shape}")
-    print(f"Projected data: {projected}")
+ print(f"Projected shape: {projected.shape}")
+ print(f"Projected data: {projected}")
 
 
-    return projected
+ return projected
 
 def main():
 
-    parser = argparse.ArgumentParser()
+ parser = argparse.ArgumentParser()
 
-    parser.add_argument('--distorted_points', type=str, required=True, help='1D string with list of image points eg "x1, y1, x2, y2"')
-    parser.add_argument('--cam_x', type=float, required=True, help='Latitude of camera')
-    parser.add_argument('--cam_y', type=float, required=True, help='Longitude of camera')
-    parser.add_argument('--altitude', type=float, required=True, help='Altitude of camera in meters')
-    parser.add_argument('--pitch', type=float, default=0.0, help='Pitch of camera (radians from horizontal)')
-    parser.add_argument('--azimuth', type=float, default=0.0, help='Azimuth of camera (radians clockwise from N)')
-    
-    args = parser.parse_args()
+ parser.add_argument('--distorted_points', type=str, required=True, help='1D string with list of image points eg "x1, y1, x2, y2"')
+ parser.add_argument('--cam_x', type=float, required=True, help='Latitude of camera')
+ parser.add_argument('--cam_y', type=float, required=True, help='Longitude of camera')
+ parser.add_argument('--altitude', type=float, required=True, help='Altitude of camera in meters')
+ parser.add_argument('--pitch', type=float, default=0.0, help='Pitch of camera (radians from horizontal)')
+ parser.add_argument('--azimuth', type=float, default=0.0, help='Azimuth of camera (radians clockwise from N)')
 
-    result = get_hotspots_gps(**vars(args))
-    print(result)
+ args = parser.parse_args()
+
+ result = get_hotspots_gps(**vars(args))
+ print(result)
 
 
 if __name__ == "__main__":
-    main()
+ main()

@@ -65,7 +65,7 @@ def mavlink_listener(the_connection):
                 timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
                 if msg_type == "GLOBAL_POSITION_INT":
-                    latest_gps = (msg.lat / 1e7, msg.lon / 1e7, msg.relative_alt / 1e3)
+                    latest_gps = (msg.lat / 1e7, msg.lon / 1e7, msg.relative_alt / 1e3, msg.vx / 100, msg.vy / 100, msg.vz / 100)
 
                 elif msg_type == "ATTITUDE":
                     latest_attitude = (msg.pitch, msg.roll, msg.yaw)
@@ -114,7 +114,7 @@ def retrieve_gps():
     """
     global latest_gps, latest_attitude
 
-    lat, lon, rel_alt = latest_gps if latest_gps else (None, None, None)
+    lat, lon, rel_alt, vx, vy, vz = latest_gps if latest_gps else (None, None, None)
 
     # Extract only pitch and yaw (ignore roll)
     if latest_attitude:
@@ -122,7 +122,7 @@ def retrieve_gps():
     else:
         pitch, yaw = None, None  # Default values if attitude is missing
 
-    return lat, lon, rel_alt, pitch, yaw
+    return lat, lon, rel_alt, vx, vy, vz, pitch, yaw
 
 def retrieve_local():
     """
@@ -144,30 +144,6 @@ def retrieve_local():
         yaw = None  # Default value if attitude is missing
 
     return x, y, z, vx, vy, vz, yaw
-
-def get_latest_gps(the_connection):
-    """
-    Fetches the latest GPS message from the MAVLink connection.
-    """
-    try:
-        # Flush buffer to remove old messages
-        while True:
-            old_msg = the_connection.recv_match(type='GLOBAL_POSITION_INT', blocking=False)
-            if old_msg is None:
-                break  # Exit loop when buffer is empty
-        # Now, wait for a fresh GPS message
-        msg = the_connection.recv_match(type='GLOBAL_POSITION_INT', blocking=True)
-        
-        if msg:
-            lat = msg.lat / 1e7
-            lon = msg.lon / 1e7
-            alt = msg.alt / 1e3
-            #print(f"Latitude: {lat}, Longitude: {lon}, Altitude: {alt} meters")
-            return lat, lon, alt
-
-    except Exception as e:
-        print(f"Error fetching GPS: {e}")
-        return None, None, None
 
 def wait_for_ack(command):
     """Wait for COMMAND_ACK and verify the result"""
@@ -302,7 +278,7 @@ def extract_coordinates_to_dict(subdir, filename):
     
     return coordinates_dict
 
-def send_set_position_target_global_int(connection, latitude, longitude, altitude, coordinate_frame=6):
+def send_set_position_target_global_int(connection, latitude, longitude, altitude, vel = 2, coordinate_frame=11):
     """
     Sends a SET_POSITION_TARGET_GLOBAL_INT command to reposition the vehicle.
 
@@ -313,20 +289,41 @@ def send_set_position_target_global_int(connection, latitude, longitude, altitud
         altitude (float): Target altitude in meters.
         coordinate_frame (int): MAV_FRAME_GLOBAL_RELATIVE_ALT_INT (default: 6).
     """
+    _, _, _, _, _, _, _, yaw = retrieve_gps()
+
     connection.mav.set_position_target_global_int_send(
         connection.target_system,  # Target system
         connection.target_component,  # Target component
         0,  # Time boot ms (not used)
         coordinate_frame,  # Coordinate frame (relative altitude)
-        0b0000111111111000,  # Type mask (ignore velocity, acceleration, and yaw)
+        0b000111111000,  # Type mask 
         int(latitude * 1e7),  # Latitude in 1E7 degrees
         int(longitude * 1e7),  # Longitude in 1E7 degrees
         altitude,  # Altitude in meters
-        0, 0, 0,  # Velocity (not used)
+        vel, vel, 1.5,  # Velocity (not used)
         0, 0, 0,  # Acceleration (not used)
-        0, 0  # Yaw and yaw rate (not used)
+        yaw, math.radians(20)  # Yaw and yaw rate (not used)
     )
     print(f"Set position target global int sent to ({latitude}, {longitude}, {altitude})")
+
+def issue_altitude_change_agl(connection, alt_agl, rate_of_climb=1.0):
+    """
+    Commands the drone to change altitude above ground level (AGL) without specifying lat/lon.
+
+    Parameters:
+        alt_agl (float): Desired altitude above ground level in meters.
+        rate_of_climb (float): Rate of climb/descent in m/s.
+    """
+    connection.mav.command_long_send(
+        connection.target_system,
+        connection.target_component,
+        mavutil.mavlink.MAV_CMD_DO_CHANGE_ALTITUDE,
+        0,                      # Confirmation
+        alt_agl,                # Target altitude (AGL) in meters
+        mavutil.mavlink.MAV_FRAME_GLOBAL_TERRAIN_ALT,  # Altitude frame (terrain-relative)
+        rate_of_climb,          # Climb/descent rate (m/s)
+        0, 0, 0, 0              # Unused parameters
+    )
 
 def wait_for_position_target(connection, target_lat, target_lon, target_alt, threshold=0.5):
     """
@@ -371,7 +368,6 @@ def wait_for_position_target(connection, target_lat, target_lon, target_alt, thr
                 break
         
         time.sleep(0.5)  # Reduce CPU usage
-
 
 def takeoff(connection, target_alt):
    
@@ -483,124 +479,85 @@ def calculate_gps_distances(landmark_points, get_gps_points):
     elif len(gps_list) > num_pairs:
         print(f"?? {len(gps_list) - num_pairs} extra GPS points not compared.")
 
-def reposition_drone_over_hotspot(connection, camera, threshold=0.5, k_p = 0.8):
+def reposition_drone_over_hotspot(connection, camera, threshold=0.5, k_p=0.8):
     """
-    Grabs location based on image,
-    call reposition function untill within acceptable distance from hotspot
+    Grabs the bucket location via bucket detection and repositions the drone until
+    it is within an acceptable distance from the bucket.
     """
     while True:
-        # Capture image from camera
-        image = camera.capture_array()
-
-        x_offset, y_offset, z_offset = get_offset(connection=connection, image=image)
-
+        # Use the new get_offset (which calls detectBucket) with a 5-second video
+        x_offset, y_offset, z_offset = get_offset(connection, camera, videoLength=0.5)
         if x_offset is None or y_offset is None:
-            print("Error retreiving offset")
+            print("Error retrieving offset")
             return False
         
         distance = math.sqrt(x_offset**2 + y_offset**2)
-        print(f"Distance to target: {distance:.2f} meters")
-
+        print(f"Distance to target: {distance:.2f} m")
         if distance < threshold:
             return True
         
         current_x, current_y, current_z, _, _, _, yaw = retrieve_local()
-        
         if current_x is None or current_y is None or current_z is None:
             print("Error retrieving local position.")
             return False
 
-         # Apply proportional control (scaled movement)
-        move_x = k_p * x_offset  # Scale movement
+        move_x = k_p * x_offset
         move_y = k_p * y_offset
         move_z = k_p * z_offset
-
-        # Convert yaw to radians
         yaw_rad = float(yaw)
-
-        # Rotate offsets from body frame to NED frame
         target_x = current_x + (move_x * math.cos(yaw_rad) - move_y * math.sin(yaw_rad))
         target_y = current_y + (move_x * math.sin(yaw_rad) + move_y * math.cos(yaw_rad))
         target_z = current_z + z_offset
         
-        # Send reposition command in body-relative frame
         send_body_offset_local_position(connection, move_x, move_y, move_z)
-        
         wait_for_position_target_local(connection, target_x, target_y, target_z)
 
-def wait_for_position_target_local(connection, target_x, target_y, target_z, threshold=0.5,interval=0.5, speed_threshold=0.05):
-    #Do Stuff to check current local position and compare it to target
+def wait_for_position_target_local(connection, target_x, target_y, target_z, threshold=0.5, interval=0.5, speed_threshold=0.05):
     while True:
-
         updated_x, updated_y, updated_z, vx, vy, vz, _ = retrieve_local()
         speed = math.sqrt(vx**2 + vy**2 + vz**2)
-
         x_distance = abs(updated_x - target_x)
         y_distance = abs(updated_y - target_y)
         z_distance = abs(updated_z - target_z)
-
         distance = math.sqrt(x_distance**2 + y_distance**2 + z_distance**2)
-        print(f"[DEBUG] Distance to target: {distance:.2f}m, Speed: {speed:.2f}m/s")
-
-        # Check if the drone is within the threshold and moving slowly enough
+        print(f"[DEBUG] Distance to target: {distance:.2f} m, Speed: {speed:.2f} m/s")
         if distance < threshold and speed < speed_threshold:
             print("[SUCCESS] Target position reached.")
             return True
-        
         time.sleep(interval)
 
-def get_offset(connection, image, fov_x=62.2, fov_y=48.8, image_width=3280, image_height=2464):
+def get_offset(connection, camera, videoLength=1, fov_x=102, fov_y=66, image_width=1280 , image_height=720):
     """
-    Detects a hotspot in the image, estimates its offset from the drone
+    Uses bucket detection to determine the target’s pixel center and calculates
+    the corresponding movement offsets based on the camera’s field of view and altitude.
     """
-    # Get altitude relative to ground (AGL)
-    lat, lon, rel_alt, pitch, azimuth = retrieve_gps()
+    lat, lon, rel_alt, vx, vy, vz, pitch, azimuth = retrieve_gps()
     if rel_alt is None:
         print("Failed to retrieve relative altitude.")
         return None, None, 0
-    
-    # Convert to grayscale
-    gray_image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-    
-    # Detect hotspots
-    hotspots = detect_hotspots(gray_image, threshold=0.9)
-    if hotspots is None or len(hotspots) == 0:
-        print("No hotspots detected.")
-        return None, None, 0 
-    
-    # Assume the largest detected hotspot is the target
-    target_hotspot = hotspots[0]  # Selecting the first hotspot detected
-    print(f"Detected hotspot at: {target_hotspot}")
-    
-    # Convert image coordinates to movement offsets
+    center = detectBucket(videoLength, camera)
+    if center == (None, None):
+        print("No circles detected.")
+        return None, None, 0
+    target_hotspot = center
+    print(f"Detected averaged center: {target_hotspot}")
     img_center_x = image_width / 2
     img_center_y = image_height / 2
-    
-    # Compute meters per pixel scale dynamically based on altitude
     fov_x_rad = math.radians(fov_x)
     fov_y_rad = math.radians(fov_y)
     meters_per_pixel_x = (2 * rel_alt * math.tan(fov_x_rad / 2)) / image_width
     meters_per_pixel_y = (2 * rel_alt * math.tan(fov_y_rad / 2)) / image_height
-    
-    x_offset = -(target_hotspot[1] - img_center_y) * meters_per_pixel_y  # Forward/Backward (NED X)
-    y_offset = (target_hotspot[0] - img_center_x) * meters_per_pixel_x  # Left/Right (NED Y)
+    x_offset = -(target_hotspot[1] - img_center_y) * meters_per_pixel_y
+    y_offset = (target_hotspot[0] - img_center_x) * meters_per_pixel_x
     z_offset = 0
-
-    print(f"Offset to hotspot: {x_offset:.2f}m forward/backward, {y_offset:.2f}m right/left")
-
+    print(f"Offset to bucket: {x_offset:.2f} m forward/backward, {y_offset:.2f} m right/left")
     return x_offset, y_offset, z_offset
 
 def send_body_offset_local_position(connection, x_offset, y_offset, z_offset):
-    """
-    Sends a SET_POSITION_TARGET_LOCAL_NED command to reposition the vehicle.
-    """
     time_boot_ms = int(round(time.time() * 1000)) & 0xFFFFFFFF
-    
-    # Ensure offsets are floats
     x_offset = float(x_offset)
     y_offset = float(y_offset)
     z_offset = float(z_offset)
-    
     connection.mav.set_position_target_local_ned_send(
         time_boot_ms,
         connection.target_system,
@@ -616,58 +573,196 @@ def send_body_offset_local_position(connection, x_offset, y_offset, z_offset):
     )
     print(f"Sent reposition command: x={x_offset}, y={y_offset}, z={z_offset}")
 
+def detectBucket(videoLength, camera):
+    print("Detection Started")
+    start = time.time()
+    timePassed = 0
+
+    listOfCenters = []
+
+
+    # Set up Matplotlib interactive mode
+    #plt.ion()
+    #fig, ax = plt.subplots()
+    #im_display = ax.imshow(np.zeros((480, 640), dtype=np.uint8), cmap="gray")  # Empty image placeholder
+    #plt.axis("off")  # Hide axes
+
+    while timePassed < videoLength:
+        # Capture grayscale image directly from PiCamera
+        gray = cv2.cvtColor(camera.capture_array("main"), cv2.COLOR_BGR2GRAY)
+
+        # Apply median blur
+        gray = cv2.medianBlur(gray, 5)
+
+        # Detect circles using HoughCircles
+        rows = gray.shape[0]
+        circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT_ALT, dp=1.5, minDist=rows / 8,
+                                  param1=300, param2=0.92,
+                                  minRadius=0, maxRadius=0)
+
+        # Convert grayscale to 3-channel image for drawing circles
+        src_display = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+
+        if circles is not None:
+            circles = np.uint16(np.around(circles))
+            for i in circles[0, :]:
+                print(f"Detected circle: Center={i[0], i[1]}, Radius={i[2]}")
+                circle_info = (i[0], i[1], i[2])
+                
+                # circle center
+                center = (i[0], i[1])
+                cv2.circle(src_display, center, 1, (0, 100, 100), 3)
+                listOfCenters.append(circle_info)
+                # circle outline
+                radius = i[2]
+                cv2.circle(src_display, center, radius, (255, 0, 255), 3)
+
+        # Update Matplotlib display
+        #im_display.set_data(src_display)
+        #plt.pause(0.01)  # Allow time for the image to refresh
+
+        # Update time
+        timePassed = time.time() - start
+    #plt.ioff()  # Turn off interactive mode
+    #plt.show()  # Show final frame
+
+    return averageCenters(listOfCenters)
+
+# Params: centers - List of all the circles detected and their info [x, y, rad]
+# Return: (x_avg, y_avg) as a Tuple
+def averageCenters(centers):
+    if len(centers) < 1:
+        return (-1, -1, -1) # error return value
+    
+    radius_values = []
+    for c in centers:
+        radius_values.append(c[2])
+
+    rad_max = max(radius_values)
+    rad_max_thresh = rad_max*0.9 # 90% of the max radius
+
+    x_values = []
+    y_values = []
+    radius_values = []
+    for c in centers:
+        # Not factor in any circles less than the biggest rad
+        if c[2] > rad_max_thresh:
+            x_values.append(c[0])
+            y_values.append(c[1])
+            radius_values.append(c[2])
+    print("Mean: ", rad_max)
+    print("Mean Thresh: ", rad_max_thresh)
+
+    # Possible idea to calculate average again and 
+    # not factor in any values outside of the std dev
+
+    #return (int(np.mean(x_values)), int(np.mean(y_values)), int(np.mean(radius_values))) # Return with radius
+    return (int(np.mean(x_values)), int(np.mean(y_values)))
+
+def distance_between_gps(lat1, lon1, lat2, lon2):
+    """Calculate approximate distance in meters between two GPS coordinates."""
+    R = 6371000  # radius of Earth in meters
+    phi1, phi2 = math.radians(lat1), math.radians(lat2)
+    delta_phi = math.radians(lat2 - lat1)
+    delta_lambda = math.radians(lon2 - lon1)
+
+    a = math.sin(delta_phi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+    return R * c
+
+def wait_until_reached(connection, target_lat, target_lon, target_alt, tolerance_m=2.0, alt_tolerance=0.5, velocity_threshold=0.2, stable_time=1.0):
+    """
+    Commands drone to move to a GPS coordinate and waits until it's stable at that point.
+
+    Parameters:
+        target_lat (float): Target latitude
+        target_lon (float): Target longitude
+        target_alt (float): Target altitude
+        tolerance_m (float): Horizontal position tolerance in meters
+        alt_tolerance (float): Vertical altitude tolerance in meters
+        velocity_threshold (float): Velocity threshold (m/s) to determine stability
+        stable_time (float): Duration (seconds) drone must be stable at location
+    """
+
+    stable_start = None
+
+    while True:
+        current_lat, current_lon, current_alt, vx, vy, vz, _, _ = retrieve_gps()
+
+        horizontal_distance = distance_between_gps(current_lat, current_lon, target_lat, target_lon)
+        vertical_distance = abs(current_alt - target_alt)
+        velocity = math.sqrt(vx ** 2 + vy ** 2 + vz ** 2)
+
+        if horizontal_distance <= tolerance_m and vertical_distance <= alt_tolerance and velocity <= velocity_threshold:
+            if stable_start is None:
+                stable_start = time.time()
+            elif time.time() - stable_start >= stable_time:
+                print("Drone has stabilized at the target coordinates.")
+                break
+        else:
+            stable_start = None  # Reset stable time if it drifts or moves
+
+        time.sleep(0.5)  # Polling interval
+
+def wait_until_altitude(target_alt, alt_tolerance=0.5, velocity_threshold=0.2, stable_time=1.0):
+    """
+    Waits until the drone reaches and stabilizes at a target altitude.
+
+    Parameters:
+        target_alt (float): Target altitude
+        alt_tolerance (float): Vertical altitude tolerance in meters
+        velocity_threshold (float): Vertical velocity threshold (m/s) to determine stability
+        stable_time (float): Duration (seconds) drone must be stable at altitude
+    """
+
+    stable_start = None
+
+    while True:
+        _, _, current_alt, _, _, vz, _, _ = retrieve_gps()
+
+        vertical_distance = abs(current_alt - target_alt)
+        vertical_velocity = abs(vz)
+
+        if vertical_distance <= alt_tolerance and vertical_velocity <= velocity_threshold:
+            if stable_start is None:
+                stable_start = time.time()
+            elif time.time() - stable_start >= stable_time:
+                print("Drone has stabilized at the target altitude.")
+                break
+        else:
+            stable_start = None  # Reset stable time if altitude drifts or moves
+
+        time.sleep(0.5)  # Polling interval
 
 
 def main():
-
-    # Initialize camera
+    # Initialize camera for main drone operations
     picam2 = Picamera2()
     config = picam2.create_still_configuration(
-        main={"format": "RGB888", "size": (3280, 2464)}  # Maximum resolution
+        main={"format": "RGB888", "size": (1280 , 720 )}
     )
     picam2.configure(config)
     picam2.start()
 
-    threshold = 0.02  # Replace with actual threshold value
+    threshold = 0.5  # Replace with an appropriate threshold
 
-    # Start test sequence
-    print("\n--- Drone Orientation Test ---")
-    print("Press Enter to move FORWARD (10m)...")
-    #input()
-    #send_body_offset_local_position(the_connection, 5, 0, 0)
-    #time.sleep(5)  # Allow time for movement
 
-    input()
-    reposition_drone_over_hotspot(the_connection, picam2, threshold)
-
-    #print("Press Enter to move RIGHT (10m)...")
-    #input()
-    #send_body_offset_local_position(the_connection, 0, 5, 0)
-    #time.sleep(5)
-
-    input()
-    reposition_drone_over_hotspot(the_connection, picam2, threshold)
-
-    #print("Press Enter to move BACKWARD (10m)...")
-    #input()
-    #send_body_offset_local_position(the_connection, -5, 0, 0)
-    #time.sleep(5)
-
-    input()
-    reposition_drone_over_hotspot(the_connection, picam2, threshold)
-
-    #print("Press Enter to move LEFT (10m)...")
-    #input()
-    #send_body_offset_local_position(the_connection, 0, -5, 0)
-    #time.sleep(5)
-
-    input()
-    reposition_drone_over_hotspot(the_connection, picam2, threshold)
-    #time.sleep(5)  # Allow time for movement
-
+    #Go to bucket at 10m
+    send_set_position_target_global_int(the_connection, 48.49276, -123.30896, 10, 11)
+    wait_until_reached(the_connection, 48.49276, -123.30896, 10)
+    #reposition to within 0.5m
+    reposition_drone_over_hotspot(the_connection, picam2, 0.5)
+    issue_altitude_change_agl(the_connection, 5, 1)
+    wait_until_altitude(5)
+    #reposition to within 10cm
+    reposition_drone_over_hotspot(the_connection, picam2, 0.1) 
+    issue_altitude_change_agl(the_connection, 2, 1)
+    wait_until_altitude(5)
+    #reposition to within 5cm
+    reposition_drone_over_hotspot(the_connection, picam2, 0.05)
 
     picam2.stop()
-
 
 if __name__ == "__main__":
     main()
