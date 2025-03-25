@@ -51,6 +51,7 @@ try:
 
         temp_filename = "/tmp/temp_capture.jpg"
         picam2.capture_file(temp_filename)
+        time.sleep(0.2)
         subprocess.Popen(['xdg-open', temp_filename])
 
         save_input = input("Save this photo? (y/n): ")

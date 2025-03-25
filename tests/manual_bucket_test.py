@@ -490,7 +490,7 @@ def reposition_drone_over_hotspot(connection, camera, threshold=0.5, k_p=0.8):
     """
     while True:
         # Use the new get_offset (which calls detectBucket) with a 5-second video
-        x_offset, y_offset, z_offset = get_offset(connection, camera, videoLength=5)
+        x_offset, y_offset, z_offset = get_offset(connection, camera, videoLength=1)
         if x_offset is None or y_offset is None:
             print("Error retrieving offset")
             return False
@@ -681,7 +681,7 @@ def main():
             print("Stopping relocation capture.")
             break  # Exit the loop
 
-        reposition_drone_over_hotspot(the_connection, picam2, threshold)
+        reposition_drone_over_hotspot(the_connection, picam2, 0.03, 0.7)
 
     picam2.stop()
 
