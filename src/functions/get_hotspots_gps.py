@@ -9,11 +9,18 @@ long_factor = 1/71546.90282746412 # 1 degree of longitude per that many meters, 
 
 sensor_width = 3.674 # sensor width in mm 
 sensor_height = 2.760 # sensor height in mm
-camera_matrix = np.array([[2398.54998, 0., 1696.02043],
-                         [0., 2406.88752, 1322.32359],
+# camera_matrix = np.array([[2398.54998, 0., 1696.02043],
+#                          [0., 2406.88752, 1322.32359],
+#                          [0., 0., 1.]]) # from cam calibration
+camera_matrix = np.array([[2594.41327, 0., 1676.02864],
+                         [0., 2588.72278, 1269.79813],
                          [0., 0., 1.]]) # from cam calibration
-dist_coeffs = np.array([0.220794232, -0.522929233, -0.000112948804, 0.00213028546, 0.292007192]) # from cam calibration
-focal_length = 3.04 #in mm. camera_matrix[0][0] camera focal length in units from calibration. USUALLY. but calibration needs work
+
+# dist_coeffs = np.array([0.220794232, -0.522929233, -0.000112948804, 0.00213028546, 0.292007192]) # from cam calibration
+dist_coeffs = np.array([0.134406320, 0.0713514047, 0.000213103847, 0.00544771710, -1.18013691]) # from cam calibration
+pixel_size_x = 3.68 / 3280  # mm/px sensor width over pixel width
+focal_length_mm = 2594.41327 * pixel_size_x
+focal_length = focal_length_mm #3.04 #in mm. camera_matrix[0][0] camera focal length in units from calibration. USUALLY. but calibration needs work
 img_half_height = 2464 / 2 # number of pixels from centre of image to top of image
 img_half_width = 3280 / 2 # number of pixels from centre to side of image
 rat_x = (sensor_width/focal_length)/2 # ratio of sensor half-width to focal length (at image centre)

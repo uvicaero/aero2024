@@ -21,6 +21,42 @@ from src.functions.detect_hotspots import detect_hotspots
 from src.functions.get_hotspots_gps import get_hotspots_gps
 import matplotlib.pyplot as plt
 
+# --- Camera Module 3 Wide calibration details ---
+
+# Sensor size (in mm)
+sensor_width = 5.6
+sensor_height = 3.2
+
+# Intrinsic matrix (from calibration)
+camera_matrix = np.array([[841.00476052, 0., 650.92250826],
+                          [0., 841.71812287, 352.50791704],
+                          [0., 0., 1.]])
+
+# Distortion coefficients (from calibration)
+dist_coeffs = np.array([-0.06503654, 0.21176427, -0.0041874, 0.00183475, -0.19964036])
+
+# Derived values
+pixel_size_x = sensor_width / 1280  # mm/px
+pixel_size_y = sensor_height / 720  # mm/px
+
+focal_length_mm_x = camera_matrix[0, 0] * pixel_size_x  # fx in mm
+focal_length_mm_y = camera_matrix[1, 1] * pixel_size_y  # fy in mm
+focal_length = (focal_length_mm_x + focal_length_mm_y) / 2  # average focal length
+
+# Image dimensions
+img_half_width = 1280 / 2
+img_half_height = 720 / 2
+
+# Half FOV angle at image center
+rat_x = (sensor_width / focal_length) / 2
+rat_y = (sensor_height / focal_length) / 2
+
+phi_x = math.atan(rat_x)
+phi_y = math.atan(rat_y)
+
+# Full field of view
+fov_x_radians = 2 * phi_x
+fov_y_radians = 2 * phi_y
 
 def send_heartbeat(the_connection):
     while True:
@@ -544,15 +580,17 @@ def get_offset(connection, camera, videoLength=1, fov_x=62.2, fov_y=48.8, image_
         print("No circles detected.")
         return None, None, 0
     target_hotspot = center
+    # Undistort the center point
+    dist_center = np.array(center, dtype=np.float32).reshape(-1, 1, 2)
+    undist_center = cv2.undistortPoints(dist_center, camera_matrix, dist_coeffs, P=camera_matrix)
+    x_undist, y_undist = undist_center[0][0]
     print(f"Detected averaged center: {target_hotspot}")
     img_center_x = image_width / 2
     img_center_y = image_height / 2
-    fov_x_rad = math.radians(fov_x)
-    fov_y_rad = math.radians(fov_y)
-    meters_per_pixel_x = (2 * rel_alt * math.tan(fov_x_rad / 2)) / image_width
-    meters_per_pixel_y = (2 * rel_alt * math.tan(fov_y_rad / 2)) / image_height
-    x_offset = -(target_hotspot[1] - img_center_y) * meters_per_pixel_y
-    y_offset = (target_hotspot[0] - img_center_x) * meters_per_pixel_x
+    meters_per_pixel_x = (2 * rel_alt * math.tan(fov_x_radians / 2)) / image_width
+    meters_per_pixel_y = (2 * rel_alt * math.tan(fov_y_radians / 2)) / image_height
+    x_offset = -(y_undist - img_center_y) * meters_per_pixel_y
+    y_offset = (x_undist - img_center_x) * meters_per_pixel_x
     z_offset = 0
     print(f"Offset to bucket: {x_offset:.2f} m forward/backward, {y_offset:.2f} m right/left")
     return x_offset, y_offset, z_offset

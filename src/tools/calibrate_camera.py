@@ -3,7 +3,6 @@ import sys
 import subprocess
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-from picamera2 import Picamera2
 import time
 import cv2 as cv
 import glob
@@ -40,12 +39,11 @@ def calibrate_camera():
 
     found_count = 0
     for fname in images:
-        img = cv.imread(f"/home/ben/aero2024/{fname}")
+        img = cv.imread(f"/Users/ben/documents/aero/code/aero2024/{fname}")
         if img is None:
             print(f"Error loading image: {fname}")
             continue
         gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-        gray = cv.equalizeHist(gray)  # Enhance contrast for better detection
         ret, corners = cv.findChessboardCorners(gray, (9, 6), None)
 
         if ret:
