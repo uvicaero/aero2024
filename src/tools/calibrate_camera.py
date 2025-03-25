@@ -1,8 +1,14 @@
+import os
+import sys
+import subprocess
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+from picamera2 import Picamera2
+import time
 import cv2 as cv
 import glob
 import numpy as np
-import sys
-import os
+
 
 def calibrate_camera():
 
@@ -21,38 +27,41 @@ def calibrate_camera():
 
     criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
-    objp = np.zeros((6*7,3), np.float32)
-    objp[:,:2] = np.mgrid[0:7,0:6].T.reshape(-1,2)
-    
+    objp = np.zeros((9 * 6, 3), np.float32)
+    objp[:, :2] = np.mgrid[0:9, 0:6].T.reshape(-1, 2)
+
     objpoints = []
     imgpoints = []
-    
-    images = glob.glob(f"{IMAGE_DIR}/*.jpg")
 
+    images = glob.glob(f"{IMAGE_DIR}/*.jpg")
     if not images:
         print(f"No images found in {IMAGE_DIR}")
         sys.exit(1)
 
     found_count = 0
     for fname in images:
-        img = cv.imread(fname)
+        img = cv.imread(f"/home/ben/aero2024/{fname}")
+        if img is None:
+            print(f"Error loading image: {fname}")
+            continue
         gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-
-        ret, corners = cv.findChessboardCorners(gray, (7,6), None)
+        gray = cv.equalizeHist(gray)  # Enhance contrast for better detection
+        ret, corners = cv.findChessboardCorners(gray, (9, 6), None)
 
         if ret:
             found_count += 1
             objpoints.append(objp)
-            corners2 = cv.cornerSubPix(gray, corners, (11,11), (-1,-1), criteria)
+            corners2 = cv.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
             imgpoints.append(corners2)
 
-            cv.drawChessboardCorners(img, (7,6), corners2, ret)
-            cv.imshow('img', img)
-            cv.waitKey(500)
+            cv.drawChessboardCorners(img, (9, 6), corners2, ret)
+            plt.imshow(cv.cvtColor(img, cv.COLOR_BGR2RGB))
+            plt.axis('off')
+            plt.show(block=False)
+            plt.pause(0.5)
+            plt.close()
         else:
             print(f"Chessboard not detected in image {fname}")
-
-    cv.destroyAllWindows()
 
     if found_count == 0:
         print("No chessboards detected. Calibration failed.")
@@ -60,12 +69,12 @@ def calibrate_camera():
 
     ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, RESOLUTION, None, None)
 
-    return ret, mtx, dist, rvecs, tvecs
+    print(f"ret:\n{ret}\n\nmtx:\n{mtx}\n\ndist:\n{dist}\n\nrvecs:\n{rvecs}\n\ntvecs:\n{tvecs}")
+
 
 def main():
-    ret, mtx, dist, rvecs, tvecs = calibrate_camera()
-    print(f"ret:\n{ret}\n\nmtx:\n{mtx}\n\ndist:\n{dist}\n\nrvecs:\n{rvecs}\n\ntvecs:\n{tvecs}")
-    # Once run: copy/paste mtx and dist to camera_matrix and distortion_coeffs in get-image-points-gps
+    calibrate_camera()
+
 
 if __name__ == "__main__":
     main()
