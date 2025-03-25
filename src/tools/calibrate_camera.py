@@ -14,10 +14,10 @@ def calibrate_camera():
 
     if camera_type == 'noir':
         RESOLUTION = (3280, 2464)
-        IMAGE_DIR = os.path.expanduser('~/data/calibration_images/noir')
+        IMAGE_DIR = 'data/calibration_images/noir'
     elif camera_type == 'wide':
         RESOLUTION = (1280, 720)
-        IMAGE_DIR = os.path.expanduser('~/data/calibration_images/wide')
+        IMAGE_DIR = 'data/calibration_images/wide'
 
     criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
