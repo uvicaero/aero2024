@@ -668,7 +668,11 @@ def detectBucket(videoLength, camera):
     #plt.ioff()  # Turn off interactive mode
     #plt.show()  # Show final frame
 
-    return averageCenters(listOfCenters)
+    if listOfCenters:
+        return averageCenters(listOfCenters)
+    else:
+        print("No circles detected.")
+        return None
 
 # Params: centers - List of all the circles detected and their info [x, y, rad]
 # Return: (x_avg, y_avg) as a Tuple
