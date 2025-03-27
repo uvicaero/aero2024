@@ -554,6 +554,26 @@ def main():
     
     print(autohold_indices)
 
+    # Single Hotspot Dive
+
+    # 1. Go to the specified coordinates at 80m and take a photo
+        # Set single waypoint in kml file
+    # 2. Find any collections of hotspots in the photo and group each collection into a single average point
+        # Run current code below which scans a photo and returns list of lat/long
+        # Take list and find averages for clusters
+        # Add those averages into a 50m list
+    # 3. Descend to 50m at each of the average points collected above
+        # Fly to each point in the 50m list
+        # Run same code as below to get lat/long from pic (but don't average)
+        # If no points, fly up and repeat
+    # 4. At each point take another photo and add the coordinates of each hotspot found at 50m to a new list
+    # 5. Descend to 20m at each new point and add the final coordinate of each hotspot to the kml file
+        # Fly to each point in the 20m list
+        # Run same code to get lat/long from image
+        # Save points to a final list
+        # If no points, fly up and repeat
+
+
     # Initialize hotspots list
     detected_hotspots = []
     get_gps_points = []
