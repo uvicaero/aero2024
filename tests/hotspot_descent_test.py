@@ -310,6 +310,7 @@ def send_set_position_target_global_int(connection, latitude, longitude, altitud
     """
     _, _, _, _, _, _, _, yaw = retrieve_gps()
 
+    print(f"Send position target")
     connection.mav.set_position_target_global_int_send(
         connection.target_system,  # Target system
         connection.target_component,  # Target component
@@ -890,6 +891,24 @@ def main():
 
     detected_hotspots_50m = []
     detected_hotspots_20m = []
+
+    time.sleep(2)
+
+    # Set mode GUIDED
+    the_connection.mav.command_long_send(
+        the_connection.target_system,
+        the_connection.target_component,
+        mavutil.mavlink.MAV_CMD_DO_SET_MODE,
+        0,
+        1,  # Base mode
+        4, 0, 0, 0, 0, 0  # Custom mode for GUIDED
+    )
+    wait_for_ack(mavutil.mavlink.MAV_CMD_DO_SET_MODE)
+    print(f"Guided Mode Set")
+
+    # Arm    
+    arm_throttle(the_connection)
+    print(f"Armed")
 
 
     time.sleep(2)
