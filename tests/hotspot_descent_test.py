@@ -795,6 +795,8 @@ def imageToHotspotCoordinates(image):
  
 def findAverageForClusters(hotspots):
     average_hotspot_clusters = []
+
+    return hotspots
     # REMEMBER TO SORT list in a way that makes sense to fly in
 
 def generateKML(hotspots):
@@ -826,9 +828,9 @@ def generateKML(hotspots):
 def main():
 
     # Images for testing
-    image_path_80m = "data/field_data/ir_detection_test_images/aerial3.jpg"
-    image_path_50m = "data/field_data/ir_detection_test_images/aerial3.jpg"
-    image_path_20m = "data/field_data/ir_detection_test_images/aerial3.jpg"
+    image_path_80m = "data/field_data/jan_8th_test_photos_run_1/photo_alt_80m.jpg"
+    image_path_50m = "data/field_data/jan_8th_test_photos_run_1/photo_alt_50m.jpg"
+    image_path_20m = "data/field_data/jan_8th_test_photos_run_1/photo_alt_20m.jpg"
 
     # Initialize hotspots list
 
@@ -848,6 +850,7 @@ def main():
 
     # Scans a photo and returns list of lat/long
     detected_hotspots_80m = imageToHotspotCoordinates(image)
+    print(f"Hotspots at 80m: {detected_hotspots_80m}")
 
     # Take list and find averages for clusters and add to list
     avg_hotspot_clusters_80m = findAverageForClusters(detected_hotspots_80m)
@@ -858,7 +861,7 @@ def main():
         wait_until_reached(the_connection, point.lat, point.lon, 50)
 
         # Take photo (or use test photo)
-        image = cv2.imread(image_path_80m, cv2.IMREAD_GRAYSCALE)
+        image = cv2.imread(image_path_50m, cv2.IMREAD_GRAYSCALE)
         hotspot = imageToHotspotCoordinates(image)
         empty_photos = 1
 
@@ -874,6 +877,9 @@ def main():
         # Once hotspot has been detected, add hotspot to list
         detected_hotspots_50m.extend(hotspot)
 
+    print(f"Hotspots at 50m: {detected_hotspots_50m}")
+
+
 
     # 4. Descend to 20m at each new point and add the final coordinate of each hotspot to the kml file
     for point in detected_hotspots_50m:
@@ -881,7 +887,7 @@ def main():
         wait_until_reached(the_connection, point.lat, point.lon, 20)
 
         # Take photo (or use test photo)
-        image = cv2.imread(image_path_80m, cv2.IMREAD_GRAYSCALE)
+        image = cv2.imread(image_path_20m, cv2.IMREAD_GRAYSCALE)
         hotspot = imageToHotspotCoordinates(image)
         empty_photos = 1
 
@@ -896,6 +902,8 @@ def main():
 
         # Once hotspot has been detected, add hotspot to list
         detected_hotspots_20m.extend(hotspot)
+
+    print(f"Hotspots at 20m: {detected_hotspots_20m}")
 
 
     generateKML(detected_hotspots_20m)
