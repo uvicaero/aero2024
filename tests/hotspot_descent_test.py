@@ -797,10 +797,38 @@ def findAverageForClusters(hotspots):
     average_hotspot_clusters = []
     # REMEMBER TO SORT list in a way that makes sense to fly in
 
+def generateKML(hotspots):
+
+    # File Save Location
+    output_kml_path = "data/kml_source_files/hotspots.kml"
+
+    # Generate KML file
+
+    kml = simplekml.Kml()
+    hotspot_count = 1
+    for point in hotspots:
+        kml.newpoint(name=f"Hotspot {hotspot_count}", coords=[(point["lon"], point["lat"])])  # Lon, Lat
+        hotspot_count += 1
+    
+    """
+    gps_point_count = 1
+    for point in get_gps_points:
+        kml.newpoint(name=f"Get GPS point {gps_point_count}", coords=[(point["lon"], point["lat"])])  # Lon, Lat
+        gps_point_count += 1
+    """
+
+    # Save KML file
+    os.makedirs(os.path.dirname(output_kml_path), exist_ok=True)
+    kml.save(output_kml_path)
+    print(f"KML file saved to {output_kml_path}")
+        
+
 def main():
 
     # Images for testing
     image_path_80m = "data/field_data/ir_detection_test_images/aerial3.jpg"
+    image_path_50m = "data/field_data/ir_detection_test_images/aerial3.jpg"
+    image_path_20m = "data/field_data/ir_detection_test_images/aerial3.jpg"
 
     # Initialize hotspots list
 
@@ -832,32 +860,45 @@ def main():
         # Take photo (or use test photo)
         image = cv2.imread(image_path_80m, cv2.IMREAD_GRAYSCALE)
         hotspot = imageToHotspotCoordinates(image)
+        empty_photos = 1
+
+        # If no hotspot found, fly up 5m and take another photo
         while hotspot.len() == 0:
-            issue_altitude_change_agl(the_connection, 5, 1) #################### IS THIS 5m relative up or go to 5m off terrain?
-            wait_until_altitude(5)
+            issue_altitude_change_agl(the_connection, (50+(5*empty_photos)), 1) #################### IS THIS 5m relative up or go to 5m off terrain?
+            wait_until_altitude(50+(5*empty_photos))
             # Take another photo (or use test photo)
             image = cv2.imread(image_path_80m, cv2.IMREAD_GRAYSCALE)
             hotspot = imageToHotspotCoordinates(image)
-        # Once hotspot has been detected
-        detected_hotspots_50m.extend()
-        # Run same code as below to get lat/long from pic (but don't average)
-    # If no points, fly up and repeat
-    # 4. At each point take another photo and add the coordinates of each hotspot found at 50m to a new list
-    # 5. Descend to 20m at each new point and add the final coordinate of each hotspot to the kml file
-        # Fly to each point in the 20m list
-        # Run same code to get lat/long from image
-        # Save points to a final list
-        # If no points, fly up and repeat
+            empty_photos += 1
 
-    # Initialize camera for main drone operations
+        # Once hotspot has been detected, add hotspot to list
+        detected_hotspots_50m.extend(hotspot)
 
 
-    #Go to bucket at 10m
-    send_set_position_target_global_int(the_connection, 48.49276, -123.30896, 10, 11)
-    wait_until_reached(the_connection, 48.49276, -123.30896, 10)
-    #reposition to within 0.5m
-    issue_altitude_change_agl(the_connection, 5, 1)
-    wait_until_altitude(5)
+    # 4. Descend to 20m at each new point and add the final coordinate of each hotspot to the kml file
+    for point in detected_hotspots_50m:
+        send_set_position_target_global_int(the_connection, point.lat, point.lon, 20, 11)
+        wait_until_reached(the_connection, point.lat, point.lon, 20)
+
+        # Take photo (or use test photo)
+        image = cv2.imread(image_path_80m, cv2.IMREAD_GRAYSCALE)
+        hotspot = imageToHotspotCoordinates(image)
+        empty_photos = 1
+
+        # If no hotspot found, fly up 5m and take another photo
+        while hotspot.len() == 0:
+            issue_altitude_change_agl(the_connection, (20+(5*empty_photos)), 1) #################### IS THIS 5m relative up or go to 5m off terrain?
+            wait_until_altitude(20+(5*empty_photos))
+            # Take another photo (or use test photo)
+            image = cv2.imread(image_path_80m, cv2.IMREAD_GRAYSCALE)
+            hotspot = imageToHotspotCoordinates(image)
+            empty_photos += 1
+
+        # Once hotspot has been detected, add hotspot to list
+        detected_hotspots_20m.extend(hotspot)
+
+
+    generateKML(detected_hotspots_20m)
 
 
 if __name__ == "__main__":
