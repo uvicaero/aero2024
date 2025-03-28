@@ -893,6 +893,7 @@ def main():
     detected_hotspots_20m = []
 
 
+    time.sleep(2)
     # 1. Go to the specified coordinates at 80m and take a photo
     send_set_position_target_global_int(the_connection, 48.49276, -123.30896, 80, 11)
     wait_until_reached(the_connection, 48.49276, -123.30896, 80)
