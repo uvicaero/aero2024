@@ -51,7 +51,7 @@ def mavlink_listener(the_connection):
             if not the_connection or not the_connection.port:
                 time.sleep(2)
                 continue
-
+            
             if toggle_state == 0:
                 msg_type = "GLOBAL_POSITION_INT"
             elif toggle_state == 1:
@@ -289,8 +289,7 @@ def send_set_position_target_global_int(connection, latitude, longitude, altitud
         altitude (float): Target altitude in meters.
         coordinate_frame (int): MAV_FRAME_GLOBAL_RELATIVE_ALT_INT (default: 6).
     """
-    #_, _, _, _, _, _, _, yaw = retrieve_gps()
-    yaw = 0
+    _, _, _, _, _, _, _, yaw = retrieve_gps()
 
     connection.mav.set_position_target_global_int_send(
         connection.target_system,  # Target system

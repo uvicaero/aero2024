@@ -51,7 +51,7 @@ def mavlink_listener(the_connection):
             if not the_connection or not the_connection.port:
                 time.sleep(2)
                 continue
-
+            print(f"Toggle State: {toggle_state}")
             if toggle_state == 0:
                 msg_type = "GLOBAL_POSITION_INT"
             elif toggle_state == 1:
