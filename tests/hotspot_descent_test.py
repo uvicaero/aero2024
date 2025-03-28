@@ -709,6 +709,7 @@ def wait_until_reached(connection, target_lat, target_lon, target_alt, tolerance
 
     while True:
         current_lat, current_lon, current_alt, vx, vy, vz, _, _ = retrieve_gps()
+        print(f"Cur Lat: {current_lat} Cur Lon: {current_lon} Cur Alt: {current_alt}")
 
         horizontal_distance = distance_between_gps(current_lat, current_lon, target_lat, target_lon)
         vertical_distance = abs(current_alt - target_alt)
@@ -916,6 +917,7 @@ def main():
     time.sleep(2)
     # 1. Go to the specified coordinates at 80m and take a photo
     send_set_position_target_global_int(the_connection, 48.49276, -123.30897, 15, 6)
+    print(f"Waiting until reached...")
     wait_until_reached(the_connection, 48.49276, -123.30897, 15)
 
     print(f"Read image...")
