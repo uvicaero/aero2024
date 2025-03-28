@@ -51,7 +51,7 @@ def mavlink_listener(the_connection):
             if not the_connection or not the_connection.port:
                 time.sleep(2)
                 continue
-            print(f"Toggle State: {toggle_state}")
+
             if toggle_state == 0:
                 msg_type = "GLOBAL_POSITION_INT"
             elif toggle_state == 1:
@@ -114,7 +114,6 @@ def retrieve_gps():
     """
     global latest_gps, latest_attitude
 
-    print(f"Latest Gps: {latest_gps}")
     lat, lon, rel_alt, vx, vy, vz = latest_gps if latest_gps else (None, None, None, None, None, None)
 
     # Extract only pitch and yaw (ignore roll)
@@ -898,6 +897,7 @@ def main():
     send_set_position_target_global_int(the_connection, 48.49276, -123.30896, 80, 11)
     wait_until_reached(the_connection, 48.49276, -123.30896, 80)
 
+    print(f"Read image...")
     # 2. Find any collections of hotspots in the photo and group each collection into a single average point
     image = cv2.imread(image_path_80m, cv2.IMREAD_GRAYSCALE)
 

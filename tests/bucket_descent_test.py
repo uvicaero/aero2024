@@ -51,7 +51,7 @@ def mavlink_listener(the_connection):
             if not the_connection or not the_connection.port:
                 time.sleep(2)
                 continue
-            
+
             if toggle_state == 0:
                 msg_type = "GLOBAL_POSITION_INT"
             elif toggle_state == 1:
@@ -738,7 +738,6 @@ def wait_until_altitude(target_alt, alt_tolerance=0.5, velocity_threshold=0.2, s
 
 def main():
     # Initialize camera for main drone operations
-    """
     picam2 = Picamera2()
     config = picam2.create_still_configuration(
         main={"format": "RGB888", "size": (1280 , 720 )}
@@ -748,11 +747,10 @@ def main():
 
     threshold = 0.5  # Replace with an appropriate threshold
 
-"""
     #Go to bucket at 10m
     send_set_position_target_global_int(the_connection, 48.49276, -123.30896, 10, 11)
     wait_until_reached(the_connection, 48.49276, -123.30896, 10)
-    """
+
     #reposition to within 0.5m
     reposition_drone_over_hotspot(the_connection, picam2, 0.5)
     issue_altitude_change_agl(the_connection, 5, 1)
@@ -764,8 +762,7 @@ def main():
     #reposition to within 5cm
     reposition_drone_over_hotspot(the_connection, picam2, 0.05)
 
-    picam2.stop()"
-    """
+    picam2.stop()
 
 if __name__ == "__main__":
     main()
