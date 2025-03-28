@@ -894,6 +894,7 @@ def main():
 
     time.sleep(2)
 
+    """
     # Set mode GUIDED
     the_connection.mav.command_long_send(
         the_connection.target_system,
@@ -910,10 +911,11 @@ def main():
     arm_throttle(the_connection)
     print(f"Armed")
 
+    """
 
     time.sleep(2)
     # 1. Go to the specified coordinates at 80m and take a photo
-    send_set_position_target_global_int(the_connection, 48.49276, -123.30897, 15, 11)
+    send_set_position_target_global_int(the_connection, 48.49276, -123.30897, 15, 6)
     wait_until_reached(the_connection, 48.49276, -123.30897, 15)
 
     print(f"Read image...")
