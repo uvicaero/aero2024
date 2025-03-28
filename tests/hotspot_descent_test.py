@@ -792,11 +792,62 @@ def imageToHotspotCoordinates(image):
             print(f"Error: Invalid GPS hotspots output {gps_hotspots}")
 
     return detected_hotspots
- 
-def findAverageForClusters(hotspots):
-    average_hotspot_clusters = []
 
-    return hotspots
+
+def merge_hotspots(hotspot_positions, merge_distance=2):
+    """
+    Merges clusters of nearby hotspot positions by replacing them with their average center.
+    
+    Parameters:
+        hotspot_positions list of (object {lat: x, lon: y}): List of objects for detected hotspots.
+        merge_distance (float): Maximum distance in meters to consider two points as the same hotspot.
+    
+    Returns:
+        list of objects: Unique (object {lat: x, lon: y}) hotspot positions after merging.
+    """
+    if not hotspot_positions:
+        return []
+
+    # Approximate conversion factors (meters per degree at given latitude)
+    lat_factor = 111230.9531021928  # Meters per degree of latitude
+    lon_factor = 71546.90282746412  # Meters per degree of longitude (approximate at this latitude)
+
+    unique_hotspots = []  # List of merged hotspots
+    unprocessed = set(range(len(hotspot_positions)))  # Keep track of unprocessed hotspots
+
+    hotspot_positions = np.array(hotspot_positions)
+
+    while unprocessed:
+        index = unprocessed.pop()  # Take an unprocessed hotspot
+        lat, lon = hotspot_positions[index].lat, hotspot_positions[index].lon
+
+        # Find all nearby hotspots within the merge distance
+        nearby_indices = []
+        cluster_lat, cluster_lon = [lat], [lon]
+
+        for i in list(unprocessed):
+            u_lat, u_lon = hotspot_positions[i]
+
+            # Convert degrees to meters and compute distance
+            lat_dist = (lat - u_lat) * lat_factor
+            lon_dist = (lon - u_lon) * lon_factor
+            distance = np.sqrt(lat_dist**2 + lon_dist**2)  # Euclidean distance in meters
+
+            if distance < merge_distance:
+                nearby_indices.append(i)
+                cluster_lat.append(u_lat)
+                cluster_lon.append(u_lon)
+
+        # Remove processed indices from unprocessed set
+        for i in nearby_indices:
+            unprocessed.remove(i)
+
+        # Compute the average position of the cluster
+        avg_lat = np.mean(cluster_lat)
+        avg_lon = np.mean(cluster_lon)
+        unique_hotspots.append({"lat": avg_lat, "lon": avg_lon})
+
+    return unique_hotspots
     # REMEMBER TO SORT list in a way that makes sense to fly in
 
 def generateKML(hotspots):
@@ -850,10 +901,11 @@ def main():
 
     # Scans a photo and returns list of lat/long
     detected_hotspots_80m = imageToHotspotCoordinates(image)
-    print(f"Hotspots at 80m: {detected_hotspots_80m}")
+    print(f"All Hotspots at 80m: {detected_hotspots_80m}")
 
     # Take list and find averages for clusters and add to list
-    avg_hotspot_clusters_80m = findAverageForClusters(detected_hotspots_80m)
+    avg_hotspot_clusters_80m = merge_hotspots(detected_hotspots_80m)
+    print(f"Merged Hotspots at 80m: {detected_hotspots_80m}")
 
     # 3. Descend to 50m at each of the average points collected above
     for point in avg_hotspot_clusters_80m:
