@@ -114,8 +114,8 @@ def retrieve_gps():
     """
     global latest_gps, latest_attitude
 
-    lat, lon, rel_alt, vx, vy, vz = latest_gps if latest_gps else (None, None, None)
-
+    print(f"Latest Gps: {latest_gps}")
+    lat, lon, rel_alt, vx, vy, vz = latest_gps if latest_gps else (None, None, None, None, None, None)
     # Extract only pitch and yaw (ignore roll)
     if latest_attitude:
         pitch, _, yaw = latest_attitude  # Ignore roll using `_`
