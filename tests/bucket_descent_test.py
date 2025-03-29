@@ -300,7 +300,7 @@ def send_set_position_target_global_int(connection, latitude, longitude, altitud
         int(latitude * 1e7),  # Latitude in 1E7 degrees
         int(longitude * 1e7),  # Longitude in 1E7 degrees
         altitude,  # Altitude in meters
-        0, 0, 0,  # Velocity (not used)
+        vel, vel, 1.5,  # Velocity (not used)
         0, 0, 0,  # Acceleration (not used)
         yaw, math.radians(20)  # Yaw and yaw rate (not used)
     )
@@ -746,6 +746,8 @@ def main():
     picam2.start()
 
     threshold = 0.5  # Replace with an appropriate threshold
+
+    time.sleep(2)
 
     #Go to bucket at 10m
     send_set_position_target_global_int(the_connection, 48.49276, -123.30896, 10, 11)
