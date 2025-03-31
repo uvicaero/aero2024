@@ -316,7 +316,7 @@ def send_set_position_target_global_int(connection, latitude, longitude, altitud
         connection.target_system,  # Target system
         connection.target_component,  # Target component
         coordinate_frame,  # Coordinate frame (relative altitude)
-        0b000111111000,  # Type mask 
+        0b000111110000,  # Type mask 
         int(latitude * 1e7),  # Latitude in 1E7 degrees
         int(longitude * 1e7),  # Longitude in 1E7 degrees
         altitude,  # Altitude in meters
@@ -583,7 +583,7 @@ def send_body_offset_local_position(connection, x_offset, y_offset, z_offset):
         connection.target_system,
         connection.target_component,
         mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED,
-        0b100111111000,
+        0b100111110000,
         x_offset,
         y_offset,
         z_offset,
