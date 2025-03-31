@@ -917,8 +917,8 @@ def main():
     time.sleep(2)
     # 1. Go to the specified coordinates at 80m and take a photo
 
-    send_body_offset_local_position(the_connection, 5, 5, 5)
-    wait_for_position_target_local(the_connection, 5, 5, 5)
+    # send_body_offset_local_position(the_connection, 5, 5, 5)
+    # wait_for_position_target_local(the_connection, 5, 5, 5)
 
 
     send_set_position_target_global_int(the_connection, 48.49276, -123.30897, 15, 11)
