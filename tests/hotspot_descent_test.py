@@ -320,7 +320,7 @@ def send_set_position_target_global_int(connection, latitude, longitude, altitud
         int(latitude * 1e7),  # Latitude in 1E7 degrees
         int(longitude * 1e7),  # Longitude in 1E7 degrees
         altitude,  # Altitude in meters
-        vel, vel, 1.5,  # Velocity (not used)
+        0, 0, 0,  # Velocity (not used)
         0, 0, 0,  # Acceleration (not used)
         yaw, math.radians(20)  # Yaw and yaw rate (not used)
     )
