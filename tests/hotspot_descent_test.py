@@ -312,9 +312,9 @@ def send_set_position_target_global_int(connection, latitude, longitude, altitud
 
     print(f"Send position target")
     connection.mav.set_position_target_global_int_send(
+        0,  # Time boot ms (not used)
         connection.target_system,  # Target system
         connection.target_component,  # Target component
-        0,  # Time boot ms (not used)
         coordinate_frame,  # Coordinate frame (relative altitude)
         0b000111111000,  # Type mask 
         int(latitude * 1e7),  # Latitude in 1E7 degrees
