@@ -316,7 +316,7 @@ def send_set_position_target_global_int(connection, latitude, longitude, altitud
         connection.target_system,  # Target system
         connection.target_component,  # Target component
         coordinate_frame,  # Coordinate frame (relative altitude)
-        0b000111110000,  # Type mask 
+        0b110111111000,  # Type mask 
         int(latitude * 1e7),  # Latitude in 1E7 degrees
         int(longitude * 1e7),  # Longitude in 1E7 degrees
         altitude,  # Altitude in meters
