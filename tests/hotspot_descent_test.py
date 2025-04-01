@@ -921,7 +921,7 @@ def main():
     # wait_for_position_target_local(the_connection, 5, 5, 5)
 
 
-    send_set_position_target_global_int(the_connection, 48.49276, -123.30897, 15, 100, 6)
+    send_set_position_target_global_int(the_connection, 48.49276, -123.30897, 15, 100, 11)
     print(f"Waiting until reached...")
     wait_until_reached(the_connection, 48.49276, -123.30897, 15)
 
