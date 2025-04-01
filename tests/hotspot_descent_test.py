@@ -316,11 +316,11 @@ def send_set_position_target_global_int(connection, latitude, longitude, altitud
         connection.target_system,  # Target system
         connection.target_component,  # Target component
         coordinate_frame,  # Coordinate frame (relative altitude)
-        0b110111111000,  # Type mask 
+        0b110111000000,  # Type mask 
         int(latitude * 1e7),  # Latitude in 1E7 degrees
         int(longitude * 1e7),  # Longitude in 1E7 degrees
         altitude,  # Altitude in meters
-        0, 0, 0,  # Velocity (not used)
+        vel, vel, 1.5,  # Velocity (not used)
         0, 0, 0,  # Acceleration (not used)
         yaw, math.radians(20)  # Yaw and yaw rate (not used)
     )
