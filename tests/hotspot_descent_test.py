@@ -858,7 +858,7 @@ def generateKML(hotspots):
     kml = simplekml.Kml()
     hotspot_count = 1
     for point in hotspots:
-        kml.newpoint(name=f"Hotspot {hotspot_count}", coords=[(point["lon"], point["lat"])])  # Lon, Lat
+        kml.newpoint(name=f"Hotspot {hotspot_count}", coords=[(point[1], point[0])])  # Lon, Lat
         hotspot_count += 1
     
     """
