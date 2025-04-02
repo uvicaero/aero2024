@@ -297,7 +297,7 @@ def extract_coordinates_to_dict(subdir, filename):
     
     return coordinates_dict
 
-def send_set_position_target_global_int(connection, latitude, longitude, altitude, vel = 2, coordinate_frame=11):
+def send_set_position_target_global_int(connection, latitude, longitude, altitude, coordinate_frame=6):
     """
     Sends a SET_POSITION_TARGET_GLOBAL_INT command to reposition the vehicle.
 
@@ -308,21 +308,18 @@ def send_set_position_target_global_int(connection, latitude, longitude, altitud
         altitude (float): Target altitude in meters.
         coordinate_frame (int): MAV_FRAME_GLOBAL_RELATIVE_ALT_INT (default: 6).
     """
-    _, _, _, _, _, _, _, yaw = retrieve_gps()
-
-    print(f"Send position target")
     connection.mav.set_position_target_global_int_send(
-        0,  # Time boot ms (not used)
         connection.target_system,  # Target system
         connection.target_component,  # Target component
+        0,  # Time boot ms (not used)
         coordinate_frame,  # Coordinate frame (relative altitude)
-        0b110111000000,  # Type mask 
+        0b0000111111111000,  # Type mask (ignore velocity, acceleration, and yaw)
         int(latitude * 1e7),  # Latitude in 1E7 degrees
         int(longitude * 1e7),  # Longitude in 1E7 degrees
         altitude,  # Altitude in meters
-        vel, vel, 1.5,  # Velocity (not used)
+        0, 0, 0,  # Velocity (not used)
         0, 0, 0,  # Acceleration (not used)
-        yaw, math.radians(20)  # Yaw and yaw rate (not used)
+        0, 0  # Yaw and yaw rate (not used)
     )
     print(f"Set position target global int sent to ({latitude}, {longitude}, {altitude})")
 
@@ -345,48 +342,46 @@ def issue_altitude_change_agl(connection, alt_agl, rate_of_climb=1.0):
         0, 0, 0, 0              # Unused parameters
     )
 
-def wait_for_position_target(connection, target_lat, target_lon, target_alt, threshold=0.5):
+def wait_for_position_target(target_lat, target_lon, target_alt, threshold=0.5):
     """
     Waits for the drone to reach the target position within a given threshold.
-    
+
     Args:
-        connection: MAVLink connection object.
         target_lat: Target latitude in degrees.
         target_lon: Target longitude in degrees.
         target_alt: Target altitude in meters.
         threshold: Allowed error margin in meters.
     """
     print("Waiting for the drone to reach the target position...")
-    
+
     earth_radius = 6371000  # Earth's radius in meters
-    
+
     while True:
-        msg = connection.recv_match(type='GLOBAL_POSITION_INT', blocking=True)
-        if msg:
-            # Convert current position from scaled integers to degrees
-            current_lat_deg = msg.lat / 1e7
-            current_lon_deg = msg.lon / 1e7
-            
+        current_lat, current_lon, current_alt, _, _ = retrieve_gps()
+
+        if current_lat is not None and current_lon is not None and current_alt is not None:
             # Compute the horizontal distance using the haversine formula
-            dlat = math.radians(target_lat - current_lat_deg)
-            dlon = math.radians(target_lon - current_lon_deg)
+            dlat = math.radians(target_lat - current_lat)
+            dlon = math.radians(target_lon - current_lon)
             a = (math.sin(dlat / 2) ** 2 +
-                 math.cos(math.radians(current_lat_deg)) *
+                 math.cos(math.radians(current_lat)) *
                  math.cos(math.radians(target_lat)) *
                  math.sin(dlon / 2) ** 2)
             c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
             horizontal_distance = earth_radius * c
-            
-            # Compute altitude difference (the drone reports relative_alt in millimeters)
-            current_alt = msg.relative_alt * 0.001  # Convert mm to meters
+
+            # Compute altitude difference
             alt_diff = abs(current_alt - target_alt)
-            
+
             print(f"Horizontal distance: {horizontal_distance:.2f} m, Altitude difference: {alt_diff:.2f} m")
-            
+
             if horizontal_distance < threshold and alt_diff < threshold:
                 print("Target position reached.")
                 break
-        
+
+        else:
+            print("Waiting for valid GPS data...")
+
         time.sleep(0.5)  # Reduce CPU usage
 
 def takeoff(connection, target_alt):
@@ -917,13 +912,9 @@ def main():
     time.sleep(2)
     # 1. Go to the specified coordinates at 80m and take a photo
 
-    # send_body_offset_local_position(the_connection, 5, 5, 5)
-    # wait_for_position_target_local(the_connection, 5, 5, 5)
-
-
-    send_set_position_target_global_int(the_connection, 48.49276, -123.30897, 15, 10, 11)
-    print(f"Waiting until reached...")
-    wait_until_reached(the_connection, 48.49276, -123.30897, 15)
+    send_set_position_target_global_int(the_connection, 48.492795, -123.309293, 20, )
+    print(f"Waiting until reached...") 
+    wait_for_position_target( 48.492795, -123.309293, 20, threshold=0.5)
 
     print(f"Read image...")
     # 2. Find any collections of hotspots in the photo and group each collection into a single average point
