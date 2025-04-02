@@ -940,7 +940,7 @@ def main():
         empty_photos = 1
 
         # If no hotspot found, fly up 5m and take another photo
-        while hotspot.len() == 0:
+        while len(hotspot) == 0:
             issue_altitude_change_agl(the_connection, (50+(5*empty_photos)), 1) #################### IS THIS 5m relative up or go to 5m off terrain?
             wait_until_altitude(50+(5*empty_photos))
             # Take another photo (or use test photo)
@@ -966,7 +966,7 @@ def main():
         empty_photos = 1
 
         # If no hotspot found, fly up 5m and take another photo
-        while hotspot.len() == 0:
+        while len(hotspot) == 0:
             issue_altitude_change_agl(the_connection, (20+(5*empty_photos)), 1) #################### IS THIS 5m relative up or go to 5m off terrain?
             wait_until_altitude(20+(5*empty_photos))
             # Take another photo (or use test photo)
