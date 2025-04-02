@@ -784,7 +784,7 @@ def imageToHotspotCoordinates(image):
         # Ensure valid data before appending
         if gps_hotspots.size > 0 and gps_hotspots.shape[1] == 2:
             for gps_point in gps_hotspots:
-                detected_hotspots.append({"lat": gps_point[0], "lon": gps_point[1]})
+                detected_hotspots.append([gps_point[0], gps_point[1]])
         else:
             print(f"Error: Invalid GPS hotspots output {gps_hotspots}")
 
@@ -817,7 +817,7 @@ def merge_hotspots(hotspot_positions, merge_distance=2):
     while unprocessed:
         index = unprocessed.pop()  # Take an unprocessed hotspot
         print(f"Hotspot {index}: {hotspot_positions[index]}")
-        lat, lon = hotspot_positions[index][lat], hotspot_positions[index][lon]
+        lat, lon = hotspot_positions[index][0], hotspot_positions[index][1]
 
         # Find all nearby hotspots within the merge distance
         nearby_indices = []
@@ -843,7 +843,7 @@ def merge_hotspots(hotspot_positions, merge_distance=2):
         # Compute the average position of the cluster
         avg_lat = np.mean(cluster_lat)
         avg_lon = np.mean(cluster_lon)
-        unique_hotspots.append({"lat": avg_lat, "lon": avg_lon})
+        unique_hotspots.append([avg_lat, avg_lon])
 
     return unique_hotspots
     # REMEMBER TO SORT list in a way that makes sense to fly in
@@ -931,8 +931,8 @@ def main():
 
     # 3. Descend to 50m at each of the average points collected above
     for point in avg_hotspot_clusters_80m:
-        send_set_position_target_global_int(the_connection, point[lat], point[lon], 50, )
-        wait_until_reached(the_connection, point[lat], point[lon], 50, threshold=0.5)
+        send_set_position_target_global_int(the_connection, point[0], point[1], 50, )
+        wait_until_reached(the_connection, point[0], point[1], 50, threshold=0.5)
 
         # Take photo (or use test photo)
         image = cv2.imread(image_path_50m, cv2.IMREAD_GRAYSCALE)
