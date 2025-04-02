@@ -8,6 +8,30 @@
                 <scale>1</scale>
             </LabelStyle>
         </Style>
+        <Placemark id="3">
+            <name>Hotspot 1 (20m)</name>
+            <Point id="2">
+                <coordinates>-123.3092724617103,48.492662755265336,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="5">
+            <name>Hotspot 1 (50m)</name>
+            <Point id="4">
+                <coordinates>-123.30926704534899,48.49268523598352,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="7">
+            <name>AVG Hotspot 1 (80m)</name>
+            <Point id="6">
+                <coordinates>-123.30927144484156,48.49273072745046,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="9">
+            <name>Hotspot 1 (80m)</name>
+            <Point id="8">
+                <coordinates>-123.30927144484156,48.49273072745046,0.0</coordinates>
+            </Point>
+        </Placemark>
         <Placemark id="5">
             <name>Hotspot 1 (20m)</name>
             <styleUrl>#0</styleUrl>
