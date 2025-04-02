@@ -932,7 +932,7 @@ def main():
     # 3. Descend to 50m at each of the average points collected above
     for point in avg_hotspot_clusters_80m:
         send_set_position_target_global_int(the_connection, point[0], point[1], 50, )
-        wait_until_reached(the_connection, point[0], point[1], 50, threshold=0.5)
+        wait_until_reached(the_connection, point[0], point[1], 50)
 
         # Take photo (or use test photo)
         image = cv2.imread(image_path_50m, cv2.IMREAD_GRAYSCALE)
@@ -957,7 +957,7 @@ def main():
 
     # 4. Descend to 20m at each new point and add the final coordinate of each hotspot to the kml file
     for point in detected_hotspots_50m:
-        send_set_position_target_global_int(the_connection, point.lat, point.lon, 20, 11)
+        send_set_position_target_global_int(the_connection, point.lat, point.lon, 20, )
         wait_until_reached(the_connection, point.lat, point.lon, 20)
 
         # Take photo (or use test photo)
