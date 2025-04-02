@@ -21,42 +21,6 @@ from src.functions.detect_hotspots import detect_hotspots
 from src.functions.get_hotspots_gps import get_hotspots_gps
 import matplotlib.pyplot as plt
 
-# --- Camera Module 3 Wide calibration details ---
-
-# Sensor size (in mm)
-sensor_width = 5.6
-sensor_height = 3.2
-
-# Intrinsic matrix (from calibration)
-camera_matrix = np.array([[841.00476052, 0., 650.92250826],
-                          [0., 841.71812287, 352.50791704],
-                          [0., 0., 1.]])
-
-# Distortion coefficients (from calibration)
-dist_coeffs = np.array([-0.06503654, 0.21176427, -0.0041874, 0.00183475, -0.19964036])
-
-# Derived values
-pixel_size_x = sensor_width / 1280  # mm/px
-pixel_size_y = sensor_height / 720  # mm/px
-
-focal_length_mm_x = camera_matrix[0, 0] * pixel_size_x  # fx in mm
-focal_length_mm_y = camera_matrix[1, 1] * pixel_size_y  # fy in mm
-focal_length = (focal_length_mm_x + focal_length_mm_y) / 2  # average focal length
-
-# Image dimensions
-img_half_width = 1280 / 2
-img_half_height = 720 / 2
-
-# Half FOV angle at image center
-rat_x = (sensor_width / focal_length) / 2
-rat_y = (sensor_height / focal_length) / 2
-
-phi_x = math.atan(rat_x)
-phi_y = math.atan(rat_y)
-
-# Full field of view
-fov_x_radians = 2 * phi_x
-fov_y_radians = 2 * phi_y
 
 def send_heartbeat(the_connection):
     while True:
@@ -364,48 +328,46 @@ def send_set_position_target_global_int(connection, latitude, longitude, altitud
     )
     print(f"Set position target global int sent to ({latitude}, {longitude}, {altitude})")
 
-def wait_for_position_target(connection, target_lat, target_lon, target_alt, threshold=0.5):
+def wait_for_position_target(target_lat, target_lon, target_alt, threshold=0.5):
     """
     Waits for the drone to reach the target position within a given threshold.
-    
+
     Args:
-        connection: MAVLink connection object.
         target_lat: Target latitude in degrees.
         target_lon: Target longitude in degrees.
         target_alt: Target altitude in meters.
         threshold: Allowed error margin in meters.
     """
     print("Waiting for the drone to reach the target position...")
-    
+
     earth_radius = 6371000  # Earth's radius in meters
-    
+
     while True:
-        msg = connection.recv_match(type='GLOBAL_POSITION_INT', blocking=True)
-        if msg:
-            # Convert current position from scaled integers to degrees
-            current_lat_deg = msg.lat / 1e7
-            current_lon_deg = msg.lon / 1e7
-            
+        current_lat, current_lon, current_alt, _, _ = retrieve_gps()
+
+        if current_lat is not None and current_lon is not None and current_alt is not None:
             # Compute the horizontal distance using the haversine formula
-            dlat = math.radians(target_lat - current_lat_deg)
-            dlon = math.radians(target_lon - current_lon_deg)
+            dlat = math.radians(target_lat - current_lat)
+            dlon = math.radians(target_lon - current_lon)
             a = (math.sin(dlat / 2) ** 2 +
-                 math.cos(math.radians(current_lat_deg)) *
+                 math.cos(math.radians(current_lat)) *
                  math.cos(math.radians(target_lat)) *
                  math.sin(dlon / 2) ** 2)
             c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
             horizontal_distance = earth_radius * c
-            
-            # Compute altitude difference (the drone reports relative_alt in millimeters)
-            current_alt = msg.relative_alt * 0.001  # Convert mm to meters
+
+            # Compute altitude difference
             alt_diff = abs(current_alt - target_alt)
-            
+
             print(f"Horizontal distance: {horizontal_distance:.2f} m, Altitude difference: {alt_diff:.2f} m")
-            
+
             if horizontal_distance < threshold and alt_diff < threshold:
                 print("Target position reached.")
                 break
-        
+
+        else:
+            print("Waiting for valid GPS data...")
+
         time.sleep(0.5)  # Reduce CPU usage
 
 
@@ -580,17 +542,15 @@ def get_offset(connection, camera, videoLength=1, fov_x=62.2, fov_y=48.8, image_
         print("No circles detected.")
         return None, None, 0
     target_hotspot = center
-    # Undistort the center point
-    dist_center = np.array(center, dtype=np.float32).reshape(-1, 1, 2)
-    undist_center = cv2.undistortPoints(dist_center, camera_matrix, dist_coeffs, P=camera_matrix)
-    x_undist, y_undist = undist_center[0][0]
     print(f"Detected averaged center: {target_hotspot}")
     img_center_x = image_width / 2
     img_center_y = image_height / 2
-    meters_per_pixel_x = (2 * rel_alt * math.tan(fov_x_radians / 2)) / image_width
-    meters_per_pixel_y = (2 * rel_alt * math.tan(fov_y_radians / 2)) / image_height
-    x_offset = -(y_undist - img_center_y) * meters_per_pixel_y
-    y_offset = (x_undist - img_center_x) * meters_per_pixel_x
+    fov_x_rad = math.radians(fov_x)
+    fov_y_rad = math.radians(fov_y)
+    meters_per_pixel_x = (2 * rel_alt * math.tan(fov_x_rad / 2)) / image_width
+    meters_per_pixel_y = (2 * rel_alt * math.tan(fov_y_rad / 2)) / image_height
+    x_offset = -(target_hotspot[1] - img_center_y) * meters_per_pixel_y
+    y_offset = (target_hotspot[0] - img_center_x) * meters_per_pixel_x
     z_offset = 0
     print(f"Offset to bucket: {x_offset:.2f} m forward/backward, {y_offset:.2f} m right/left")
     return x_offset, y_offset, z_offset
@@ -703,12 +663,12 @@ def averageCenters(centers):
 
 def main():
     # Initialize camera for main drone operations
-    picam2 = Picamera2()
-    config = picam2.create_still_configuration(
-        main={"format": "RGB888", "size": (1280 , 720 )}
-    )
-    picam2.configure(config)
-    picam2.start()
+    # picam2 = Picamera2()
+    # config = picam2.create_still_configuration(
+        # main={"format": "RGB888", "size": (1280 , 720 )}
+    # )
+    # picam2.configure(config)
+    # picam2.start()
 
     threshold = 0.5  # Replace with an appropriate threshold
 
@@ -718,10 +678,12 @@ def main():
         if user_input.lower() == "s":
             print("Stopping relocation capture.")
             break  # Exit the loop
+        send_set_position_target_global_int(the_connection, 48.492795, -123.309293, 20, )
+        
+        wait_for_position_target( 48.492795, -123.309293, 20, threshold=0.5)
+        # reposition_drone_over_hotspot(the_connection, picam2, 0.03, 0.7)
 
-        reposition_drone_over_hotspot(the_connection, picam2, 0.03, 0.7)
-
-    picam2.stop()
+    # picam2.stop()
 
 if __name__ == "__main__":
     main()
