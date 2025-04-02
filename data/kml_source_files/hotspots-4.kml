@@ -12,28 +12,28 @@
             <name>Hotspot 1 (20m)</name>
             <styleUrl>#0</styleUrl>
             <Point id="4">
-                <coordinates>-123.30911008428612,48.49285714405028,0.0</coordinates>
+                <coordinates>-123.30911017849745,48.492857025570565,0.0</coordinates>
             </Point>
         </Placemark>
         <Placemark id="7">
             <name>Hotspot 1 (50m)</name>
             <styleUrl>#0</styleUrl>
             <Point id="6">
-                <coordinates>-123.30914478903499,48.49285258147815,0.0</coordinates>
+                <coordinates>-123.30914466467648,48.49285254696143,0.0</coordinates>
             </Point>
         </Placemark>
         <Placemark id="9">
             <name>AVG Hotspot 1 (80m)</name>
             <styleUrl>#0</styleUrl>
             <Point id="8">
-                <coordinates>-123.30920903517297,48.492833651790505,0.0</coordinates>
+                <coordinates>-123.30920880560942,48.49283371464287,0.0</coordinates>
             </Point>
         </Placemark>
         <Placemark id="11">
             <name>Hotspot 1 (80m)</name>
             <styleUrl>#0</styleUrl>
             <Point id="10">
-                <coordinates>-123.30920903517297,48.492833651790505,0.0</coordinates>
+                <coordinates>-123.30920880560942,48.49283371464287,0.0</coordinates>
             </Point>
         </Placemark>
     </Document>
