@@ -851,30 +851,39 @@ def merge_hotspots(hotspot_positions, merge_distance=2):
 def generateKML(hotspots_20, hotspots_50, avg_hotspots_80, hotspots_80):
 
     # File Save Location
-    output_kml_path = "data/kml_source_files/hotspots.kml"
+    output_kml_path = "data/kml_source_files/hotspots-2.kml"
 
+    sharedstyle = simplekml.Style()
+    sharedstyle.labelstyle.color = 'ff0000ff'  # Red
     # Generate KML file
 
     kml = simplekml.Kml()
     hotspot_20_count = 1
     for point in hotspots_20:
-        kml.newpoint(name=f"Hotspot {hotspot_20_count} (20m)", coords=[(point[1], point[0])])  # Lon, Lat
+        pnt = kml.newpoint(name=f"Hotspot {hotspot_20_count} (20m)", coords=[(point[1], point[0])])  # Lon, Lat
         hotspot_20_count += 1
+        pnt.style = sharedstyle 
 
     hotspot_50_count = 1
     for point in hotspots_50:
-        kml.newpoint(name=f"Hotspot {hotspot_50_count} (50m)", coords=[(point[1], point[0])])  # Lon, Lat
+        pnt = kml.newpoint(name=f"Hotspot {hotspot_50_count} (50m)", coords=[(point[1], point[0])])  # Lon, Lat
         hotspot_50_count += 1
+        pnt.style = sharedstyle 
+
 
     avg_hotspot_80_count = 1
     for point in avg_hotspots_80:
-        kml.newpoint(name=f"AVG Hotspot {avg_hotspot_80_count} (80m)", coords=[(point[1], point[0])])  # Lon, Lat
+        pnt = kml.newpoint(name=f"AVG Hotspot {avg_hotspot_80_count} (80m)", coords=[(point[1], point[0])])  # Lon, Lat
         avg_hotspot_80_count += 1
+        pnt.style = sharedstyle 
+
 
     hotspot_80_count = 1
     for point in hotspots_80:
-        kml.newpoint(name=f"Hotspot {hotspot_80_count} (80m)", coords=[(point[1], point[0])])  # Lon, Lat
+        pnt = kml.newpoint(name=f"Hotspot {hotspot_80_count} (80m)", coords=[(point[1], point[0])])  # Lon, Lat
         hotspot_80_count += 1
+        pnt.style = sharedstyle 
+
     
     """
     gps_point_count = 1
