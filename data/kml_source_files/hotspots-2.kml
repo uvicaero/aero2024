@@ -8,6 +8,41 @@
                 <scale>1</scale>
             </LabelStyle>
         </Style>
+        <Style id="1">
+            <LabelStyle id="2">
+                <color>ffff00ff</color>
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+            </LabelStyle>
+        </Style>
+        <Placemark id="15">
+            <name>Hotspot 1 (20m)</name>
+            <styleUrl>#1</styleUrl>
+            <Point id="14">
+                <coordinates>-123.3090872234469,48.492789426037476,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="17">
+            <name>Hotspot 1 (50m)</name>
+            <styleUrl>#1</styleUrl>
+            <Point id="16">
+                <coordinates>-123.30912054054777,48.492796553713276,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="19">
+            <name>AVG Hotspot 1 (80m)</name>
+            <styleUrl>#1</styleUrl>
+            <Point id="18">
+                <coordinates>-123.30919076024304,48.49280062989127,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="111">
+            <name>Hotspot 1 (80m)</name>
+            <styleUrl>#1</styleUrl>
+            <Point id="110">
+                <coordinates>-123.30919076024304,48.49280062989127,0.0</coordinates>
+            </Point>
+        </Placemark>
         <Placemark id="3">
             <name>Hotspot 1 (20m)</name>
             <Point id="2">

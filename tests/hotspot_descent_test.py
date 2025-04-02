@@ -851,7 +851,7 @@ def merge_hotspots(hotspot_positions, merge_distance=2):
 def generateKML(hotspots_20, hotspots_50, avg_hotspots_80, hotspots_80):
 
     # File Save Location
-    output_kml_path = "data/kml_source_files/hotspots-3.kml"
+    output_kml_path = "data/kml_source_files/hotspots-4.kml"
 
     sharedstyle = simplekml.Style()
     sharedstyle.labelstyle.color = '36ba2dff' 
