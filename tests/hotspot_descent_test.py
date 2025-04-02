@@ -848,7 +848,7 @@ def merge_hotspots(hotspot_positions, merge_distance=2):
     return unique_hotspots
     # REMEMBER TO SORT list in a way that makes sense to fly in
 
-def generateKML(hotspots):
+def generateKML(hotspots_20, hotspots_50, avg_hotspots_80, hotspots_80):
 
     # File Save Location
     output_kml_path = "data/kml_source_files/hotspots.kml"
@@ -856,10 +856,25 @@ def generateKML(hotspots):
     # Generate KML file
 
     kml = simplekml.Kml()
-    hotspot_count = 1
-    for point in hotspots:
-        kml.newpoint(name=f"Hotspot {hotspot_count}", coords=[(point[1], point[0])])  # Lon, Lat
-        hotspot_count += 1
+    hotspot_20_count = 1
+    for point in hotspots_20:
+        kml.newpoint(name=f"Hotspot {hotspot_20_count} (20m)", coords=[(point[1], point[0])])  # Lon, Lat
+        hotspot_20_count += 1
+
+    hotspot_50_count = 1
+    for point in hotspots_50:
+        kml.newpoint(name=f"Hotspot {hotspot_50_count} (50m)", coords=[(point[1], point[0])])  # Lon, Lat
+        hotspot_50_count += 1
+
+    avg_hotspot_80_count = 1
+    for point in avg_hotspots_80:
+        kml.newpoint(name=f"AVG Hotspot {avg_hotspot_80_count} (80m)", coords=[(point[1], point[0])])  # Lon, Lat
+        avg_hotspot_80_count += 1
+
+    hotspot_80_count = 1
+    for point in hotspot_80_count:
+        kml.newpoint(name=f"Hotspot {hotspot_80_count} (80m)", coords=[(point[1], point[0])])  # Lon, Lat
+        hotspot_80_count += 1
     
     """
     gps_point_count = 1
@@ -980,7 +995,7 @@ def main():
     print(f"Hotspots at 20m: {detected_hotspots_20m}")
 
 
-    generateKML(detected_hotspots_20m)
+    generateKML(detected_hotspots_20m, detected_hotspots_50m, avg_hotspot_clusters_80m, detected_hotspots_80m)
 
 
 if __name__ == "__main__":
