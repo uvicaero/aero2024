@@ -812,7 +812,7 @@ def merge_hotspots(hotspot_positions, merge_distance=2):
     unique_hotspots = []  # List of merged hotspots
     unprocessed = set(range(len(hotspot_positions)))  # Keep track of unprocessed hotspots
 
-    hotspot_positions = np.array(hotspot_positions)
+    #hotspot_positions = np.array(hotspot_positions)
 
     while unprocessed:
         index = unprocessed.pop()  # Take an unprocessed hotspot
