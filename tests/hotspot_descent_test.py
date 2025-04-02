@@ -816,6 +816,7 @@ def merge_hotspots(hotspot_positions, merge_distance=2):
 
     while unprocessed:
         index = unprocessed.pop()  # Take an unprocessed hotspot
+        print(f"Hotspot {index}: {hotspot_positions[index]}")
         lat, lon = hotspot_positions[index].lat, hotspot_positions[index].lon
 
         # Find all nearby hotspots within the merge distance
