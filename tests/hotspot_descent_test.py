@@ -817,7 +817,7 @@ def merge_hotspots(hotspot_positions, merge_distance=2):
     while unprocessed:
         index = unprocessed.pop()  # Take an unprocessed hotspot
         print(f"Hotspot {index}: {hotspot_positions[index]}")
-        lat, lon = hotspot_positions[index].lat, hotspot_positions[index].lon
+        lat, lon = hotspot_positions[index][lat], hotspot_positions[index][lon]
 
         # Find all nearby hotspots within the merge distance
         nearby_indices = []
@@ -931,8 +931,8 @@ def main():
 
     # 3. Descend to 50m at each of the average points collected above
     for point in avg_hotspot_clusters_80m:
-        send_set_position_target_global_int(the_connection, point.lat, point.lon, 50, 11)
-        wait_until_reached(the_connection, point.lat, point.lon, 50)
+        send_set_position_target_global_int(the_connection, point[lat], point[lon], 50, )
+        wait_until_reached(the_connection, point[lat], point[lon], 50, threshold=0.5)
 
         # Take photo (or use test photo)
         image = cv2.imread(image_path_50m, cv2.IMREAD_GRAYSCALE)
