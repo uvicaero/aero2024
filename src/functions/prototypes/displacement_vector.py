@@ -90,7 +90,7 @@ def averageCenters(centers):
 
 # Computes the desired bucket location in pixels, adjusting for camera offset and altitude.
 # Return: returns the desired location of the bucket as a tuple (x_desired, y_desired) in pixels.
-def determine_desired_location(image_shape, camera_offset, bucket_real_radius, altitude, fov, detected_bucket_radius, scale_factor):
+def determine_desired_location(image_shape, camera_offset, bucket_real_radius, altitude, fov, detected_bucket_radius, scale_factor, tilt_angles):
     """
     :param scale_factor: Dynamic scaling factor for adjusting size based on altitude. Default is 0.1. A larger scaling factor makes the adjustments more sensitive.
     """
@@ -115,20 +115,32 @@ def determine_desired_location(image_shape, camera_offset, bucket_real_radius, a
     x_center = int((img_width / 2) - (camera_offset[0]*pixels_per_meter_x))
     y_center = int((img_height / 2) - (camera_offset[1]*pixels_per_meter_y))
 
+    # Estimate focal length in pixels (approximated)
+    f_x = img_width / (2 * math.tan(math.radians(fov[0] / 2)))
+    f_y = img_height / (2 * math.tan(math.radians(fov[1] / 2)))
+
+    # Convert tilt angles from degrees to radians (don’t need this)
+    theta_x, theta_y = math.radians(tilt_angles[0]), math.radians(tilt_angles[1])
+
+    # Compute pixel shift due to tilt
+    tilt_x_shift = f_x * math.tan(theta_y)  # Left-right tilt shifts x position
+    tilt_y_shift = f_y * math.tan(theta_x)  # Forward-backward tilt shifts y position
+
+
     # Calculate the size adjustment based on the detected radius (adjusts dynamically based on altitude)
     size_adjustment_x = (detected_bucket_radius - expected_bucket_radius_pixels_x) * (altitude * scale_factor)
     size_adjustment_y = (detected_bucket_radius - expected_bucket_radius_pixels_y) * (altitude * scale_factor)
 
     # Adjust the desired position uniformly
-    x_desired = x_center + size_adjustment_x * 0.15 #0.15 is a scale factor to further adjust the desired position(It can be changed. A larger value can be used for a more sensitive adjustment of position)
-    y_desired = y_center + size_adjustment_y * 0.15  
+    x_desired = x_center + size_adjustment_x * 0.15 + tilt_x_shift#0.15 is a scale factor to further adjust the desired position(It can be changed. A larger value can be used for a more sensitive adjustment of position)
+    y_desired = y_center + size_adjustment_y * 0.15 + tilt_y_shift
   
 
     return (int(x_desired), int(y_desired))
 
 # Computes the displacement vector (difference between detected bucket location and expected bucket location)
 # Return: returns the displacement vector as a tuple (displacement_x, displacement_y) in meters.
-def displacement_in_meters(detected_location, image_shape, camera_offset, bucket_real_radius, altitude, fov, detected_bucket_radius, scale_factor):
+def displacement_in_meters(detected_location, image_shape, camera_offset, bucket_real_radius, altitude, fov, detected_bucket_radius, scale_factor, tilt_angles):
   
     img_width, img_height = image_shape[:2]
 
@@ -141,7 +153,7 @@ def displacement_in_meters(detected_location, image_shape, camera_offset, bucket
     meters_per_pixel_y = real_height / img_height
 
     # Use determine_desired_location to get the target position in pixels
-    desired_location = determine_desired_location(image_shape, camera_offset, bucket_real_radius, altitude, fov, detected_bucket_radius, scale_factor)
+    desired_location = determine_desired_location(image_shape, camera_offset, bucket_real_radius, altitude, fov, detected_bucket_radius, scale_factor, tilt_angles)
 
     # Compute pixel displacement (might have to change the order of these while testing to see what works best (detected - desired or desired - detected))
     displacement_x_pixels = detected_location[0] - desired_location[0]
@@ -182,11 +194,12 @@ def displayAverage(circle_params):
     altitude = 0.70  # Drone altitude in meters
     fov = (66, 42)  # Camera FOV in degrees
     scale_factor = 0.1
+    tilt_angles = (5,-3) #Camera tilt angles in degrees (left/right, forward/backward)
 
     detected_bucket_radius = detected_bucket[2] # Detected bucket radius in pixels
 
-    desired_location = determine_desired_location(image_shape, camera_offset, bucket_real_radius, altitude, fov, detected_bucket_radius, scale_factor)
-    displacement_vector = displacement_in_meters(detected_bucket, image_shape, camera_offset, bucket_real_radius, altitude, fov, detected_bucket_radius, scale_factor)
+    desired_location = determine_desired_location(image_shape, camera_offset, bucket_real_radius, altitude, fov, detected_bucket_radius, scale_factor, tilt_angles)
+    displacement_vector = displacement_in_meters(detected_bucket, image_shape, camera_offset, bucket_real_radius, altitude, fov, detected_bucket_radius, scale_factor, tilt_angles)
    
     print("Dynamic desired bucket location in pixels: ", desired_location)
     print("Displacement vector in meters: ", displacement_vector)
