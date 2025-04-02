@@ -758,8 +758,8 @@ def imageToHotspotCoordinates(image):
     Parameters:
         image: either static image from a file or taken live from picam2
     Return:
-        detected_hotspots: a list of every hotspot detected in the image as lat/lon pairs
-        get_gps_points: a lat/lon object of where the drone was when the photo was taken
+        detected_hotspots: a list of every hotspot detected in the image as lat/lon pairs in a 2d array [[lat, lon]]
+        get_gps_points: a lat/lon array of where the drone was when the photo was taken
     """
     detected_hotspots = []
 
@@ -796,11 +796,11 @@ def merge_hotspots(hotspot_positions, merge_distance=2):
     Merges clusters of nearby hotspot positions by replacing them with their average center.
     
     Parameters:
-        hotspot_positions list of (object {lat: x, lon: y}): List of objects for detected hotspots.
+        hotspot_positions list of [[lat, lon]]: List of objects for detected hotspots.
         merge_distance (float): Maximum distance in meters to consider two points as the same hotspot.
     
     Returns:
-        list of objects: Unique (object {lat: x, lon: y}) hotspot positions after merging.
+        2d array: Unique [[lat, lon]] hotspot positions after merging.
     """
     if not hotspot_positions:
         return []
@@ -957,8 +957,8 @@ def main():
 
     # 4. Descend to 20m at each new point and add the final coordinate of each hotspot to the kml file
     for point in detected_hotspots_50m:
-        send_set_position_target_global_int(the_connection, point.lat, point.lon, 20, )
-        wait_until_reached(the_connection, point.lat, point.lon, 20)
+        send_set_position_target_global_int(the_connection, point[0], point[1], 20, )
+        wait_until_reached(the_connection, point[0], point[1], 20)
 
         # Take photo (or use test photo)
         image = cv2.imread(image_path_20m, cv2.IMREAD_GRAYSCALE)
