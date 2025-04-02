@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="3">
+        <Style id="0">
+            <LabelStyle id="1">
+                <color>36ba2dff</color>
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+            </LabelStyle>
+        </Style>
+        <Placemark id="5">
+            <name>Hotspot 1 (20m)</name>
+            <styleUrl>#0</styleUrl>
+            <Point id="4">
+                <coordinates>-123.3090872234469,48.492789426037476,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="7">
+            <name>Hotspot 1 (50m)</name>
+            <styleUrl>#0</styleUrl>
+            <Point id="6">
+                <coordinates>-123.30912054054777,48.492796553713276,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="9">
+            <name>AVG Hotspot 1 (80m)</name>
+            <styleUrl>#0</styleUrl>
+            <Point id="8">
+                <coordinates>-123.30919076024304,48.49280062989127,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="11">
+            <name>Hotspot 1 (80m)</name>
+            <styleUrl>#0</styleUrl>
+            <Point id="10">
+                <coordinates>-123.30919076024304,48.49280062989127,0.0</coordinates>
+            </Point>
+        </Placemark>
+    </Document>
+</kml>
