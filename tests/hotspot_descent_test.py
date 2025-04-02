@@ -766,7 +766,7 @@ def imageToHotspotCoordinates(image):
     hotspots = detect_hotspots_with_mask(image, threshold=0.7)
     print(f"Detected hotspots: {hotspots}")
     # Get the latest GPS coordinates from drone
-    lat, lon, alt, yaw = get_latest_gps(the_connection) ############################SHOULD we use get_latest_gps, retrieve_gps or retrieve_local
+    lat, lon, alt, _, _, _, _, yaw = retrieve_gps() ############################SHOULD we use get_latest_gps, retrieve_gps or retrieve_local
     #get_gps_points.append({"lat": lat, "lon": lon})   ###### Don't need to implement till flight test
 
     # Map hotspots to GPS coordinates using `get_hotspots_gps`
