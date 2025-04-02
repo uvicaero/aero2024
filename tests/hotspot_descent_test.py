@@ -872,7 +872,7 @@ def generateKML(hotspots_20, hotspots_50, avg_hotspots_80, hotspots_80):
         avg_hotspot_80_count += 1
 
     hotspot_80_count = 1
-    for point in hotspot_80_count:
+    for point in hotspots_80:
         kml.newpoint(name=f"Hotspot {hotspot_80_count} (80m)", coords=[(point[1], point[0])])  # Lon, Lat
         hotspot_80_count += 1
     
