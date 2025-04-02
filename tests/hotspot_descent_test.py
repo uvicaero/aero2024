@@ -357,7 +357,7 @@ def wait_for_position_target(target_lat, target_lon, target_alt, threshold=0.5):
     earth_radius = 6371000  # Earth's radius in meters
 
     while True:
-        current_lat, current_lon, current_alt, _, _ = retrieve_gps()
+        current_lat, current_lon, current_alt, _, _, _, _, _ = retrieve_gps()
 
         if current_lat is not None and current_lon is not None and current_alt is not None:
             # Compute the horizontal distance using the haversine formula
