@@ -752,6 +752,7 @@ def wait_until_altitude(target_alt, alt_tolerance=0.5, velocity_threshold=0.2, s
 
         time.sleep(0.5)  # Polling interval
 
+
 def imageToHotspotCoordinates(image):
     """
     Gets list of hotspot lat/lon from an image
@@ -951,9 +952,9 @@ def main():
     # 1. Go to the specified coordinates at 80m and take a photo
 
     empty_photos = 1
-    send_set_position_target_global_int(the_connection, 0, 0, altitude=(20+(5*empty_photos)), mask=0b0000111111111011)
+    send_body_offset_local_position(the_connection, 0, 0, altitude=(20+(5*empty_photos)))
     print(f"Waiting until reached...") 
-    wait_until_altitude(20+(5*empty_photos))
+    wait_for_position_target_local(the_connection, 0, 0, 20+(5*empty_photos))
 
 
     send_set_position_target_global_int(the_connection, 48.492796, -123.309295, 80, )
