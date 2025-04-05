@@ -934,6 +934,15 @@ def main():
 
     """
 
+    # Initialize camera
+    picam2 = Picamera2()
+    config = picam2.create_still_configuration(
+        main={"format": "RGB888", "size": (3280, 2464)}  # Maximum resolution
+    )
+    picam2.configure(config)
+    picam2.start()
+
+
     time.sleep(2)
     # 1. Go to the specified coordinates at 80m and take a photo
 
@@ -941,9 +950,10 @@ def main():
     print(f"Waiting until reached...") 
     wait_until_reached(the_connection, 48.492796, -123.309295, 80)
 
-    print(f"Read image...")
+    print(f"Taking photo...")
     # 2. Find any collections of hotspots in the photo and group each collection into a single average point
-    image = cv2.imread(image_path_80m, cv2.IMREAD_GRAYSCALE)
+    rgb_image = picam2.capture_array("main")
+    image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
 
     # Scans a photo and returns list of lat/long
     detected_hotspots_80m = imageToHotspotCoordinates(image)
@@ -959,16 +969,21 @@ def main():
         wait_until_reached(the_connection, point[0], point[1], 50)
 
         # Take photo (or use test photo)
-        image = cv2.imread(image_path_50m, cv2.IMREAD_GRAYSCALE)
+        print(f"Taking photo...")
+        rgb_image = picam2.capture_array("main")
+        image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
         hotspot = imageToHotspotCoordinates(image)
         empty_photos = 1
 
         # If no hotspot found, fly up 5m and take another photo
         while len(hotspot) == 0:
-            issue_altitude_change_agl(the_connection, (50+(5*empty_photos)), 1) #################### IS THIS 5m relative up or go to 5m off terrain?
+            print(f"No Hotspot found on attempt {empty_photos}")
+            issue_altitude_change_agl(the_connection, (50+(5*empty_photos)), 1)
             wait_until_altitude(50+(5*empty_photos))
             # Take another photo (or use test photo)
-            image = cv2.imread(image_path_80m, cv2.IMREAD_GRAYSCALE)
+            print(f"Taking photo...")
+            rgb_image = picam2.capture_array("main")
+            image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
             hotspot = imageToHotspotCoordinates(image)
             empty_photos += 1
 
@@ -985,16 +1000,21 @@ def main():
         wait_until_reached(the_connection, point[0], point[1], 20)
 
         # Take photo (or use test photo)
-        image = cv2.imread(image_path_20m, cv2.IMREAD_GRAYSCALE)
+        print(f"Taking photo...")
+        rgb_image = picam2.capture_array("main")
+        image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
         hotspot = imageToHotspotCoordinates(image)
         empty_photos = 1
 
         # If no hotspot found, fly up 5m and take another photo
         while len(hotspot) == 0:
-            issue_altitude_change_agl(the_connection, (20+(5*empty_photos)), 1) #################### IS THIS 5m relative up or go to 5m off terrain?
+            print(f"No Hotspot found on attempt {empty_photos}")
+            issue_altitude_change_agl(the_connection, (20+(5*empty_photos)), 1)
             wait_until_altitude(20+(5*empty_photos))
             # Take another photo (or use test photo)
-            image = cv2.imread(image_path_80m, cv2.IMREAD_GRAYSCALE)
+            print(f"Taking photo...")
+            rgb_image = picam2.capture_array("main")
+            image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
             hotspot = imageToHotspotCoordinates(image)
             empty_photos += 1
 
@@ -1003,6 +1023,7 @@ def main():
 
     print(f"Hotspots at 20m: {detected_hotspots_20m}")
 
+    picam2.stop()
 
     generateKML(detected_hotspots_20m, detected_hotspots_50m, avg_hotspot_clusters_80m, detected_hotspots_80m)
 
