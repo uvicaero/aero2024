@@ -951,12 +951,6 @@ def main():
     time.sleep(2)
     # 1. Go to the specified coordinates at 80m and take a photo
 
-    empty_photos = 1
-    cur_lat, cur_lon, _, _, _, _, _, _ = retrieve_gps()
-    send_set_position_target_global_int(the_connection, cur_lat, cur_lon, (20+(5*empty_photos)), )
-    print(f"Waiting until reached...") 
-    wait_until_reached(the_connection, cur_lat, cur_lon, (20+(5*empty_photos)))
-
 
     send_set_position_target_global_int(the_connection, 48.492796, -123.309295, 80, )
     print(f"Waiting until reached...") 
@@ -991,8 +985,10 @@ def main():
         # If no hotspot found, fly up 5m and take another photo
         while len(hotspot) == 0:
             print(f"No Hotspot found on attempt {empty_photos}")
-            issue_altitude_change_agl(the_connection, (50+(5*empty_photos)), 1)
-            wait_until_altitude(50+(5*empty_photos))
+            cur_lat, cur_lon, _, _, _, _, _, _ = retrieve_gps()
+            send_set_position_target_global_int(the_connection, cur_lat, cur_lon, (50+(5*empty_photos)), )
+            print(f"Waiting until reached...") 
+            wait_until_reached(the_connection, cur_lat, cur_lon, (50+(5*empty_photos)))
             # Take another photo (or use test photo)
             print(f"Taking photo...")
             rgb_image = picam2.capture_array("main")
@@ -1022,8 +1018,10 @@ def main():
         # If no hotspot found, fly up 5m and take another photo
         while len(hotspot) == 0:
             print(f"No Hotspot found on attempt {empty_photos}")
-            issue_altitude_change_agl(the_connection, (20+(5*empty_photos)), 1)
-            wait_until_altitude(20+(5*empty_photos))
+            cur_lat, cur_lon, _, _, _, _, _, _ = retrieve_gps()
+            send_set_position_target_global_int(the_connection, cur_lat, cur_lon, (20+(5*empty_photos)), )
+            print(f"Waiting until reached...") 
+            wait_until_reached(the_connection, cur_lat, cur_lon, (20+(5*empty_photos)))
             # Take another photo (or use test photo)
             print(f"Taking photo...")
             rgb_image = picam2.capture_array("main")
