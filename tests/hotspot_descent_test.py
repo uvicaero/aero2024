@@ -897,6 +897,9 @@ def generateKML(hotspots_20, hotspots_50, avg_hotspots_80, hotspots_80):
     kml.save(output_kml_path)
     print(f"KML file saved to {output_kml_path}")
         
+def showImage(image):
+    cv2.imshow("IR-image", image)
+    cv2.waitKey(0)
 
 def main():
 
@@ -954,6 +957,7 @@ def main():
     # 2. Find any collections of hotspots in the photo and group each collection into a single average point
     rgb_image = picam2.capture_array("main")
     image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
+    showImage(image)
 
     # Scans a photo and returns list of lat/long
     detected_hotspots_80m = imageToHotspotCoordinates(image)
