@@ -957,7 +957,7 @@ def main():
     # 2. Find any collections of hotspots in the photo and group each collection into a single average point
     rgb_image = picam2.capture_array("main")
     image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
-    showImage(image)
+    #showImage(image)
 
     # Scans a photo and returns list of lat/long
     detected_hotspots_80m = imageToHotspotCoordinates(image)
