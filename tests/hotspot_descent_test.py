@@ -297,7 +297,7 @@ def extract_coordinates_to_dict(subdir, filename):
     
     return coordinates_dict
 
-def send_set_position_target_global_int(connection, latitude, longitude, altitude, coordinate_frame=6):
+def send_set_position_target_global_int(connection, latitude, longitude, altitude, coordinate_frame=6, mask=0b0000111111111000):
     """
     Sends a SET_POSITION_TARGET_GLOBAL_INT command to reposition the vehicle.
 
@@ -313,7 +313,7 @@ def send_set_position_target_global_int(connection, latitude, longitude, altitud
         connection.target_component,  # Target component
         0,  # Time boot ms (not used)
         coordinate_frame,  # Coordinate frame (relative altitude)
-        0b0000111111111000,  # Type mask (ignore velocity, acceleration, and yaw)
+        mask,  # Type mask (ignore velocity, acceleration, and yaw)
         int(latitude * 1e7),  # Latitude in 1E7 degrees
         int(longitude * 1e7),  # Longitude in 1E7 degrees
         altitude,  # Altitude in meters
@@ -951,8 +951,10 @@ def main():
     # 1. Go to the specified coordinates at 80m and take a photo
 
     empty_photos = 1
-    issue_altitude_change_agl(the_connection, (20+(5*empty_photos)), 1)
+    send_set_position_target_global_int(the_connection, 0, 0, altitude=(20+(5*empty_photos)), mask=0b0000111111111011)
+    print(f"Waiting until reached...") 
     wait_until_altitude(20+(5*empty_photos))
+
 
     send_set_position_target_global_int(the_connection, 48.492796, -123.309295, 80, )
     print(f"Waiting until reached...") 
