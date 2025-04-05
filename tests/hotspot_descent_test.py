@@ -853,8 +853,10 @@ def generateKML(hotspots_20, hotspots_50, avg_hotspots_80, hotspots_80):
     # File Save Location
     output_kml_path = "data/kml_source_files/hotspots-4.kml"
 
-    sharedstyle = simplekml.Style()
-    sharedstyle.labelstyle.color = '36ba2dff' 
+    red_icon = "http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png"
+    blue_icon = "http://maps.google.com/mapfiles/kml/pushpin/blu-pushpin.png"
+    green_icon = "https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png"
+    purple_icon = "http://maps.google.com/mapfiles/kml/pushpin/purple-pushpin.png"
     # Generate KML file
 
     kml = simplekml.Kml()
@@ -862,27 +864,25 @@ def generateKML(hotspots_20, hotspots_50, avg_hotspots_80, hotspots_80):
     for point in hotspots_20:
         pnt = kml.newpoint(name=f"Hotspot {hotspot_20_count} (20m)", coords=[(point[1], point[0])])  # Lon, Lat
         hotspot_20_count += 1
-        pnt.style = sharedstyle 
+        pnt.style.iconstyle.icon.href = green_icon
 
     hotspot_50_count = 1
     for point in hotspots_50:
         pnt = kml.newpoint(name=f"Hotspot {hotspot_50_count} (50m)", coords=[(point[1], point[0])])  # Lon, Lat
         hotspot_50_count += 1
-        pnt.style = sharedstyle 
-
+        pnt.style.iconstyle.icon.href = red_icon
 
     avg_hotspot_80_count = 1
     for point in avg_hotspots_80:
         pnt = kml.newpoint(name=f"AVG Hotspot {avg_hotspot_80_count} (80m)", coords=[(point[1], point[0])])  # Lon, Lat
         avg_hotspot_80_count += 1
-        pnt.style = sharedstyle 
-
+        pnt.style.iconstyle.icon.href = purple_icon
 
     hotspot_80_count = 1
     for point in hotspots_80:
         pnt = kml.newpoint(name=f"Hotspot {hotspot_80_count} (80m)", coords=[(point[1], point[0])])  # Lon, Lat
         hotspot_80_count += 1
-        pnt.style = sharedstyle 
+        pnt.style.iconstyle.icon.href = blue_icon
 
     
     """
