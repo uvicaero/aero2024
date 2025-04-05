@@ -1,39 +1,1211 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
-    <Document id="3">
-        <Style id="0">
-            <LabelStyle id="1">
-                <color>36ba2dff</color>
+    <Document id="1">
+        <Style id="4">
+            <IconStyle id="5">
                 <colorMode>normal</colorMode>
                 <scale>1</scale>
-            </LabelStyle>
+                <heading>0</heading>
+                <Icon id="6">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
         </Style>
-        <Placemark id="5">
+        <Style id="9">
+            <IconStyle id="10">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="11">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="14">
+            <IconStyle id="15">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="16">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="19">
+            <IconStyle id="20">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="21">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="24">
+            <IconStyle id="25">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="26">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="29">
+            <IconStyle id="30">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="31">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="34">
+            <IconStyle id="35">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="36">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="39">
+            <IconStyle id="40">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="41">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="44">
+            <IconStyle id="45">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="46">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="49">
+            <IconStyle id="50">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="51">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="54">
+            <IconStyle id="55">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="56">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="59">
+            <IconStyle id="60">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="61">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="64">
+            <IconStyle id="65">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="66">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="69">
+            <IconStyle id="70">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="71">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="74">
+            <IconStyle id="75">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="76">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="79">
+            <IconStyle id="80">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="81">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="84">
+            <IconStyle id="85">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="86">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="89">
+            <IconStyle id="90">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="91">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="94">
+            <IconStyle id="95">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="96">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="99">
+            <IconStyle id="100">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="101">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="104">
+            <IconStyle id="105">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="106">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="109">
+            <IconStyle id="110">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="111">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="114">
+            <IconStyle id="115">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="116">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="119">
+            <IconStyle id="120">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="121">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="124">
+            <IconStyle id="125">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="126">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="129">
+            <IconStyle id="130">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="131">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="134">
+            <IconStyle id="135">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="136">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="139">
+            <IconStyle id="140">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="141">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="144">
+            <IconStyle id="145">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="146">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="149">
+            <IconStyle id="150">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="151">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="154">
+            <IconStyle id="155">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="156">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="159">
+            <IconStyle id="160">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="161">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="164">
+            <IconStyle id="165">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="166">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="169">
+            <IconStyle id="170">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="171">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="174">
+            <IconStyle id="175">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="176">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="179">
+            <IconStyle id="180">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="181">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="184">
+            <IconStyle id="185">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="186">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="189">
+            <IconStyle id="190">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="191">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="194">
+            <IconStyle id="195">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="196">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="199">
+            <IconStyle id="200">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="201">
+                    <href>https://maps.google.com/mapfiles/kml/pushpin/grn-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="204">
+            <IconStyle id="205">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="206">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="209">
+            <IconStyle id="210">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="211">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="214">
+            <IconStyle id="215">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="216">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="219">
+            <IconStyle id="220">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="221">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="224">
+            <IconStyle id="225">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="226">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="229">
+            <IconStyle id="230">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="231">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="234">
+            <IconStyle id="235">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="236">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="239">
+            <IconStyle id="240">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="241">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="244">
+            <IconStyle id="245">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="246">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="249">
+            <IconStyle id="250">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="251">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="254">
+            <IconStyle id="255">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="256">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="259">
+            <IconStyle id="260">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="261">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="264">
+            <IconStyle id="265">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="266">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="269">
+            <IconStyle id="270">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="271">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="274">
+            <IconStyle id="275">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="276">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="279">
+            <IconStyle id="280">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="281">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="284">
+            <IconStyle id="285">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="286">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="289">
+            <IconStyle id="290">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="291">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="294">
+            <IconStyle id="295">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="296">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="299">
+            <IconStyle id="300">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="301">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/purple-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="304">
+            <IconStyle id="305">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="306">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/purple-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="309">
+            <IconStyle id="310">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="311">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/purple-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="314">
+            <IconStyle id="315">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="316">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/purple-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="319">
+            <IconStyle id="320">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="321">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/purple-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="324">
+            <IconStyle id="325">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="326">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/purple-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="329">
+            <IconStyle id="330">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="331">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/blu-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="334">
+            <IconStyle id="335">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="336">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/blu-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="339">
+            <IconStyle id="340">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="341">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/blu-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="344">
+            <IconStyle id="345">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="346">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/blu-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="349">
+            <IconStyle id="350">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="351">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/blu-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Style id="354">
+            <IconStyle id="355">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="356">
+                    <href>http://maps.google.com/mapfiles/kml/pushpin/blu-pushpin.png</href>
+                </Icon>
+            </IconStyle>
+        </Style>
+        <Placemark id="3">
             <name>Hotspot 1 (20m)</name>
-            <styleUrl>#0</styleUrl>
-            <Point id="4">
-                <coordinates>-123.30911017849745,48.492857025570565,0.0</coordinates>
+            <styleUrl>#4</styleUrl>
+            <Point id="2">
+                <coordinates>-123.30912375147255,48.49297529781129,0.0</coordinates>
             </Point>
         </Placemark>
-        <Placemark id="7">
+        <Placemark id="8">
+            <name>Hotspot 2 (20m)</name>
+            <styleUrl>#9</styleUrl>
+            <Point id="7">
+                <coordinates>-123.30911758938737,48.49292478128792,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="13">
+            <name>Hotspot 3 (20m)</name>
+            <styleUrl>#14</styleUrl>
+            <Point id="12">
+                <coordinates>-123.30921670810673,48.49278668727135,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="18">
+            <name>Hotspot 4 (20m)</name>
+            <styleUrl>#19</styleUrl>
+            <Point id="17">
+                <coordinates>-123.30915110279663,48.492789027973245,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="23">
+            <name>Hotspot 5 (20m)</name>
+            <styleUrl>#24</styleUrl>
+            <Point id="22">
+                <coordinates>-123.30901197175416,48.49276059743927,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="28">
+            <name>Hotspot 6 (20m)</name>
+            <styleUrl>#29</styleUrl>
+            <Point id="27">
+                <coordinates>-123.30906813743411,48.49278371813767,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="33">
+            <name>Hotspot 7 (20m)</name>
+            <styleUrl>#34</styleUrl>
+            <Point id="32">
+                <coordinates>-123.3090031670688,48.492756106597064,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="38">
+            <name>Hotspot 8 (20m)</name>
+            <styleUrl>#39</styleUrl>
+            <Point id="37">
+                <coordinates>-123.30904952988894,48.49277864234836,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="43">
+            <name>Hotspot 9 (20m)</name>
+            <styleUrl>#44</styleUrl>
+            <Point id="42">
+                <coordinates>-123.30892225158533,48.49292422890104,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="48">
+            <name>Hotspot 10 (20m)</name>
+            <styleUrl>#49</styleUrl>
+            <Point id="47">
+                <coordinates>-123.308984828083,48.49293368712696,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="53">
+            <name>Hotspot 11 (20m)</name>
+            <styleUrl>#54</styleUrl>
+            <Point id="52">
+                <coordinates>-123.30917523010588,48.49299301653131,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="58">
+            <name>Hotspot 12 (20m)</name>
+            <styleUrl>#59</styleUrl>
+            <Point id="57">
+                <coordinates>-123.30916380265785,48.492953444953855,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="63">
+            <name>Hotspot 13 (20m)</name>
+            <styleUrl>#64</styleUrl>
+            <Point id="62">
+                <coordinates>-123.30934925738381,48.4929231669345,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="68">
+            <name>Hotspot 14 (20m)</name>
+            <styleUrl>#69</styleUrl>
+            <Point id="67">
+                <coordinates>-123.30929417050702,48.49290193905789,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="73">
+            <name>Hotspot 15 (20m)</name>
+            <styleUrl>#74</styleUrl>
+            <Point id="72">
+                <coordinates>-123.3094736476877,48.492847677697895,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="78">
+            <name>Hotspot 16 (20m)</name>
+            <styleUrl>#79</styleUrl>
+            <Point id="77">
+                <coordinates>-123.30942732085552,48.492723480823194,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="83">
+            <name>Hotspot 17 (20m)</name>
+            <styleUrl>#84</styleUrl>
+            <Point id="82">
+                <coordinates>-123.30941002598367,48.49277170769776,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="88">
+            <name>Hotspot 18 (20m)</name>
+            <styleUrl>#89</styleUrl>
+            <Point id="87">
+                <coordinates>-123.3088999884476,48.49302671600956,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="93">
+            <name>Hotspot 19 (20m)</name>
+            <styleUrl>#94</styleUrl>
+            <Point id="92">
+                <coordinates>-123.3088665766543,48.49299191006779,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="98">
+            <name>Hotspot 20 (20m)</name>
+            <styleUrl>#99</styleUrl>
+            <Point id="97">
+                <coordinates>-123.30892193662514,48.49302504557126,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="103">
+            <name>Hotspot 21 (20m)</name>
+            <styleUrl>#104</styleUrl>
+            <Point id="102">
+                <coordinates>-123.30920330837127,48.493097041106275,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="108">
+            <name>Hotspot 22 (20m)</name>
+            <styleUrl>#109</styleUrl>
+            <Point id="107">
+                <coordinates>-123.30920174952676,48.49306392715785,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="113">
+            <name>Hotspot 23 (20m)</name>
+            <styleUrl>#114</styleUrl>
+            <Point id="112">
+                <coordinates>-123.30926600630289,48.49302096309711,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="118">
+            <name>Hotspot 24 (20m)</name>
+            <styleUrl>#119</styleUrl>
+            <Point id="117">
+                <coordinates>-123.30928358159112,48.493049961769536,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="123">
+            <name>Hotspot 25 (20m)</name>
+            <styleUrl>#124</styleUrl>
+            <Point id="122">
+                <coordinates>-123.30924504361995,48.49302392247817,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="128">
+            <name>Hotspot 26 (20m)</name>
+            <styleUrl>#129</styleUrl>
+            <Point id="127">
+                <coordinates>-123.30929317557559,48.493051565213065,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="133">
+            <name>Hotspot 27 (20m)</name>
+            <styleUrl>#134</styleUrl>
+            <Point id="132">
+                <coordinates>-123.30925555830362,48.493022269415754,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="138">
+            <name>Hotspot 28 (20m)</name>
+            <styleUrl>#139</styleUrl>
+            <Point id="137">
+                <coordinates>-123.3091981950842,48.49300855911825,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="143">
+            <name>Hotspot 29 (20m)</name>
+            <styleUrl>#144</styleUrl>
+            <Point id="142">
+                <coordinates>-123.30929245363932,48.49305032553126,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="148">
+            <name>Hotspot 30 (20m)</name>
+            <styleUrl>#149</styleUrl>
+            <Point id="147">
+                <coordinates>-123.30925671282186,48.49302273447266,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="153">
+            <name>Hotspot 31 (20m)</name>
+            <styleUrl>#154</styleUrl>
+            <Point id="152">
+                <coordinates>-123.30949680696678,48.49298080606913,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="158">
+            <name>Hotspot 32 (20m)</name>
+            <styleUrl>#159</styleUrl>
+            <Point id="157">
+                <coordinates>-123.30946305994681,48.492950618309834,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="163">
+            <name>Hotspot 33 (20m)</name>
+            <styleUrl>#164</styleUrl>
+            <Point id="162">
+                <coordinates>-123.30915908995998,48.492884624701716,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="168">
+            <name>Hotspot 34 (20m)</name>
+            <styleUrl>#169</styleUrl>
+            <Point id="167">
+                <coordinates>-123.30919672490668,48.49295066943958,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="173">
+            <name>Hotspot 35 (20m)</name>
+            <styleUrl>#174</styleUrl>
+            <Point id="172">
+                <coordinates>-123.30907783201853,48.49300683335341,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="178">
+            <name>Hotspot 36 (20m)</name>
+            <styleUrl>#179</styleUrl>
+            <Point id="177">
+                <coordinates>-123.30914164908823,48.49301969597723,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="183">
+            <name>Hotspot 37 (20m)</name>
+            <styleUrl>#184</styleUrl>
+            <Point id="182">
+                <coordinates>-123.30904715825193,48.4926834772693,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="188">
+            <name>Hotspot 38 (20m)</name>
+            <styleUrl>#189</styleUrl>
+            <Point id="187">
+                <coordinates>-123.30899224777353,48.49270714414743,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="193">
+            <name>Hotspot 39 (20m)</name>
+            <styleUrl>#194</styleUrl>
+            <Point id="192">
+                <coordinates>-123.30883108214775,48.49282333822648,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="198">
+            <name>Hotspot 40 (20m)</name>
+            <styleUrl>#199</styleUrl>
+            <Point id="197">
+                <coordinates>-123.30888789710242,48.49282995898902,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="203">
             <name>Hotspot 1 (50m)</name>
-            <styleUrl>#0</styleUrl>
-            <Point id="6">
-                <coordinates>-123.30914466467648,48.49285254696143,0.0</coordinates>
+            <styleUrl>#204</styleUrl>
+            <Point id="202">
+                <coordinates>-123.3091136173682,48.49289481932496,0.0</coordinates>
             </Point>
         </Placemark>
-        <Placemark id="9">
+        <Placemark id="208">
+            <name>Hotspot 2 (50m)</name>
+            <styleUrl>#209</styleUrl>
+            <Point id="207">
+                <coordinates>-123.30911977722485,48.492776462287104,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="213">
+            <name>Hotspot 3 (50m)</name>
+            <styleUrl>#214</styleUrl>
+            <Point id="212">
+                <coordinates>-123.30908996977493,48.492800306758554,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="218">
+            <name>Hotspot 4 (50m)</name>
+            <styleUrl>#219</styleUrl>
+            <Point id="217">
+                <coordinates>-123.30908452861169,48.492799374559496,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="223">
+            <name>Hotspot 5 (50m)</name>
+            <styleUrl>#224</styleUrl>
+            <Point id="222">
+                <coordinates>-123.3090159445385,48.49293840751271,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="228">
+            <name>Hotspot 6 (50m)</name>
+            <styleUrl>#229</styleUrl>
+            <Point id="227">
+                <coordinates>-123.30916955741866,48.49292884237396,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="233">
+            <name>Hotspot 7 (50m)</name>
+            <styleUrl>#234</styleUrl>
+            <Point id="232">
+                <coordinates>-123.3092790393082,48.49284456057992,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="238">
+            <name>Hotspot 8 (50m)</name>
+            <styleUrl>#239</styleUrl>
+            <Point id="237">
+                <coordinates>-123.30952116858636,48.49281178502942,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="243">
+            <name>Hotspot 9 (50m)</name>
+            <styleUrl>#244</styleUrl>
+            <Point id="242">
+                <coordinates>-123.30937768188086,48.49277956796653,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="248">
+            <name>Hotspot 10 (50m)</name>
+            <styleUrl>#249</styleUrl>
+            <Point id="247">
+                <coordinates>-123.30895436841192,48.49301960818486,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="253">
+            <name>Hotspot 11 (50m)</name>
+            <styleUrl>#254</styleUrl>
+            <Point id="252">
+                <coordinates>-123.30918010993615,48.493035852178245,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="258">
+            <name>Hotspot 12 (50m)</name>
+            <styleUrl>#259</styleUrl>
+            <Point id="257">
+                <coordinates>-123.30921253727168,48.49302054350939,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="263">
+            <name>Hotspot 13 (50m)</name>
+            <styleUrl>#264</styleUrl>
+            <Point id="262">
+                <coordinates>-123.30922841939781,48.49301425627026,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="268">
+            <name>Hotspot 14 (50m)</name>
+            <styleUrl>#269</styleUrl>
+            <Point id="267">
+                <coordinates>-123.30923903360384,48.49300842430571,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="273">
+            <name>Hotspot 15 (50m)</name>
+            <styleUrl>#274</styleUrl>
+            <Point id="272">
+                <coordinates>-123.30943036970157,48.49294023977703,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="278">
+            <name>Hotspot 16 (50m)</name>
+            <styleUrl>#279</styleUrl>
+            <Point id="277">
+                <coordinates>-123.30922122019514,48.492972627007276,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="283">
+            <name>Hotspot 17 (50m)</name>
+            <styleUrl>#284</styleUrl>
+            <Point id="282">
+                <coordinates>-123.30918251629762,48.49302249682082,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="288">
+            <name>Hotspot 18 (50m)</name>
+            <styleUrl>#289</styleUrl>
+            <Point id="287">
+                <coordinates>-123.30897685846575,48.49272637985583,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="293">
+            <name>Hotspot 19 (50m)</name>
+            <styleUrl>#294</styleUrl>
+            <Point id="292">
+                <coordinates>-123.30892838648435,48.4928147925954,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="298">
             <name>AVG Hotspot 1 (80m)</name>
-            <styleUrl>#0</styleUrl>
-            <Point id="8">
-                <coordinates>-123.30920880560942,48.49283371464287,0.0</coordinates>
+            <styleUrl>#299</styleUrl>
+            <Point id="297">
+                <coordinates>-123.3092341889263,48.49276746191692,0.0</coordinates>
             </Point>
         </Placemark>
-        <Placemark id="11">
+        <Placemark id="303">
+            <name>AVG Hotspot 2 (80m)</name>
+            <styleUrl>#304</styleUrl>
+            <Point id="302">
+                <coordinates>-123.30922700590041,48.49289073498652,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="308">
+            <name>AVG Hotspot 3 (80m)</name>
+            <styleUrl>#309</styleUrl>
+            <Point id="307">
+                <coordinates>-123.30929327974984,48.49280249162524,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="313">
+            <name>AVG Hotspot 4 (80m)</name>
+            <styleUrl>#314</styleUrl>
+            <Point id="312">
+                <coordinates>-123.30920409109142,48.49302951501523,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="318">
+            <name>AVG Hotspot 5 (80m)</name>
+            <styleUrl>#319</styleUrl>
+            <Point id="317">
+                <coordinates>-123.30919976903917,48.49299321642506,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="323">
+            <name>AVG Hotspot 6 (80m)</name>
+            <styleUrl>#324</styleUrl>
+            <Point id="322">
+                <coordinates>-123.30890150026313,48.49289395174007,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="328">
             <name>Hotspot 1 (80m)</name>
-            <styleUrl>#0</styleUrl>
-            <Point id="10">
-                <coordinates>-123.30920880560942,48.49283371464287,0.0</coordinates>
+            <styleUrl>#329</styleUrl>
+            <Point id="327">
+                <coordinates>-123.3092341889263,48.49276746191692,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="333">
+            <name>Hotspot 2 (80m)</name>
+            <styleUrl>#334</styleUrl>
+            <Point id="332">
+                <coordinates>-123.30922700590041,48.49289073498652,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="338">
+            <name>Hotspot 3 (80m)</name>
+            <styleUrl>#339</styleUrl>
+            <Point id="337">
+                <coordinates>-123.30929327974984,48.49280249162524,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="343">
+            <name>Hotspot 4 (80m)</name>
+            <styleUrl>#344</styleUrl>
+            <Point id="342">
+                <coordinates>-123.30920409109142,48.49302951501523,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="348">
+            <name>Hotspot 5 (80m)</name>
+            <styleUrl>#349</styleUrl>
+            <Point id="347">
+                <coordinates>-123.30919976903917,48.49299321642506,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="353">
+            <name>Hotspot 6 (80m)</name>
+            <styleUrl>#354</styleUrl>
+            <Point id="352">
+                <coordinates>-123.30890150026313,48.49289395174007,0.0</coordinates>
             </Point>
         </Placemark>
     </Document>
