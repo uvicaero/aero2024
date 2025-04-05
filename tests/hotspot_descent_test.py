@@ -331,6 +331,7 @@ def issue_altitude_change_agl(connection, alt_agl, rate_of_climb=1.0):
         alt_agl (float): Desired altitude above ground level in meters.
         rate_of_climb (float): Rate of climb/descent in m/s.
     """
+    print(f"Alt Change")
     connection.mav.command_long_send(
         connection.target_system,
         connection.target_component,
@@ -948,6 +949,10 @@ def main():
 
     time.sleep(2)
     # 1. Go to the specified coordinates at 80m and take a photo
+
+    empty_photos = 1
+    issue_altitude_change_agl(the_connection, (20+(5*empty_photos)), 1)
+    wait_until_altitude(20+(5*empty_photos))
 
     send_set_position_target_global_int(the_connection, 48.492796, -123.309295, 80, )
     print(f"Waiting until reached...") 
