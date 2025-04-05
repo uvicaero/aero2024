@@ -952,9 +952,10 @@ def main():
     # 1. Go to the specified coordinates at 80m and take a photo
 
     empty_photos = 1
-    send_body_offset_local_position(the_connection, 0, 0, (-5*empty_photos))
+    cur_lat, cur_lon, _, _, _, _, _, _ = retrieve_gps()
+    send_set_position_target_global_int(the_connection, cur_lat, cur_lon, (20+(5*empty_photos)), )
     print(f"Waiting until reached...") 
-    wait_for_position_target_local(the_connection, 0, 0, (80+(5*empty_photos)))
+    wait_until_reached(the_connection, cur_lat, cur_lon, (20+(5*empty_photos)))
 
 
     send_set_position_target_global_int(the_connection, 48.492796, -123.309295, 80, )
