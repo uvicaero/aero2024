@@ -952,9 +952,9 @@ def main():
     # 1. Go to the specified coordinates at 80m and take a photo
 
 
-    send_set_position_target_global_int(the_connection, 48.492796, -123.309295, 80, )
+    send_set_position_target_global_int(the_connection, 48.492797, -123.309295, 80, )
     print(f"Waiting until reached...") 
-    wait_until_reached(the_connection, 48.492796, -123.309295, 80)
+    wait_until_reached(the_connection, 48.492797, -123.309295, 80)
 
     print(f"Taking photo...")
     # 2. Find any collections of hotspots in the photo and group each collection into a single average point
