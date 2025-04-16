@@ -19,6 +19,7 @@ from src.functions.upload_kml import upload_kml
 from picamera2 import Picamera2
 from src.functions.detect_hotspots import detect_hotspots
 from src.functions.get_hotspots_gps import get_hotspots_gps
+from src.functions.upload_kml import upload_kml
 import matplotlib.pyplot as plt
 
 
@@ -848,12 +849,11 @@ def merge_hotspots(hotspot_positions, merge_distance=2):
         unique_hotspots.append([avg_lat, avg_lon])
 
     return unique_hotspots
-    # REMEMBER TO SORT list in a way that makes sense to fly in
 
 def generateKML(hotspots_20, hotspots_50, avg_hotspots_80, hotspots_80):
 
     # File Save Location
-    output_kml_path = "data/kml_source_files/hotspots-4.kml"
+    output_kml_path = "data/kml_source_files/hotspots.kml"
 
     red_icon = "http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png"
     blue_icon = "http://maps.google.com/mapfiles/kml/pushpin/blu-pushpin.png"
@@ -872,13 +872,12 @@ def generateKML(hotspots_20, hotspots_50, avg_hotspots_80, hotspots_80):
     for point in hotspots_50:
         pnt = kml.newpoint(name=f"Hotspot {hotspot_50_count} (50m)", coords=[(point[1], point[0])])  # Lon, Lat
         hotspot_50_count += 1
-        pnt.style.iconstyle.icon.href = red_icon
 
     avg_hotspot_80_count = 1
     for point in avg_hotspots_80:
         pnt = kml.newpoint(name=f"AVG Hotspot {avg_hotspot_80_count} (80m)", coords=[(point[1], point[0])])  # Lon, Lat
         avg_hotspot_80_count += 1
-        pnt.style.iconstyle.icon.href = purple_icon
+        pnt.style.iconstyle.icon.href = red_icon
 
     hotspot_80_count = 1
     for point in hotspots_80:
@@ -898,6 +897,10 @@ def generateKML(hotspots_20, hotspots_50, avg_hotspots_80, hotspots_80):
     os.makedirs(os.path.dirname(output_kml_path), exist_ok=True)
     kml.save(output_kml_path)
     print(f"KML file saved to {output_kml_path}")
+
+    # Upload KML file to Google Drive
+    upload_kml(output_kml_path, 'https://drive.google.com/drive/folders/1GW56sU4zJuf8If8B6NgVultpZ_C2QT2V')
+    print(f"KML file uploaded to Google Drive")
         
 def showImage(image):
     cv2.imshow("IR-image", image)
@@ -970,6 +973,8 @@ def main():
     avg_hotspot_clusters_80m = merge_hotspots(detected_hotspots_80m)
     print(f"Merged Hotspots at 80m: {detected_hotspots_80m}")
 
+    # REMEMBER TO SORT list in a way that makes sense to fly in ########################################################### TODO 
+
     # 3. Descend to 50m at each of the average points collected above
     for point in avg_hotspot_clusters_80m:
         send_set_position_target_global_int(the_connection, point[0], point[1], 50, )
@@ -980,21 +985,21 @@ def main():
         rgb_image = picam2.capture_array("main")
         image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
         hotspot = imageToHotspotCoordinates(image)
-        empty_photos = 1
+        photo_retakes = 1
 
         # If no hotspot found, fly up 5m and take another photo
         while len(hotspot) == 0:
-            print(f"No Hotspot found on attempt {empty_photos}")
+            print(f"No Hotspot found on attempt {photo_retakes}")
             cur_lat, cur_lon, _, _, _, _, _, _ = retrieve_gps()
-            send_set_position_target_global_int(the_connection, cur_lat, cur_lon, (50+(5*empty_photos)), )
+            send_set_position_target_global_int(the_connection, cur_lat, cur_lon, (50+(5*photo_retakes)), )
             print(f"Waiting until reached...") 
-            wait_until_reached(the_connection, cur_lat, cur_lon, (50+(5*empty_photos)))
+            wait_until_reached(the_connection, cur_lat, cur_lon, (50+(5*photo_retakes)))
             # Take another photo (or use test photo)
             print(f"Taking photo...")
             rgb_image = picam2.capture_array("main")
             image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
             hotspot = imageToHotspotCoordinates(image)
-            empty_photos += 1
+            photo_retakes += 1
 
         # Once hotspot has been detected, add hotspot to list
         detected_hotspots_50m.extend(hotspot)
@@ -1013,21 +1018,21 @@ def main():
         rgb_image = picam2.capture_array("main")
         image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
         hotspot = imageToHotspotCoordinates(image)
-        empty_photos = 1
+        photo_retakes = 1
 
         # If no hotspot found, fly up 5m and take another photo
         while len(hotspot) == 0:
-            print(f"No Hotspot found on attempt {empty_photos}")
+            print(f"No Hotspot found on attempt {photo_retakes}")
             cur_lat, cur_lon, _, _, _, _, _, _ = retrieve_gps()
-            send_set_position_target_global_int(the_connection, cur_lat, cur_lon, (20+(5*empty_photos)), )
+            send_set_position_target_global_int(the_connection, cur_lat, cur_lon, (20+(5*photo_retakes)), )
             print(f"Waiting until reached...") 
-            wait_until_reached(the_connection, cur_lat, cur_lon, (20+(5*empty_photos)))
+            wait_until_reached(the_connection, cur_lat, cur_lon, (20+(5*photo_retakes)))
             # Take another photo (or use test photo)
             print(f"Taking photo...")
             rgb_image = picam2.capture_array("main")
             image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
             hotspot = imageToHotspotCoordinates(image)
-            empty_photos += 1
+            photo_retakes += 1
 
         # Once hotspot has been detected, add hotspot to list
         detected_hotspots_20m.extend(hotspot)
