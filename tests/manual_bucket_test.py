@@ -528,8 +528,9 @@ def wait_for_position_target_local(connection, target_x, target_y, target_z, thr
             return True
         time.sleep(interval)
 
-def get_offset(connection, camera, videoLength=1, fov_x=62.2, fov_y=48.8, image_width=1280 , image_height=720):
+def get_offset(connection, camera, videoLength=1, fov_x=62.2, fov_y=48.8, image_width=1280 , image_height=720, camera_offset = (0,1)):
     """
+    camera_offset = (x,y) camera's offset from vehicle's centre in meters
     Uses bucket detection to determine the target’s pixel center and calculates
     the corresponding movement offsets based on the camera’s field of view and altitude.
     """
@@ -543,8 +544,10 @@ def get_offset(connection, camera, videoLength=1, fov_x=62.2, fov_y=48.8, image_
         return None, None, 0
     target_hotspot = center
     print(f"Detected averaged center: {target_hotspot}")
-    img_center_x = image_width / 2
-    img_center_y = image_height / 2
+    pixels_per_meter_x = image_width / (2 * rel_alt * math.tan(fov_x_rad / 2))
+    pixels_per_meter_y = image_height / (2 * rel_alt * math.tan(fov_x_rad / 2))
+    img_center_x = image_width / 2 - camera_offset[0]*pixels_per_meter_x
+    img_center_y = image_height / 2 - camera_offset[1]*pixels_per_meter_y
     fov_x_rad = math.radians(fov_x)
     fov_y_rad = math.radians(fov_y)
     meters_per_pixel_x = (2 * rel_alt * math.tan(fov_x_rad / 2)) / image_width
