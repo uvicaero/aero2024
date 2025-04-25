@@ -277,7 +277,7 @@ def send_set_position_target_global_int(connection, latitude, longitude, altitud
         connection.target_component,  # Target component
         0,  # Time boot ms (not used)
         coordinate_frame,  # Coordinate frame (relative altitude)
-        0b0000111111111000,  # Type mask (ignore velocity, acceleration, and yaw)
+        0b0000100111111000,  # Type mask (ignore velocity, acceleration, and yaw)
         int(latitude * 1e7),  # Latitude in 1E7 degrees
         int(longitude * 1e7),  # Longitude in 1E7 degrees
         altitude,  # Altitude in meters
@@ -488,6 +488,24 @@ def wait_until_reached(connection, target_lat, target_lon, target_alt, tolerance
 
         time.sleep(0.5)  # Polling interval
 
+def point_north(connection):
+    time_boot_ms = int(round(time.time() * 1000)) & 0xFFFFFFFF
+    connection.mav.set_position_target_local_ned_send(
+        time_boot_ms,
+        connection.target_system,
+        connection.target_component,
+        mavutil.mavlink.MAV_FRAME_LOCAL_NED,
+        0b100111111000,
+        0,
+        0,
+        0,
+        0, 0, 0,
+        0, 0, 0,
+        0, 0
+    )
+    time.sleep(5)
+    
+
 # ——— Hard-coded offsets for the 18 rectangular FOV centers ———
 # Format: (box_index, x_offset_m_east, y_offset_m_north)
 PATTERN_OFFSETS = [
@@ -545,6 +563,7 @@ def main():
 
     while True:
         user_input = input(f"Press Enter to start")
+        point_north(the_connection)
         lat, lon, _, _, _ = retrieve_gps()
         waypoints = get_rectangle_centers_from_list(lat, lon)
         for lat, lon, alt in waypoints:
