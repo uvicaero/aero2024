@@ -619,9 +619,9 @@ vantreight_boundary_coords = [
 ]
 
 # Create the boundary polygon
-comp_boundary_polygon = Polygon(comp_boundary_coords)
+comp_boundary_polygon = Polygon([(lon, lat) for lat, lon in comp_boundary_coords])
 
-vantreight_boundary_polygon = Polygon(vantreight_boundary_coords)
+vantreight_boundary_polygon = Polygon([(lon, lat) for lat, lon in vantreight_boundary_coords])
 
 
 cornerfix_comp = (50.0989139, -110.7381534)
