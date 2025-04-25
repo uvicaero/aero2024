@@ -626,7 +626,7 @@ vantreight_boundary_polygon = Polygon(vantreight_boundary_coords)
 cornerfix_comp = (50.0989139, -110.7381534)
 cornerfix_vantreight = (48.49254, -123.30896)
 
-def main():
+def main(boundary_choice):
     if boundary_choice == "comp":
         boundary_polygon = comp_boundary_polygon
         cornerfix = cornerfix_comp
