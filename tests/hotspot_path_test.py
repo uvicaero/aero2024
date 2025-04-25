@@ -442,6 +442,18 @@ def calculate_gps_distances(landmark_points, get_gps_points):
     elif len(gps_list) > num_pairs:
         print(f"?? {len(gps_list) - num_pairs} extra GPS points not compared.")
 
+def distance_between_gps(lat1, lon1, lat2, lon2):
+    """Calculate approximate distance in meters between two GPS coordinates."""
+    R = 6371000  # radius of Earth in meters
+    phi1, phi2 = math.radians(lat1), math.radians(lat2)
+    delta_phi = math.radians(lat2 - lat1)
+    delta_lambda = math.radians(lon2 - lon1)
+
+    a = math.sin(delta_phi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+    return R * c
+
 def wait_until_reached(connection, target_lat, target_lon, target_alt, tolerance_m=2.0, alt_tolerance=0.5, velocity_threshold=0.2, stable_time=1.0):
     """
     Commands drone to move to a GPS coordinate and waits until it's stable at that point.
