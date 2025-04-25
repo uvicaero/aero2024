@@ -117,7 +117,7 @@ def retrieve_gps():
     """
     global latest_gps, latest_attitude
 
-    lat, lon, rel_alt, vx, vy, vz = latest_gps if latest_gps else (None, None, None, None, None, None)
+    lat, lon, rel_alt = latest_gps if latest_gps else (None, None, None)
 
     # Extract only pitch and yaw (ignore roll)
     if latest_attitude:
@@ -125,31 +125,8 @@ def retrieve_gps():
     else:
         pitch, yaw = None, None  # Default values if attitude is missing
 
-    return lat, lon, rel_alt, vx, vy, vz, pitch, yaw
+    return lat, lon, rel_alt, pitch, yaw
 
-def get_latest_gps(the_connection):
-    """
-    Fetches the latest GPS message from the MAVLink connection.
-    """
-    try:
-        # Flush buffer to remove old messages
-        while True:
-            old_msg = the_connection.recv_match(type='GLOBAL_POSITION_INT', blocking=False)
-            if old_msg is None:
-                break  # Exit loop when buffer is empty
-        # Now, wait for a fresh GPS message
-        msg = the_connection.recv_match(type='GLOBAL_POSITION_INT', blocking=True)
-        
-        if msg:
-            lat = msg.lat / 1e7
-            lon = msg.lon / 1e7
-            alt = msg.alt / 1e3
-            #print(f"Latitude: {lat}, Longitude: {lon}, Altitude: {alt} meters")
-            return lat, lon, alt
-
-    except Exception as e:
-        print(f"Error fetching GPS: {e}")
-        return None, None, None
 
 def wait_for_ack(command):
     """Wait for COMMAND_ACK and verify the result"""
@@ -482,14 +459,13 @@ def wait_until_reached(connection, target_lat, target_lon, target_alt, tolerance
     stable_start = None
 
     while True:
-        current_lat, current_lon, current_alt, vx, vy, vz, _, _ = retrieve_gps()
+        current_lat, current_lon, current_alt, _, _ = retrieve_gps()
         print(f"Cur Lat: {current_lat} Cur Lon: {current_lon} Cur Alt: {current_alt}")
 
         horizontal_distance = distance_between_gps(current_lat, current_lon, target_lat, target_lon)
         vertical_distance = abs(current_alt - target_alt)
-        velocity = math.sqrt(vx ** 2 + vy ** 2 + vz ** 2)
 
-        if horizontal_distance <= tolerance_m and vertical_distance <= alt_tolerance and velocity <= velocity_threshold:
+        if horizontal_distance <= tolerance_m and vertical_distance <= alt_tolerance:
             if stable_start is None:
                 stable_start = time.time()
             elif time.time() - stable_start >= stable_time:
@@ -557,7 +533,7 @@ def main():
 
     while True:
         user_input = input(f"Press Enter to start")
-        lat, lon, rel_alt, vx, vy, vz, pitch, yaw = retrieve_gps()
+        lat, lon, _, _, _ = retrieve_gps()
         waypoints = get_rectangle_centers_from_list(lat, lon)
         for lat, lon, alt in waypoints:
             send_set_position_target_global_int(the_connection, lat, lon, alt)
