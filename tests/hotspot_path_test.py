@@ -20,6 +20,7 @@ from picamera2 import Picamera2
 from src.functions.detect_hotspots import detect_hotspots
 from src.functions.get_hotspots_gps import get_hotspots_gps
 import matplotlib.pyplot as plt
+import argparse
 
 
 def send_heartbeat(the_connection):
