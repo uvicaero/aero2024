@@ -117,7 +117,7 @@ def retrieve_gps():
     """
     global latest_gps, latest_attitude
 
-    lat, lon, rel_alt = latest_gps if latest_gps else (None, None, None)
+    lat, lon, rel_alt, vx, vy, vz = latest_gps if latest_gps else (None, None, None, None, None, None)
 
     # Extract only pitch and yaw (ignore roll)
     if latest_attitude:
@@ -125,7 +125,7 @@ def retrieve_gps():
     else:
         pitch, yaw = None, None  # Default values if attitude is missing
 
-    return lat, lon, rel_alt, pitch, yaw
+    return lat, lon, rel_alt, vx, vy, vz, pitch, yaw
 
 def get_latest_gps(the_connection):
     """
