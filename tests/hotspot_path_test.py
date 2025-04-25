@@ -617,7 +617,7 @@ vantreight_boundary_coords = [
 ]
 
 # Create the boundary polygon
-comp_boundary_polygon = Polygon(green_boundary_coords)
+comp_boundary_polygon = Polygon(comp_boundary_coords)
 
 vantreight_boundary_polygon = Polygon(vantreight_boundary_coords)
 
