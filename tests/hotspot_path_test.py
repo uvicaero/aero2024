@@ -557,8 +557,84 @@ def get_rectangle_centers_from_list(center_lat: float,
         waypoints.append((lat, lon, altitude))
     return waypoints
 
+def validate_spiral_path(
+    waypoint_list,                # [(lat, lon, alt), ...]
+    boundary_polygon,             # shapely.geometry.Polygon (lon, lat order)
+    cornerfix,                    # (lat, lon)
+    altitude=50.0                 # Altitude to use for cornerfix
+):
+    """
+    Given a list of waypoints, return a safe path that drops out-of-bound points
+    and inserts `cornerfix` detours where path segments cross the boundary.
+
+    Parameters:
+        waypoint_list: ordered list of (lat, lon, alt)
+        boundary_polygon: Shapely Polygon in (lon, lat) format
+        cornerfix: (lat, lon) tuple to insert when a segment crosses outside
+        altitude: altitude to use for cornerfix
+
+    Returns:
+        Filtered and patched list of (lat, lon, alt) waypoints
+    """
+    # Step 1: Filter out-of-bounds points
+    valid_points = [
+        (lat, lon, alt)
+        for lat, lon, alt in waypoint_list
+        if boundary_polygon.contains(Point(lon, lat))
+    ]
+
+    # Step 2: Insert cornerfix detour where segment crosses outside
+    path = []
+    for i in range(len(valid_points) - 1):
+        lat1, lon1, alt1 = valid_points[i]
+        lat2, lon2, alt2 = valid_points[i + 1]
+        segment = LineString([(lon1, lat1), (lon2, lat2)])
+        path.append((lat1, lon1, alt1))
+        if not boundary_polygon.contains(segment):
+            path.append((cornerfix[0], cornerfix[1], altitude))
+
+    if valid_points:
+        path.append(valid_points[-1])  # Add the last point
+
+    return path
+
+# Define the boundary coordinates 
+comp_boundary_coords = [
+    (50.0971537, -110.7329257),
+    (50.1060519, -110.7328869),
+    (50.1060793, -110.7436756),
+    (50.1035452, -110.7436555),
+    (50.0989139, -110.7381534),
+    (50.0971788, -110.7381487),
+    (50.0971537, -110.7329257)
+]
+
+vantreight_boundary_coords = [
+    (48.4934674, -123.3101331),
+    (48.4929946, -123.3080785),
+    (48.4923298, -123.308556),
+    (48.4928204, -123.3105194)
+]
+
+# Create the boundary polygon
+comp_boundary_polygon = Polygon(green_boundary_coords)
+
+vantreight_boundary_polygon = Polygon(vantreight_boundary_coords)
+
+
+cornerfix_comp = (50.0989139, -110.7381534)
+cornerfix_vantreight = (48.49254, -123.30896)
+
 def main():
-    # Timestamp for KML output
+    if boundary_choice == "comp":
+        boundary_polygon = comp_boundary_polygon
+        cornerfix = cornerfix_comp
+    elif boundary_choice == "vantreight":
+        boundary_polygon = vantreight_boundary_polygon
+        cornerfix = cornerfix_vantreight
+    else:
+        print(f"Invalid boundary: {boundary_choice}")
+        return
 
 
     while True:
@@ -566,7 +642,8 @@ def main():
         point_north(the_connection)
         lat, lon, _, _, _ = retrieve_gps()
         waypoints = get_rectangle_centers_from_list(lat, lon)
-        for lat, lon, alt in waypoints:
+        validated_waypoints = validate_spiral_path(waypoints, )
+        for lat, lon, alt in validated_waypoints:
             send_set_position_target_global_int(the_connection, lat, lon, alt)
             print(f"Waiting until reached...") 
             wait_until_reached(the_connection, lat, lon, alt)
@@ -576,4 +653,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Run drone spiral path with selected boundary.")
+    parser.add_argument("--boundary", type=str, choices=["comp", "vantreight"], default="comp",
+                        help="Boundary to use: 'comp' or 'vantreight'")
+    args = parser.parse_args()
+    main(args.boundary)
