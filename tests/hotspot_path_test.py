@@ -643,7 +643,7 @@ def main(boundary_choice):
         point_north(the_connection)
         lat, lon, _, _, _ = retrieve_gps()
         waypoints = get_rectangle_centers_from_list(lat, lon)
-        validated_waypoints = validate_spiral_path(waypoints, )
+        validated_waypoints = validate_spiral_path(waypoints, boundary_polygon, cornerfix)
         for lat, lon, alt in validated_waypoints:
             send_set_position_target_global_int(the_connection, lat, lon, alt)
             print(f"Waiting until reached...") 
