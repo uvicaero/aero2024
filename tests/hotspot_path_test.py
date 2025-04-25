@@ -557,7 +557,7 @@ def main():
 
     while True:
         user_input = input(f"Press Enter to start")
-        lat, lon, rel_alt, pitch, azimuth = retrieve_gps()
+        lat, lon, rel_alt, vx, vy, vz, pitch, yaw = retrieve_gps()
         waypoints = get_rectangle_centers_from_list(lat, lon)
         for lat, lon, alt in waypoints:
             send_set_position_target_global_int(the_connection, lat, lon, alt)
