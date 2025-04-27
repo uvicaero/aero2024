@@ -717,7 +717,7 @@ def point_north(connection):
         connection.target_system,
         connection.target_component,
         mavutil.mavlink.MAV_FRAME_LOCAL_NED,
-        0b100111111000,
+        0b100111111111,
         0,
         0,
         0,
