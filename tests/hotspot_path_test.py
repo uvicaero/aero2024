@@ -712,18 +712,16 @@ def wait_until_reached(connection, target_lat, target_lon, target_alt, tolerance
 
 def point_north(connection):
     time_boot_ms = int(round(time.time() * 1000)) & 0xFFFFFFFF
-    connection.mav.set_position_target_local_ned_send(
-        time_boot_ms,
+    connection.mav.command_long_send(
         connection.target_system,
         connection.target_component,
-        mavutil.mavlink.MAV_FRAME_LOCAL_NED,
-        0b100111111111,
-        0,
-        0,
-        0,
-        0, 0, 0,
-        0, 0, 0,
-        0, 0
+        mavutil.mavlink.MAV_CMD_CONDITION_YAW,
+        0,      # confirmation
+        0,      # target angle, degrees
+        30,     # yaw rate, deg/s
+        1,      # direction: 1=cw, -1=ccw
+        0,      # relative offset: 0=absolute
+        0,0,0   # unused
     )
     time.sleep(5)
     
