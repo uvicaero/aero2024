@@ -765,8 +765,7 @@ def xy_to_latlon(x_m: float, y_m: float, lat0: float, lon0: float) -> (float, fl
 
 def get_rectangle_centers_from_list(center_lat: float,
                                     center_lon: float,
-                                    pattern_offsets=PATTERN_OFFSETS,
-                                    altitude: float = 50.0) -> list:
+                                    pattern_offsets=PATTERN_OFFSETS) -> list:
     """
     Returns a list of (lat, lon, alt) for each rectangular FOV center,
     ordered by the box index in the spiral pattern.
@@ -776,7 +775,7 @@ def get_rectangle_centers_from_list(center_lat: float,
     waypoints = []
     for idx, x_m, y_m in sorted_offsets:
         lat, lon = xy_to_latlon(x_m, y_m, center_lat, center_lon)
-        waypoints.append((lat, lon, altitude))
+        waypoints.append((lat, lon))
     return waypoints
 
 def validate_spiral_path(
@@ -790,35 +789,99 @@ def validate_spiral_path(
     and inserts `cornerfix` detours where path segments cross the boundary.
 
     Parameters:
-        waypoint_list: ordered list of (lat, lon, alt)
+        waypoint_list: ordered list of (lat, lon)
         boundary_polygon: Shapely Polygon in (lon, lat) format
         cornerfix: (lat, lon) tuple to insert when a segment crosses outside
         altitude: altitude to use for cornerfix
 
     Returns:
-        Filtered and patched list of (lat, lon, alt) waypoints
+        Filtered and patched list of (lat, lon) waypoints
     """
     # Step 1: Filter out-of-bounds points
     valid_points = [
-        (lat, lon, alt)
-        for lat, lon, alt in waypoint_list
+        (lat, lon)
+        for lat, lon in waypoint_list
         if boundary_polygon.contains(Point(lon, lat))
     ]
 
     # Step 2: Insert cornerfix detour where segment crosses outside
     path = []
     for i in range(len(valid_points) - 1):
-        lat1, lon1, alt1 = valid_points[i]
-        lat2, lon2, alt2 = valid_points[i + 1]
+        lat1, lon1 = valid_points[i]
+        lat2, lon2 = valid_points[i + 1]
         segment = LineString([(lon1, lat1), (lon2, lat2)])
-        path.append((lat1, lon1, alt1))
+        path.append((lat1, lon1))
         if not boundary_polygon.contains(segment):
-            path.append((cornerfix[0], cornerfix[1], altitude))
+            path.append((cornerfix[0], cornerfix[1]))
 
     if valid_points:
         path.append(valid_points[-1])  # Add the last point
 
     return path
+
+def imageToHotspotCoordinates(image):
+    """
+    Gets list of hotspot lat/lon from an image
+
+    Parameters:
+        image: either static image from a file or taken live from picam2
+    Return:
+        detected_hotspots: a list of every hotspot detected in the image as lat/lon pairs in a 2d array [[lat, lon]]
+        get_gps_points: a lat/lon array of where the drone was when the photo was taken
+    """
+    detected_hotspots = []
+
+    hotspots = detect_hotspots_with_mask(image, threshold=0.7)
+    print(f"Detected hotspots: {hotspots}")
+    # Get the latest GPS coordinates from drone
+    lat, lon, alt, _, _, _, _, yaw = retrieve_gps() ############################SHOULD we use get_latest_gps, retrieve_gps or retrieve_local
+    #get_gps_points.append({"lat": lat, "lon": lon})   ###### Don't need to implement till flight test
+
+    # Map hotspots to GPS coordinates using `get_hotspots_gps`
+    if hotspots.size > 0:
+        distorted_points = [[x, y] for x, y in hotspots]
+        dist_pts = np.array(distorted_points, dtype=np.float32)
+        pitch = math.radians(-90)
+        azimuth = yaw  # Replace with actual azimuth reading
+        gps_hotspots = get_hotspots_gps(dist_pts, lon, lat, alt, pitch, azimuth)
+
+        # Fix shape if necessary: Convert (N, 1, 2) ? (N, 2)
+        if gps_hotspots.ndim == 3 and gps_hotspots.shape[1] == 1 and gps_hotspots.shape[2] == 2:
+            gps_hotspots = gps_hotspots.reshape(-1, 2)
+
+        # Ensure valid data before appending
+        if gps_hotspots.size > 0 and gps_hotspots.shape[1] == 2:
+            for gps_point in gps_hotspots:
+                detected_hotspots.append([gps_point[0], gps_point[1]])
+        else:
+            print(f"Error: Invalid GPS hotspots output {gps_hotspots}")
+
+    return detected_hotspots
+
+def generateKML(hotspots):
+
+    # File Save Location
+    output_kml_path = "data/kml_source_files/hotspots.kml"
+
+    red_icon = "http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png"
+
+    # Generate KML file
+
+    kml = simplekml.Kml()
+    hotspot_count = 1
+    for point in hotspots:
+        pnt = kml.newpoint(name=f"Hotspot {hotspot_count}", coords=[(point[1], point[0])])  # Lon, Lat
+        hotspot_count += 1
+        pnt.style.iconstyle.icon.href = red_icon
+
+    # Save KML file
+    os.makedirs(os.path.dirname(output_kml_path), exist_ok=True)
+    kml.save(output_kml_path)
+    print(f"KML file saved to {output_kml_path}")
+
+    # Upload KML file to Google Drive
+    upload_kml(output_kml_path, 'https://drive.google.com/drive/folders/1Nc0sSJF1-gshAaj4k81v2x1kxkqtnhiA')
+    print(f"KML file uploaded to Google Drive")
 
 # Define the boundary coordinates 
 comp_boundary_coords = [
@@ -871,11 +934,12 @@ def main(boundary_choice):
     time.sleep(2)
 
     initial_hotspots = []
+    final_hotspots = []
 
 
     while True:
         # Wait to start survey
-        user_input = input(f"Press Enter to start")
+        user_input = input(f"Press Enter to start") ######## FOR TESTING ################################
 
         # Orient correctly
         point_north(the_connection)
@@ -890,89 +954,91 @@ def main(boundary_choice):
         #  1. Go to point
         #  2. Take photo
         #  3. Detect hotspots and store
-        for lat, lon, alt in validated_waypoints:
+        for lat, lon in validated_waypoints:
+            user_input = input(f"Press Enter to start") ######## FOR TESTING ################################
 
             # Go to point
-            send_set_position_target_global_int(the_connection, lat, lon, alt)
+            send_set_position_target_global_int(the_connection, lat, lon, 50)
             print(f"Waiting until reached...") 
-            wait_until_reached(the_connection, lat, lon, alt)
+            wait_until_reached(the_connection, lat, lon, 50)
             print(f"Point reached") 
             time.sleep(1)
             print("\nCapturing image...")
 
-            # Capture image
+            # Capture image and extract hotspots
             rgb_image = picam2.capture_array("main")
-            gray_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
+            image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
+            detected_hotspots = imageToHotspotCoordinates(image)
+            initial_hotspots.extend(detected_hotspots)
 
-            # Get current GPS location, altitude, pitch, and azimuth
-            lat, lon, rel_alt, pitch, azimuth = retrieve_gps()
-            print(f"GPS: lat={lat}, lon={lon}, rel_alt={rel_alt}m, pitch={pitch} rad, azimuth={azimuth} rad")
-
-            # Detect hotspots in image
-            print("Running hotspot detection...")
-            hotspots = detect_hotspots(gray_image, threshold=0.9)
-
-            # When detected, map hotspots to GPS coordinates using `get_hotspots_gps`
-            if hotspots.size > 0:
-                distorted_points = np.array([[x, y] for x, y in hotspots], dtype=np.float32)
-                camera_pitch = pitch - math.radians(90)
-                gps_hotspots = get_hotspots_gps(distorted_points, lon, lat, rel_alt, camera_pitch, azimuth)
-
-                # Ensure output shape is (N,2)
-                gps_hotspots = gps_hotspots.reshape(-1, 2) if gps_hotspots.ndim > 2 else gps_hotspots
-
-                # Validate before appending
-                if gps_hotspots.size > 0 and gps_hotspots.shape[1] == 2:
-                    for j, gps_point in enumerate(gps_hotspots):
-                        initial_hotspots.append([gps_point[0], gps_point[1], 20])
-                else:
-                    print(f"[ERROR] Invalid GPS hotspots output: {gps_hotspots.shape} - Data: {gps_hotspots}")
-                
+            
+        # Create a valid path to visit detected hotspots (Doesnt cross outside boundary)
         validated_hotspots = validate_spiral_path(initial_hotspots, boundary_polygon, cornerfix)
         
         # Second pass, for each hotspot guess:
         #  1. Go to point
         #  2. Reposition over spot
-        #  3. Store current 
-        for lat, lon, alt in validated_hotspots:
+        #  3. Store final estimate
+        for lat, lon in validated_hotspots:
+            user_input = input(f"Press Enter to start press enter") ######## FOR TESTING ################################
             # Go to point
-            send_set_position_target_global_int(the_connection, lat, lon, alt)
+            send_set_position_target_global_int(the_connection, lat, lon, 20)
             print(f"Waiting until reached...") 
-            wait_until_reached(the_connection, lat, lon, alt)
+            wait_until_reached(the_connection, lat, lon, 20)
             print(f"Point reached") 
             time.sleep(1)
             print("\nCapturing image...")
-
-            # Check for hotspot, go up until it has appeared
+            user_input = input(f"Get ready for photo press enter") ######## FOR TESTING ################################
+            # look for hotspot
             print(f"Taking photo...")
             rgb_image = picam2.capture_array("main")
             image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
             hotspot = imageToHotspotCoordinates(image)
-            photo_retakes = 1
             
-            # Repeats until a hotspot has appeared
-            while len(hotspot) == 0:
-                print(f"No Hotspot found on attempt {photo_retakes}")
+            # try up to 3 times, ascending by 5 m each time
+            max_retries = 3
+            for attempt in range(1, max_retries+1):
+                if hotspot:
+                    break
+                print(f"No hotspot found on attempt {attempt}, ascending and retrying…")
                 cur_lat, cur_lon, _, _, _ = retrieve_gps()
-                send_set_position_target_global_int(the_connection, cur_lat, cur_lon, (20+(5*photo_retakes)), )
-                print(f"Waiting until reached...") 
-                wait_until_reached(the_connection, cur_lat, cur_lon, (20+(5*photo_retakes)))
-                # Take another photo (or use test photo)
-                print(f"Taking photo...")
+                new_alt = 20 + 5 * attempt
+                send_set_position_target_global_int(the_connection, cur_lat, cur_lon, new_alt)
+                print("Waiting until reached…")
+                wait_until_reached(the_connection, cur_lat, cur_lon, new_alt)
+                print("Retake photo…")
+                user_input = input(f"Press Enter to start press enter") ######## FOR TESTING ################################
                 rgb_image = picam2.capture_array("main")
                 image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
                 hotspot = imageToHotspotCoordinates(image)
-                photo_retakes += 1
+
+            # if still no hotspot, skip this point
+            if not hotspot:
+                print(f"[WARN] No hotspot after {max_retries} attempts; skipping this point.")
+                continue
+
             
-            # reposition at 20m
+            
+            # reposition within 1m
             threshold = 1  
+            user_input = input(f"First reposition press enter") ######## FOR TESTING ################################
             reposition_drone_over_hotspot(the_connection, picam2, threshold)
             # descend to 10m
             cur_lat, cur_lon, _, _, _ = retrieve_gps()
+            user_input = input(f"Descend press enter") ######## FOR TESTING ################################
             send_set_position_target_global_int(the_connection, cur_lat, cur_lon, 10 )
-            # reposition at 10m
+            # reposition within 0.5m
             threshold = 0.5  
+            user_input = input(f"Second reposition press enter") ######## FOR TESTING ################################
             reposition_drone_over_hotspot(the_connection, picam2, threshold)
+            user_input = input(f"Final capture press enter") ######## FOR TESTING ################################
+            rgb_image = picam2.capture_array("main")
+            image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
+            hotspot = imageToHotspotCoordinates(image)
+            final_hotspots.extend(hotspot)
+
+        # generate and upload kml of final hotspots
+        generateKML(final_hotspots)
 
 
            
