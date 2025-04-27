@@ -854,6 +854,16 @@ comp_boundary_coords = [
     (50.0971537, -110.7329257)
 ]
 
+metchosin_boundary_coords = [
+    (48.3720373, -123.5406123),  # Point 1
+    (48.3716952, -123.5393624),  # Point 2
+    (48.3709183, -123.5402368),  # Point 3
+    (48.3713363, -123.5412400),  # Point 4
+    (48.3713505, -123.5397272),  # Point 5
+    (48.3709942, -123.5387884),  # Point 6
+    (48.3713007, -123.5385041),  # Point 7
+]
+
 vantreight_boundary_coords = [
 
     (48.4932345, -123.3099802),
@@ -866,16 +876,22 @@ vantreight_boundary_coords = [
 # Create the boundary polygon
 comp_boundary_polygon = Polygon([(lon, lat) for lat, lon in comp_boundary_coords])
 
+metchosin_boundary_polygon = Polygon([(lon, lat) for lat, lon in metchosin_boundary_coords])
+
 vantreight_boundary_polygon = Polygon([(lon, lat) for lat, lon in vantreight_boundary_coords])
 
 
 cornerfix_comp = (50.0989139, -110.7381534)
+cornerfix_metchosin = (48.3713505, -123.5397272)
 cornerfix_vantreight = (48.49254, -123.30896)
 
 def main(boundary_choice):
     if boundary_choice == "comp":
         boundary_polygon = comp_boundary_polygon
         cornerfix = cornerfix_comp
+    elif boundary_choice == "metchosin":
+        boundary_polygon = metchosin_boundary_polygon
+        cornerfix = cornerfix_metchosin
     elif boundary_choice == "vantreight":
         boundary_polygon = vantreight_boundary_polygon
         cornerfix = cornerfix_vantreight
