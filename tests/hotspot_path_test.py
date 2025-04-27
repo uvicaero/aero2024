@@ -819,44 +819,6 @@ def validate_spiral_path(
 
     return path
 
-def imageToHotspotCoordinates(image):
-    """
-    Gets list of hotspot lat/lon from an image
-
-    Parameters:
-        image: either static image from a file or taken live from picam2
-    Return:
-        detected_hotspots: a list of every hotspot detected in the image as lat/lon pairs in a 2d array [[lat, lon]]
-        get_gps_points: a lat/lon array of where the drone was when the photo was taken
-    """
-    detected_hotspots = []
-
-    hotspots = detect_hotspots_with_mask(image, threshold=0.7)
-    print(f"Detected hotspots: {hotspots}")
-    # Get the latest GPS coordinates from drone
-    lat, lon, alt, _, _, _, _, yaw = retrieve_gps() ############################SHOULD we use get_latest_gps, retrieve_gps or retrieve_local
-    #get_gps_points.append({"lat": lat, "lon": lon})   ###### Don't need to implement till flight test
-
-    # Map hotspots to GPS coordinates using `get_hotspots_gps`
-    if hotspots.size > 0:
-        distorted_points = [[x, y] for x, y in hotspots]
-        dist_pts = np.array(distorted_points, dtype=np.float32)
-        pitch = math.radians(-90)
-        azimuth = yaw  # Replace with actual azimuth reading
-        gps_hotspots = get_hotspots_gps(dist_pts, lon, lat, alt, pitch, azimuth)
-
-        # Fix shape if necessary: Convert (N, 1, 2) ? (N, 2)
-        if gps_hotspots.ndim == 3 and gps_hotspots.shape[1] == 1 and gps_hotspots.shape[2] == 2:
-            gps_hotspots = gps_hotspots.reshape(-1, 2)
-
-        # Ensure valid data before appending
-        if gps_hotspots.size > 0 and gps_hotspots.shape[1] == 2:
-            for gps_point in gps_hotspots:
-                detected_hotspots.append([gps_point[0], gps_point[1]])
-        else:
-            print(f"Error: Invalid GPS hotspots output {gps_hotspots}")
-
-    return detected_hotspots
 
 def generateKML(hotspots):
 
