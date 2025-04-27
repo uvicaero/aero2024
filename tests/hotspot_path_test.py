@@ -1024,7 +1024,7 @@ def main(boundary_choice):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run drone spiral path with selected boundary.")
-    parser.add_argument("--boundary", type=str, choices=["comp", "vantreight"], default="comp",
+    parser.add_argument("--boundary", type=str, choices=["comp", "vantreight", "metchosin"], default="comp",
                         help="Boundary to use: 'comp' or 'vantreight'")
     args = parser.parse_args()
     main(args.boundary)
