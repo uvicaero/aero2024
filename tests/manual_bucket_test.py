@@ -519,7 +519,7 @@ def calculate_gps_distances(landmark_points, get_gps_points):
     elif len(gps_list) > num_pairs:
         print(f"?? {len(gps_list) - num_pairs} extra GPS points not compared.")
 
-def reposition_drone_over_hotspot(connection, camera, threshold=0.5, k_p=0.8):
+def reposition_drone_over_hotspot(connection, camera, threshold=0.5, k_p=0.8, x_cam_offset=42, y_cam_offset=0):
     """
     Grabs the bucket location via bucket detection and repositions the drone until
     it is within an acceptable distance from the bucket.
@@ -545,9 +545,17 @@ def reposition_drone_over_hotspot(connection, camera, threshold=0.5, k_p=0.8):
         move_y = k_p * y_offset
         move_z = k_p * z_offset
         yaw_rad = float(yaw)
-        target_x = current_x + (move_x * math.cos(yaw_rad) - move_y * math.sin(yaw_rad))
-        target_y = current_y + (move_x * math.sin(yaw_rad) + move_y * math.cos(yaw_rad))
-        target_z = current_z + z_offset
+
+        # get camera offset based off yaw (orientation)
+        cam_offset_world_x = (x_cam_offset * math.cos(yaw_rad) - y_cam_offset * math.sin(yaw_rad))
+        cam_offset_world_y = (x_cam_offset * math.sin(yaw_rad) + y_cam_offset * math.cos(yaw_rad))
+
+        corrected_move_x = move_x - cam_offset_world_x
+        corrected_move_y = move_y - cam_offset_world_y
+
+        target_x = current_x + (corrected_move_x * math.cos(yaw_rad) - corrected_move_y * math.sin(yaw_rad))
+        target_y = current_y + (corrected_move_x * math.sin(yaw_rad) + corrected_move_y * math.cos(yaw_rad))
+        target_z = current_z + move_z
         
         send_body_offset_local_position(connection, move_x, move_y, move_z)
         wait_for_position_target_local(connection, target_x, target_y, target_z)
@@ -571,7 +579,7 @@ def get_offset(connection, camera, videoLength=1, fov_x=62.2, fov_y=48.8, image_
     Uses bucket detection to determine the target’s pixel center and calculates
     the corresponding movement offsets based on the camera’s field of view and altitude.
     """
-    lat, lon, rel_alt, pitch, azimuth = retrieve_gps()
+    lat, lon, rel_alt, pitch, yew = retrieve_gps()
     if rel_alt is None:
         print("Failed to retrieve relative altitude.")
         return None, None, 0
