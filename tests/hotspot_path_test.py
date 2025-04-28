@@ -745,7 +745,7 @@ def point_north(connection):
 
 
 def wait_until_pointing_north():
-    while true:
+    while True:
         _, _, _, _, yaw = retrieve_gps()
         if(yaw <= 0.1):
             break
