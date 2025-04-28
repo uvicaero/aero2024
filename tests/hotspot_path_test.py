@@ -868,11 +868,6 @@ def arm_and_takeoff(connection, altitude):
     )
     wait_for_ack(mavutil.mavlink.MAV_CMD_DO_SET_MODE)
 
-    # Load waypoints
-    if not load_waypoints_via_mavlink(waypoints):
-        print("Failed to upload waypoints. Exiting.")
-        return
-
     # Arm the vehicle
     connection.mav.command_long_send(
         connection.target_system,
