@@ -167,16 +167,11 @@ def wait_for_takeoff_completion(target_altitude):
     """
     print(f"Waiting for the drone to reach {target_altitude} meters altitude...")
     while True:
-        msg = the_connection.recv_match(type='GLOBAL_POSITION_INT', blocking=True, timeout=50)
-        if msg:
-            current_alt = msg.relative_alt / 1000.0  # Convert from millimeters to meters
-            print(f"Current altitude (GLOBAL_POSITION_INT): {current_alt:.2f} meters")
-            if current_alt >= target_altitude * 0.95:
-                print(f"Target altitude {target_altitude} meters reached.")
-                break
-        else:
-            print("Timeout waiting for altitude data.")
-            return False
+        _, _, current_alt, _, _ = retrieve_gps()
+        
+        if current_alt >= target_altitude * 0.95:
+            print(f"Target altitude {target_altitude} meters reached.")
+            break
         time.sleep(1)
     return True
 
@@ -818,30 +813,152 @@ def validate_spiral_path(
     return path
 
 
-def generateKML(hotspots):
-
-    # File Save Location
+def generateKML(hotspots, flags, sources=None):
+    """
+    hotspots: list of (lat, lon)
+    flags:    list of "multi-blob" or "refine"
+    sources:  list of (lat, lon, description)
+    """
     output_kml_path = "data/kml_source_files/hotspots.kml"
-
-    red_icon = "http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png"
-
-    # Generate KML file
+    red_icon        = "http://maps.google.com/mapfiles/kml/pushpin/red-pushpin.png"
+    fire_icon       = "http://maps.google.com/mapfiles/kml/pushpin/fire.png"
 
     kml = simplekml.Kml()
-    hotspot_count = 1
-    for point in hotspots:
-        pnt = kml.newpoint(name=f"Hotspot {hotspot_count}", coords=[(point[1], point[0])])  # Lon, Lat
-        hotspot_count += 1
-        pnt.style.iconstyle.icon.href = red_icon
 
-    # Save KML file
+    # 1) Plot your surveyed hotspots
+    for i, ((lat, lon), flag) in enumerate(zip(hotspots, flags), start=1):
+        method = "clustered@20m" if flag=="multi-blob" else "refined@10m"
+        p = kml.newpoint(
+            name=f"Hotspot {i} ({method})",
+            coords=[(lon, lat)]
+        )
+        p.description = (
+            "Clustered multiple blobs at 20 m"
+            if flag=="multi-blob"
+            else "Refined single blob at 10 m"
+        )
+        p.style.iconstyle.icon.href = red_icon
+
+    # 2) Plot any manual “source of fire” markers
+    if sources:
+        for j, (lat, lon, desc) in enumerate(sources, start=1):
+            s = kml.newpoint(
+                name=f"Source of fire: {desc}",
+                coords=[(lon, lat)]
+            )
+            s.description = f"Manually marked source of fire: {desc}"
+            s.style.iconstyle.icon.href = fire_icon
+
+    # Save & upload
     os.makedirs(os.path.dirname(output_kml_path), exist_ok=True)
     kml.save(output_kml_path)
     print(f"KML file saved to {output_kml_path}")
-
-    # Upload KML file to Google Drive
     upload_kml(output_kml_path, 'https://drive.google.com/drive/folders/1Nc0sSJF1-gshAaj4k81v2x1kxkqtnhiA')
-    print(f"KML file uploaded to Google Drive")
+    print("KML file uploaded to Google Drive")
+
+def arm_and_takeoff(connection, altitude):
+    # Set mode
+    connection.mav.command_long_send(
+        connection.target_system,
+        connection.target_component,
+        mavutil.mavlink.MAV_CMD_DO_SET_MODE,
+        0,
+        1,  # Base mode
+        4, 0, 0, 0, 0, 0  # Custom mode for GUIDED
+    )
+    wait_for_ack(mavutil.mavlink.MAV_CMD_DO_SET_MODE)
+
+    # Load waypoints
+    if not load_waypoints_via_mavlink(waypoints):
+        print("Failed to upload waypoints. Exiting.")
+        return
+
+    # Arm the vehicle
+    connection.mav.command_long_send(
+        connection.target_system,
+        connection.target_component,
+        mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,
+        0,
+        1,  # Arm
+        0, 0, 0, 0, 0, 0
+    )
+    print("Vehicle armed.")
+
+    # Takeoff to an altitude of 10 meters
+    connection.mav.command_long_send(
+        connection.target_system,
+        connection.target_component,
+        mavutil.mavlink.MAV_CMD_NAV_TAKEOFF,
+        0,
+        0, 0, 0, float('nan'),
+        0, 0,
+        altitude  # Target altitude in meters
+    )
+    print("Takeoff command sent.")
+
+    wait_for_ack(mavutil.mavlink.MAV_CMD_NAV_TAKEOFF)
+
+def set_mode_loiter(connection):
+    connection.mav.command_long_send(
+        connection.target_system,
+        connection.target_component,
+        mavutil.mavlink.MAV_CMD_DO_SET_MODE,      # 176
+        0,                                         # confirmation
+        mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,  # 1
+        5,                                         # Loiter mode (custom_mode = 5) :contentReference[oaicite:0]{index=0}
+        0, 0, 0, 0, 0                              # unused
+    )
+    wait_for_ack(mavutil.mavlink.MAV_CMD_DO_SET_MODE)
+    print("Now in Loiter mode")
+
+def set_mode_guided(connection):
+    connection.mav.command_long_send(
+        connection.target_system,
+        connection.target_component,
+        mavutil.mavlink.MAV_CMD_DO_SET_MODE,      # 176
+        0,                                         # confirmation
+        mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,  # 1
+        4,                                         # Loiter mode (custom_mode = 5) :contentReference[oaicite:0]{index=0}
+        0, 0, 0, 0, 0                              # unused
+    )
+    wait_for_ack(mavutil.mavlink.MAV_CMD_DO_SET_MODE)
+    print("Now in Guided mode")
+
+def set_mode_RTL(connection):
+    # DO_SET_MODE (176), param1=1 to enable custom mode, param2=6 for RTL
+    connection.mav.command_long_send(
+        connection.target_system,
+        connection.target_component,
+        mavutil.mavlink.MAV_CMD_DO_SET_MODE,            # 176
+        0,                                               # confirmation
+        mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,  # enable custom mode
+        6,                                               # RTL mode (custom_mode = 6)
+        0, 0, 0, 0, 0                                    # unused
+    )
+    wait_for_ack(mavutil.mavlink.MAV_CMD_DO_SET_MODE)
+    print("Now in RTL mode")
+
+def cluster_hotspots(hotspots, threshold_m=5.0):
+    """
+    Merge any hotspots closer than threshold_m into a single cluster,
+    returning the list of cluster centers.
+    """
+    clusters = []  # each entry is [sum_lat, sum_lon, count]
+    for lat, lon in hotspots:
+        placed = False
+        for c in clusters:
+            # compute distance from this point to cluster center
+            avg_lat, avg_lon = c[0]/c[2], c[1]/c[2]
+            if distance_between_gps(lat, lon, avg_lat, avg_lon) < threshold_m:
+                c[0] += lat
+                c[1] += lon
+                c[2] += 1
+                placed = True
+                break
+        if not placed:
+            clusters.append([lat, lon, 1])
+    # turn sums back into centers
+    return [(c[0]/c[2], c[1]/c[2]) for c in clusters]
 
 # Define the boundary coordinates 
 comp_boundary_coords = [
@@ -912,11 +1029,23 @@ def main(boundary_choice):
 
     initial_hotspots = []
     final_hotspots = []
+    final_flags    = []   # “multi blob” or “refine”
+    source_markers   = []   # will hold (lat, lon, description)
+
+    user_input = input(f"Press Enter to takeoff") 
+
+    arm_and_takeoff(the_connection, 10)
+
+    wait_for_takeoff_completion(10)
+
+    set_mode_loiter(the_connection)
 
 
     while True:
         # Wait to start survey
         user_input = input(f"Press Enter to start") ######## FOR TESTING ################################
+
+        set_mode_guided(the_connection)
 
         # Orient correctly
         point_north(the_connection)
@@ -948,74 +1077,95 @@ def main(boundary_choice):
             detected_hotspots = imageToHotspotCoordinates(image)
             initial_hotspots.extend(detected_hotspots)
 
-            
+        # cluster the initial list: merge any repeats closer than 5 m
+        clustered_initial_hotspots = cluster_hotspots(initial_hotspots, threshold_m=5.0)
         # Create a valid path to visit detected hotspots (Doesnt cross outside boundary)
-        validated_hotspots = validate_spiral_path(initial_hotspots, boundary_polygon, cornerfix)
-        
+        validated_hotspots = validate_spiral_path(clustered_initial_hotspots, boundary_polygon, cornerfix)
+
         # Second pass, for each hotspot guess:
         #  1. Go to point
         #  2. Reposition over spot
         #  3. Store final estimate
         for lat, lon in validated_hotspots:
-            user_input = input(f"Press Enter to start press enter") ######## FOR TESTING ################################
-            # Go to point
+            # ── Go to 20 m and take the initial shot ───────────────────────────────
+            user_input = input("Press Enter to start second-pass point…")
             send_set_position_target_global_int(the_connection, lat, lon, 20)
-            print(f"Waiting until reached...") 
+            print("Waiting until reached…")
             wait_until_reached(the_connection, lat, lon, 20)
-            print(f"Point reached") 
+            print("Point reached at 20 m")
             time.sleep(1)
-            print("\nCapturing image...")
-            user_input = input(f"Get ready for photo press enter") ######## FOR TESTING ################################
-            # look for hotspot
-            print(f"Taking photo...")
+
+            user_input = input("Get ready for photo, press Enter")
             rgb_image = picam2.capture_array("main")
-            image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
-            hotspot = imageToHotspotCoordinates(image)
-            
-            # try up to 3 times, ascending by 5 m each time
+            image     = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
+            raw       = imageToHotspotCoordinates(image)
+
+            # ── Retry up to 3× if nothing detected ────────────────────────────────
             max_retries = 3
             for attempt in range(1, max_retries+1):
-                if hotspot:
+                if raw:
                     break
-                print(f"No hotspot found on attempt {attempt}, ascending and retrying…")
+                print(f"No hotspot on attempt {attempt}, ascending and retrying…")
                 cur_lat, cur_lon, _, _, _ = retrieve_gps()
                 new_alt = 20 + 5 * attempt
                 send_set_position_target_global_int(the_connection, cur_lat, cur_lon, new_alt)
                 print("Waiting until reached…")
                 wait_until_reached(the_connection, cur_lat, cur_lon, new_alt)
-                print("Retake photo…")
-                user_input = input(f"Press Enter to start press enter") ######## FOR TESTING ################################
+                user_input = input("Retake photo, press Enter")
                 rgb_image = picam2.capture_array("main")
-                image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
-                hotspot = imageToHotspotCoordinates(image)
+                image     = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
+                raw       = imageToHotspotCoordinates(image)
 
-            # if still no hotspot, skip this point
-            if not hotspot:
+            if not raw:
                 print(f"[WARN] No hotspot after {max_retries} attempts; skipping this point.")
                 continue
 
-            
-            
-            # reposition within 1m
-            threshold = 1  
-            user_input = input(f"First reposition press enter") ######## FOR TESTING ################################
+            # ── Branch: multiple vs. single at 20 m ───────────────────────────────
+            if len(raw) > 1:
+                print(f"[INFO] {len(raw)} hotspots at 20 m; skipping fine-tune")
+                centers = cluster_hotspots(raw, threshold_m=1.0)
+                for lat_c, lon_c in centers:
+                    final_hotspots.append((lat_c, lon_c))
+                    final_flags.append("multi-blob")
+                continue
+
+            # ── Exactly one hotspot → do the 10 m refine ──────────────────────────
+            # reposition within 1 m at 20 m
+            threshold = 1.0  
+            user_input = input("First reposition at 20 m, press Enter")
             reposition_drone_over_hotspot(the_connection, picam2, threshold)
-            # descend to 10m
+
+            # descend to 10 m
+            user_input = input("Descend to 10 m, press Enter")
             cur_lat, cur_lon, _, _, _ = retrieve_gps()
-            user_input = input(f"Descend press enter") ######## FOR TESTING ################################
-            send_set_position_target_global_int(the_connection, cur_lat, cur_lon, 10 )
-            # reposition within 0.5m
+            send_set_position_target_global_int(the_connection, cur_lat, cur_lon, 10)
+
+            # reposition within 0.5 m at 10 m
             threshold = 0.5  
-            user_input = input(f"Second reposition press enter") ######## FOR TESTING ################################
+            user_input = input("Second reposition at 10 m, press Enter")
             reposition_drone_over_hotspot(the_connection, picam2, threshold)
-            user_input = input(f"Final capture press enter") ######## FOR TESTING ################################
+
+            # final capture at 10 m
+            user_input = input("Final capture at 10 m, press Enter")
             rgb_image = picam2.capture_array("main")
-            image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
-            hotspot = imageToHotspotCoordinates(image)
-            final_hotspots.extend(hotspot)
+            image     = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
+            refined   = imageToHotspotCoordinates(image)
+            if refined:
+                final_hotspots.append(refined[0])
+                final_flags.append("refine")
+        # Now manually fly to source of fire
+        set_mode_loiter(the_connection)
+        print("Fly to the fire source, then press Enter to mark its location.")
+        input()  # wait for pilot to arrive
+        lat_s, lon_s, _, _, _ = retrieve_gps()
+        desc = input("Enter a description for this source of fire: ")
+        source_markers.append((lat_s, lon_s, desc))
 
         # generate and upload kml of final hotspots
-        generateKML(final_hotspots)
+        # merge any final picks that are still within, say, 2 m
+        clustered_final_hotspots = cluster_hotspots(final_hotspots, threshold_m=2.0)
+        generateKML(clustered_final_hotspots, final_flags, source_markers)
+
 
 
            
