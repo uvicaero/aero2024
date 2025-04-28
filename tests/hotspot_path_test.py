@@ -1034,130 +1034,131 @@ def main(boundary_choice):
     set_mode_loiter(the_connection)
 
 
-    while True:
-        # Wait to start survey
+    # Wait to start survey
+    user_input = input(f"Press Enter to start") ######## FOR TESTING ################################
+
+    set_mode_guided(the_connection)
+
+    # Orient correctly
+    point_north(the_connection)
+    lat, lon, _, _, _ = retrieve_gps()
+
+    # Generate waypoints for initial survey and validate
+    waypoints = get_rectangle_centers_from_list(lat, lon)
+    validated_waypoints = validate_spiral_path(waypoints, boundary_polygon, cornerfix)
+    print(validated_waypoints) 
+
+    # First pass, for each waypoint:
+    #  1. Go to point
+    #  2. Take photo
+    #  3. Detect hotspots and store
+    for lat, lon in validated_waypoints:
         user_input = input(f"Press Enter to start") ######## FOR TESTING ################################
 
-        set_mode_guided(the_connection)
+        # Go to point
+        send_set_position_target_global_int(the_connection, lat, lon, 50)
+        print(f"Waiting until reached...") 
+        wait_until_reached(the_connection, lat, lon, 50)
+        print(f"Point reached") 
+        time.sleep(1)
+        print("\nCapturing image...")
 
-        # Orient correctly
-        point_north(the_connection)
-        lat, lon, _, _, _ = retrieve_gps()
+        # Capture image and extract hotspots
+        rgb_image = picam2.capture_array("main")
+        image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
+        detected_hotspots = imageToHotspotCoordinates(image)
+        initial_hotspots.extend(detected_hotspots)
 
-        # Generate waypoints for initial survey and validate
-        waypoints = get_rectangle_centers_from_list(lat, lon)
-        validated_waypoints = validate_spiral_path(waypoints, boundary_polygon, cornerfix)
-        print(validated_waypoints) 
+    # cluster the initial list: merge any repeats closer than 5 m
+    clustered_initial_hotspots = cluster_hotspots(initial_hotspots, threshold_m=5.0)
+    # Create a valid path to visit detected hotspots (Doesnt cross outside boundary)
+    validated_hotspots = validate_spiral_path(clustered_initial_hotspots, boundary_polygon, cornerfix)
 
-        # First pass, for each waypoint:
-        #  1. Go to point
-        #  2. Take photo
-        #  3. Detect hotspots and store
-        for lat, lon in validated_waypoints:
-            user_input = input(f"Press Enter to start") ######## FOR TESTING ################################
+    # Second pass, for each hotspot guess:
+    #  1. Go to point
+    #  2. Reposition over spot
+    #  3. Store final estimate
+    for lat, lon in validated_hotspots:
+        # ── Go to 20 m and take the initial shot ───────────────────────────────
+        user_input = input("Press Enter to start second-pass point…")
+        send_set_position_target_global_int(the_connection, lat, lon, 20)
+        print("Waiting until reached…")
+        wait_until_reached(the_connection, lat, lon, 20)
+        print("Point reached at 20 m")
+        time.sleep(1)
 
-            # Go to point
-            send_set_position_target_global_int(the_connection, lat, lon, 50)
-            print(f"Waiting until reached...") 
-            wait_until_reached(the_connection, lat, lon, 50)
-            print(f"Point reached") 
-            time.sleep(1)
-            print("\nCapturing image...")
+        user_input = input("Get ready for photo, press Enter")
+        rgb_image = picam2.capture_array("main")
+        image     = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
+        raw       = imageToHotspotCoordinates(image)
 
-            # Capture image and extract hotspots
-            rgb_image = picam2.capture_array("main")
-            image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
-            detected_hotspots = imageToHotspotCoordinates(image)
-            initial_hotspots.extend(detected_hotspots)
-
-        # cluster the initial list: merge any repeats closer than 5 m
-        clustered_initial_hotspots = cluster_hotspots(initial_hotspots, threshold_m=5.0)
-        # Create a valid path to visit detected hotspots (Doesnt cross outside boundary)
-        validated_hotspots = validate_spiral_path(clustered_initial_hotspots, boundary_polygon, cornerfix)
-
-        # Second pass, for each hotspot guess:
-        #  1. Go to point
-        #  2. Reposition over spot
-        #  3. Store final estimate
-        for lat, lon in validated_hotspots:
-            # ── Go to 20 m and take the initial shot ───────────────────────────────
-            user_input = input("Press Enter to start second-pass point…")
-            send_set_position_target_global_int(the_connection, lat, lon, 20)
+        # ── Retry up to 3× if nothing detected ────────────────────────────────
+        max_retries = 3
+        for attempt in range(1, max_retries+1):
+            if raw:
+                break
+            print(f"No hotspot on attempt {attempt}, ascending and retrying…")
+            cur_lat, cur_lon, _, _, _ = retrieve_gps()
+            new_alt = 20 + 5 * attempt
+            send_set_position_target_global_int(the_connection, cur_lat, cur_lon, new_alt)
             print("Waiting until reached…")
-            wait_until_reached(the_connection, lat, lon, 20)
-            print("Point reached at 20 m")
-            time.sleep(1)
-
-            user_input = input("Get ready for photo, press Enter")
+            wait_until_reached(the_connection, cur_lat, cur_lon, new_alt)
+            user_input = input("Retake photo, press Enter")
             rgb_image = picam2.capture_array("main")
             image     = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
             raw       = imageToHotspotCoordinates(image)
 
-            # ── Retry up to 3× if nothing detected ────────────────────────────────
-            max_retries = 3
-            for attempt in range(1, max_retries+1):
-                if raw:
-                    break
-                print(f"No hotspot on attempt {attempt}, ascending and retrying…")
-                cur_lat, cur_lon, _, _, _ = retrieve_gps()
-                new_alt = 20 + 5 * attempt
-                send_set_position_target_global_int(the_connection, cur_lat, cur_lon, new_alt)
-                print("Waiting until reached…")
-                wait_until_reached(the_connection, cur_lat, cur_lon, new_alt)
-                user_input = input("Retake photo, press Enter")
-                rgb_image = picam2.capture_array("main")
-                image     = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
-                raw       = imageToHotspotCoordinates(image)
+        if not raw:
+            print(f"[WARN] No hotspot after {max_retries} attempts; skipping this point.")
+            continue
 
-            if not raw:
-                print(f"[WARN] No hotspot after {max_retries} attempts; skipping this point.")
-                continue
+        # ── Branch: multiple vs. single at 20 m ───────────────────────────────
+        if len(raw) > 1:
+            print(f"[INFO] {len(raw)} hotspots at 20 m; skipping fine-tune")
+            centers = cluster_hotspots(raw, threshold_m=1.0)
+            for lat_c, lon_c in centers:
+                final_hotspots.append((lat_c, lon_c))
+                final_flags.append("multi-blob")
+            continue
 
-            # ── Branch: multiple vs. single at 20 m ───────────────────────────────
-            if len(raw) > 1:
-                print(f"[INFO] {len(raw)} hotspots at 20 m; skipping fine-tune")
-                centers = cluster_hotspots(raw, threshold_m=1.0)
-                for lat_c, lon_c in centers:
-                    final_hotspots.append((lat_c, lon_c))
-                    final_flags.append("multi-blob")
-                continue
+        # ── Exactly one hotspot → do the 10 m refine ──────────────────────────
+        # reposition within 1 m at 20 m
+        threshold = 1.0  
+        user_input = input("First reposition at 20 m, press Enter")
+        reposition_drone_over_hotspot(the_connection, picam2, threshold)
 
-            # ── Exactly one hotspot → do the 10 m refine ──────────────────────────
-            # reposition within 1 m at 20 m
-            threshold = 1.0  
-            user_input = input("First reposition at 20 m, press Enter")
-            reposition_drone_over_hotspot(the_connection, picam2, threshold)
+        # descend to 10 m
+        user_input = input("Descend to 10 m, press Enter")
+        cur_lat, cur_lon, _, _, _ = retrieve_gps()
+        send_set_position_target_global_int(the_connection, cur_lat, cur_lon, 10)
 
-            # descend to 10 m
-            user_input = input("Descend to 10 m, press Enter")
-            cur_lat, cur_lon, _, _, _ = retrieve_gps()
-            send_set_position_target_global_int(the_connection, cur_lat, cur_lon, 10)
+        # reposition within 0.5 m at 10 m
+        threshold = 0.5  
+        user_input = input("Second reposition at 10 m, press Enter")
+        reposition_drone_over_hotspot(the_connection, picam2, threshold)
 
-            # reposition within 0.5 m at 10 m
-            threshold = 0.5  
-            user_input = input("Second reposition at 10 m, press Enter")
-            reposition_drone_over_hotspot(the_connection, picam2, threshold)
+        # final capture at 10 m
+        user_input = input("Final capture at 10 m, press Enter")
+        rgb_image = picam2.capture_array("main")
+        image     = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
+        refined   = imageToHotspotCoordinates(image)
+        if refined:
+            final_hotspots.append(refined[0])
+            final_flags.append("refine")
+    # Now manually fly to source of fire
+    set_mode_loiter(the_connection)
+    print("Fly to the fire source, then press Enter to mark its location.")
+    input()  # wait for pilot to arrive
+    lat_s, lon_s, _, _, _ = retrieve_gps()
+    desc = input("Enter a description for this source of fire: ")
+    source_markers.append((lat_s, lon_s, desc))
 
-            # final capture at 10 m
-            user_input = input("Final capture at 10 m, press Enter")
-            rgb_image = picam2.capture_array("main")
-            image     = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
-            refined   = imageToHotspotCoordinates(image)
-            if refined:
-                final_hotspots.append(refined[0])
-                final_flags.append("refine")
-        # Now manually fly to source of fire
-        set_mode_loiter(the_connection)
-        print("Fly to the fire source, then press Enter to mark its location.")
-        input()  # wait for pilot to arrive
-        lat_s, lon_s, _, _, _ = retrieve_gps()
-        desc = input("Enter a description for this source of fire: ")
-        source_markers.append((lat_s, lon_s, desc))
+    # generate and upload kml of final hotspots
+    # merge any final picks that are still within, say, 2 m
+    clustered_final_hotspots = cluster_hotspots(final_hotspots, threshold_m=2.0)
+    generateKML(clustered_final_hotspots, final_flags, source_markers)
 
-        # generate and upload kml of final hotspots
-        # merge any final picks that are still within, say, 2 m
-        clustered_final_hotspots = cluster_hotspots(final_hotspots, threshold_m=2.0)
-        generateKML(clustered_final_hotspots, final_flags, source_markers)
+    set_mode_RTL(the_connection)
 
 
 
