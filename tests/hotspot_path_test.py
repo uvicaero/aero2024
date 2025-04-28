@@ -1087,7 +1087,7 @@ def main(boundary_choice):
     #  2. Take photo
     #  3. Detect hotspots and store
     for lat, lon in validated_waypoints:
-        user_input = input(f"Press Enter to start") ######## FOR TESTING ################################
+        user_input = input(f"Press Enter to go to next survey point") ######## FOR TESTING ################################
 
         # Go to point
         send_set_position_target_global_int(the_connection, lat, lon, 50)
@@ -1096,7 +1096,7 @@ def main(boundary_choice):
         print(f"Point reached") 
         time.sleep(1)
         print("\nCapturing image...")
-
+        user_input = input(f"Press Enter to take photo") ######## FOR TESTING ################################
         # Capture image and extract hotspots
         rgb_image = picam2.capture_array("main")
         image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
