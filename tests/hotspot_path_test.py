@@ -972,14 +972,12 @@ comp_boundary_coords = [
 ]
 
 metchosin_boundary_coords = [
-    (48.3720373, -123.5406123),  # Point 1
-    (48.3716952, -123.5393624),  # Point 2
-    (48.3713007, -123.5385041),  # Point 7
-    (48.3709942, -123.5387884),  # Point 6
-    (48.3713505, -123.5397272),  # Point 5
-    (48.3709183, -123.5402368),  # Point 3
-    (48.3713363, -123.5412400)  # Point 4
-    
+    (48.3721639, -123.540655),   # Point 1
+    (48.3711448, -123.5374364),  # Point 2
+    (48.3693772, -123.5395929),  # Point 3
+    (48.3698904, -123.5413417),  # Point 4
+    (48.3707741, -123.5405048),  # Point 5
+    (48.3713443, -123.5413738),  # Point 6
 ]
 
 vantreight_boundary_coords = [
@@ -1000,7 +998,7 @@ vantreight_boundary_polygon = Polygon([(lon, lat) for lat, lon in vantreight_bou
 
 
 cornerfix_comp = (50.0989139, -110.7381534)
-cornerfix_metchosin = (48.3713505, -123.5397272)
+cornerfix_metchosin = (48.3707741, -123.5405048)
 cornerfix_vantreight = (48.49254, -123.30896)
 
 def main(boundary_choice):
