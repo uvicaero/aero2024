@@ -388,7 +388,7 @@ def set_mode_rtl(connection):
     )
     
     # Wait for an acknowledgement that the mode has been set.
-    wait_for_ack(mavutil.mavlink.MAV_CMD_DO_SET_MODE)
+    #wait_for_ack(mavutil.mavlink.MAV_CMD_DO_SET_MODE)
     
 def wait_for_switch():
     # Read the initial state of the GPIO pin
@@ -866,7 +866,7 @@ def arm_and_takeoff(connection, altitude):
         1,  # Base mode
         4, 0, 0, 0, 0, 0  # Custom mode for GUIDED
     )
-    wait_for_ack(mavutil.mavlink.MAV_CMD_DO_SET_MODE)
+    #wait_for_ack(mavutil.mavlink.MAV_CMD_DO_SET_MODE)
 
     # Arm the vehicle
     connection.mav.command_long_send(
@@ -891,7 +891,7 @@ def arm_and_takeoff(connection, altitude):
     )
     print("Takeoff command sent.")
 
-    wait_for_ack(mavutil.mavlink.MAV_CMD_NAV_TAKEOFF)
+    #wait_for_ack(mavutil.mavlink.MAV_CMD_NAV_TAKEOFF)
 
 def set_mode_loiter(connection):
     connection.mav.command_long_send(
@@ -903,7 +903,7 @@ def set_mode_loiter(connection):
         5,                                         # Loiter mode (custom_mode = 5) :contentReference[oaicite:0]{index=0}
         0, 0, 0, 0, 0                              # unused
     )
-    wait_for_ack(mavutil.mavlink.MAV_CMD_DO_SET_MODE)
+    #wait_for_ack(mavutil.mavlink.MAV_CMD_DO_SET_MODE)
     print("Now in Loiter mode")
 
 def set_mode_guided(connection):
@@ -916,7 +916,7 @@ def set_mode_guided(connection):
         4,                                         # Loiter mode (custom_mode = 5) :contentReference[oaicite:0]{index=0}
         0, 0, 0, 0, 0                              # unused
     )
-    wait_for_ack(mavutil.mavlink.MAV_CMD_DO_SET_MODE)
+    #wait_for_ack(mavutil.mavlink.MAV_CMD_DO_SET_MODE)
     print("Now in Guided mode")
 
 def set_mode_RTL(connection):
@@ -930,7 +930,7 @@ def set_mode_RTL(connection):
         6,                                               # RTL mode (custom_mode = 6)
         0, 0, 0, 0, 0                                    # unused
     )
-    wait_for_ack(mavutil.mavlink.MAV_CMD_DO_SET_MODE)
+    #wait_for_ack(mavutil.mavlink.MAV_CMD_DO_SET_MODE)
     print("Now in RTL mode")
 
 def cluster_hotspots(hotspots, threshold_m=5.0):
