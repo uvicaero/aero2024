@@ -705,20 +705,53 @@ def wait_until_reached(connection, target_lat, target_lon, target_alt, tolerance
 
         time.sleep(0.5)  # Polling interval
 
+import math
+
 def point_north(connection):
-    time_boot_ms = int(round(time.time() * 1000)) & 0xFFFFFFFF
+    # 1) get current yaw in degrees 0…360
+    _, _, _, _, yaw = retrieve_gps()
+    
+    current_deg = (math.degrees(yaw) + 360) % 360
+    # 2) compute angular difference to 0° (north)
+    diff = (0 - current_deg) % 360
+    # 3) pick shortest direction
+    if diff == 0:
+        print("Already pointing north")
+        return
+    elif diff < 180:
+        direction = 1   # CW (turn diff degrees)
+        angle     = diff
+    else:
+        direction = -1  # CCW (turn 360-diff degrees)
+        angle     = 360 - diff
+
+    # 4) send the yaw command
+    yaw_rate = 10  # deg/s
     connection.mav.command_long_send(
         connection.target_system,
         connection.target_component,
         mavutil.mavlink.MAV_CMD_CONDITION_YAW,
-        0,      # confirmation
-        0,      # target angle, degrees
-        30,     # yaw rate, deg/s
-        1,      # direction: 1=cw, -1=ccw
-        0,      # relative offset: 0=absolute
-        0,0,0   # unused
+        0,            # confirmation
+        0,            # param1: ignored in relative=0 absolute mode
+        yaw_rate,     # param2: yaw speed
+        direction,    # param3: 1=cw, -1=ccw
+        0,            # param4: relative=0 → absolute to param1 (we ignore it, using direction+angle)
+        0, 0, 0       # unused
     )
-    time.sleep(5)
+    # wait long enough for the turn to complete
+    duration = angle / yaw_rate
+    time.sleep(duration + 0.5)
+    print(f"Rotated to north via {'CW' if direction==1 else 'CCW'} ({angle:.1f}°)")
+
+
+def wait_until_pointing_north():
+    while true:
+        _, _, _, _, yaw = retrieve_gps()
+        if(yaw <= 0.1):
+            break
+        time.sleep(0.5)  # Polling interval
+
+
     
 
 # ——— Hard-coded offsets for the 18 rectangular FOV centers ———
@@ -1041,6 +1074,7 @@ def main(boundary_choice):
 
     # Orient correctly
     point_north(the_connection)
+    wait_until_pointing_north()
     lat, lon, _, _, _ = retrieve_gps()
 
     # Generate waypoints for initial survey and validate
