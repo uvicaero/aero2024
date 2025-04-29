@@ -1105,6 +1105,9 @@ def main(boundary_choice):
         main={"format": "RGB888", "size": (3280, 2464)}  # Maximum resolution
     )
     picam2.configure(config)
+    # picam2.set_controls(
+
+    # )
     picam2.start()
 
     time.sleep(2)
@@ -1259,7 +1262,7 @@ def main(boundary_choice):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run drone spiral path with selected boundary.")
-    parser.add_argument("--boundary", type=str, choices=["comp", "vantreight", "metchosin, lansdowne"], default="comp",
+    parser.add_argument("--boundary", type=str, choices=["comp", "vantreight", "metchosin", "lansdowne"], default="comp",
                         help="Boundary to use: 'comp' or 'vantreight' or 'metchosin' or 'lansdowne'")
     args = parser.parse_args()
     main(args.boundary)
