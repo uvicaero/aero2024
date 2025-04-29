@@ -21,6 +21,7 @@ from src.functions.detect_hotspots import detect_hotspots
 from src.functions.get_hotspots_gps import get_hotspots_gps
 import matplotlib.pyplot as plt
 import argparse
+import xml.dom.minidom
 
 
 def send_heartbeat(the_connection):
@@ -892,7 +893,7 @@ def generateKML(hotspots, flags, sources=None):
 def save_kml_minimal_format(hotspots, source_marker, output_path="data/kml_source_files/hotspots_minimal.kml"):
     """
     Save minimal KML with hotspots and a source marker.
-    Then upload it to Google Drive and print confirmation.
+    Then upload to Google Drive and print confirmation.
     """
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
@@ -915,9 +916,14 @@ def save_kml_minimal_format(hotspots, source_marker, output_path="data/kml_sourc
         point = ET.SubElement(placemark, "Point")
         ET.SubElement(point, "coordinates").text = f"{lon},{lat},0"
 
+    # Convert to pretty-printed XML string
+    rough_string = ET.tostring(kml, encoding='utf-8')
+    reparsed = xml.dom.minidom.parseString(rough_string)
+    pretty_kml = reparsed.toprettyxml(indent=" ", newl="\n")
+
     # Write to file
-    tree = ET.ElementTree(kml)
-    tree.write(output_path, encoding="utf-8", xml_declaration=True)
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write(pretty_kml)
 
     print(f"KML file saved to {output_path}")
 
@@ -926,6 +932,7 @@ def save_kml_minimal_format(hotspots, source_marker, output_path="data/kml_sourc
     print("KML file uploaded to Google Drive")
 
     return output_path
+
 
 def arm_and_takeoff(connection, altitude):
     # Set mode
@@ -1273,6 +1280,7 @@ def main(boundary_choice):
         user_input = input("Descend to 10 m, press Enter")
         cur_lat, cur_lon, _, _, _ = retrieve_gps()
         send_set_position_target_global_int(the_connection, cur_lat, cur_lon, 10)
+        wait_until_reached(the_connection, cur_lat, cur_lon, 10)
 
         # reposition within 0.5 m at 10 m
         threshold = 0.5  
