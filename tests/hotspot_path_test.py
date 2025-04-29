@@ -1026,9 +1026,14 @@ def cluster_hotspots(hotspots, threshold_m=5.0):
     # turn sums back into centers
     return [(c[0]/c[2], c[1]/c[2]) for c in clusters]
 
-def save_boundary_and_waypoints_kml(validated_waypoints, boundary_polygon, output_path="data/kml_source_files/boundary_and_waypoints.kml"):
+def save_boundary_validated_and_eliminated_kml(
+    validated_waypoints, all_waypoints, boundary_polygon, output_path="data/kml_source_files/boundary_validated_eliminated.kml"
+):
     """
-    Save a KML showing validated waypoints and boundary polygon.
+    Save a KML showing:
+      - Validated points (inside boundary)
+      - Eliminated points (outside boundary)
+      - Boundary polygon
     Then upload it to Google Drive.
     """
     import simplekml
@@ -1037,10 +1042,18 @@ def save_boundary_and_waypoints_kml(validated_waypoints, boundary_polygon, outpu
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     kml = simplekml.Kml()
 
-    # Add the validated waypoints
-    for idx, (lat, lon) in enumerate(validated_waypoints, 1):
-        pnt = kml.newpoint(name=f"Waypoint {idx}", coords=[(lon, lat)])
-        pnt.style.iconstyle.icon.href = "http://maps.google.com/mapfiles/kml/paddle/blu-circle.png"
+    # Track which waypoints were validated
+    validated_set = set(validated_waypoints)
+
+    # Add ALL waypoints, but colored by validity
+    for idx, (lat, lon) in enumerate(all_waypoints, 1):
+        pnt = kml.newpoint(coords=[(lon, lat)])
+        if (lat, lon) in validated_set:
+            pnt.name = f"VALID Waypoint {idx}"
+            pnt.style.iconstyle.icon.href = "http://maps.google.com/mapfiles/kml/paddle/blu-circle.png"
+        else:
+            pnt.name = f"ELIMINATED Waypoint {idx}"
+            pnt.style.iconstyle.icon.href = "http://maps.google.com/mapfiles/kml/paddle/red-circle.png"
 
     # Add the boundary polygon
     if boundary_polygon:
@@ -1051,9 +1064,9 @@ def save_boundary_and_waypoints_kml(validated_waypoints, boundary_polygon, outpu
 
     # Save KML file
     kml.save(output_path)
-    print(f"Boundary and waypoints KML saved to {output_path}")
+    print(f"Boundary and waypoints (validated + eliminated) KML saved to {output_path}")
 
-    # Upload to Google Drive
+    # Upload to Drive
     upload_kml(output_path, 'https://drive.google.com/drive/folders/1Nc0sSJF1-gshAaj4k81v2x1kxkqtnhiA')
     print("Boundary and waypoints KML uploaded to Google Drive")
 
@@ -1199,7 +1212,11 @@ def main(boundary_choice):
     clustered_initial_hotspots = cluster_hotspots(initial_hotspots, threshold_m=5.0)
     # Create a valid path to visit detected hotspots (Doesnt cross outside boundary)
     validated_hotspots = validate_spiral_path(clustered_initial_hotspots, boundary_polygon, cornerfix)
-
+    save_boundary_validated_and_eliminated_kml(
+        validated_waypoints, 
+        waypoints, 
+        boundary_polygon
+    )
     # Second pass, for each hotspot guess:
     #  1. Go to point
     #  2. Reposition over spot
