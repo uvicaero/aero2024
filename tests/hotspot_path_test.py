@@ -1183,7 +1183,11 @@ def main(boundary_choice):
     # Generate waypoints for initial survey and validate
     waypoints = get_rectangle_centers_from_list(lat, lon)
     validated_waypoints = validate_spiral_path(waypoints, boundary_polygon, cornerfix)
-    save_boundary_and_waypoints_kml(validated_waypoints, boundary_polygon)
+    save_boundary_validated_and_eliminated_kml(
+        validated_waypoints, 
+        waypoints, 
+        boundary_polygon
+    )
 
     print(validated_waypoints) 
 
@@ -1212,11 +1216,6 @@ def main(boundary_choice):
     clustered_initial_hotspots = cluster_hotspots(initial_hotspots, threshold_m=5.0)
     # Create a valid path to visit detected hotspots (Doesnt cross outside boundary)
     validated_hotspots = validate_spiral_path(clustered_initial_hotspots, boundary_polygon, cornerfix)
-    save_boundary_validated_and_eliminated_kml(
-        validated_waypoints, 
-        waypoints, 
-        boundary_polygon
-    )
     # Second pass, for each hotspot guess:
     #  1. Go to point
     #  2. Reposition over spot
