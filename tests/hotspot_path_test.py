@@ -889,6 +889,44 @@ def generateKML(hotspots, flags, sources=None):
     upload_kml(output_kml_path, 'https://drive.google.com/drive/folders/1Nc0sSJF1-gshAaj4k81v2x1kxkqtnhiA')
     print("KML file uploaded to Google Drive")
 
+def save_kml_minimal_format(hotspots, source_marker, output_path="data/kml_source_files/hotspots_minimal.kml"):
+    """
+    Save minimal KML with hotspots and a source marker.
+    Then upload it to Google Drive and print confirmation.
+    """
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+    kml = ET.Element("kml", xmlns="http://www.opengis.net/kml/2.2")
+    document = ET.SubElement(kml, "Document")
+
+    # Add source
+    if source_marker:
+        source_lat, source_lon, desc = source_marker
+        placemark = ET.SubElement(document, "Placemark")
+        ET.SubElement(placemark, "name").text = "Source"
+        ET.SubElement(placemark, "description").text = desc
+        point = ET.SubElement(placemark, "Point")
+        ET.SubElement(point, "coordinates").text = f"{source_lon},{source_lat},0"
+
+    # Add hotspots
+    for idx, (lat, lon) in enumerate(hotspots, 1):
+        placemark = ET.SubElement(document, "Placemark")
+        ET.SubElement(placemark, "name").text = f"Hotspot {idx}"
+        point = ET.SubElement(placemark, "Point")
+        ET.SubElement(point, "coordinates").text = f"{lon},{lat},0"
+
+    # Write to file
+    tree = ET.ElementTree(kml)
+    tree.write(output_path, encoding="utf-8", xml_declaration=True)
+
+    print(f"KML file saved to {output_path}")
+
+    # Upload the file
+    upload_kml(output_path, 'https://drive.google.com/drive/folders/1Nc0sSJF1-gshAaj4k81v2x1kxkqtnhiA')
+    print("KML file uploaded to Google Drive")
+
+    return output_path
+
 def arm_and_takeoff(connection, altitude):
     # Set mode
     connection.mav.command_long_send(
@@ -988,6 +1026,8 @@ def cluster_hotspots(hotspots, threshold_m=5.0):
     # turn sums back into centers
     return [(c[0]/c[2], c[1]/c[2]) for c in clusters]
 
+
+
 # Define the boundary coordinates 
 comp_boundary_coords = [
     (50.0971537, -110.7329257),
@@ -1017,6 +1057,16 @@ vantreight_boundary_coords = [
 
 ]
 
+lansdowne_boundary_coords = [
+
+    (48.4454336, -123.3320062),
+    (48.4454549, -123.3305363),
+    (48.444793, -123.3305149),
+    (48.4440956, -123.3296458),
+    (48.4441098, -123.3320491)
+
+]
+
 # Create the boundary polygon
 comp_boundary_polygon = Polygon([(lon, lat) for lat, lon in comp_boundary_coords])
 
@@ -1024,10 +1074,13 @@ metchosin_boundary_polygon = Polygon([(lon, lat) for lat, lon in metchosin_bound
 
 vantreight_boundary_polygon = Polygon([(lon, lat) for lat, lon in vantreight_boundary_coords])
 
+landsdowne_boundary_polygon = Polygon([(lon, lat) for lat, lon in lansdowne_boundary_coords])
+
 
 cornerfix_comp = (50.0989139, -110.7381534)
 cornerfix_metchosin = (48.3707741, -123.5405048)
 cornerfix_vantreight = (48.49254, -123.30896)
+cornerfix_lansdowne = (48.444793, -123.3305149)
 
 def main(boundary_choice):
     if boundary_choice == "comp":
@@ -1039,6 +1092,9 @@ def main(boundary_choice):
     elif boundary_choice == "vantreight":
         boundary_polygon = vantreight_boundary_polygon
         cornerfix = cornerfix_vantreight
+    elif boundary_choice == "lansdowne":
+        boundary_polygon = landsdowne_boundary_polygon
+        cornerfix = cornerfix_lansdowne
     else:
         print(f"Invalid boundary: {boundary_choice}")
         return
@@ -1064,13 +1120,11 @@ def main(boundary_choice):
 
     wait_for_takeoff_completion(10)
 
-    set_mode_loiter(the_connection)
-
+    # set_mode_loiter(the_connection)
+    print("Set mode to loiter and fly to survey start")
 
     # Wait to start survey
-    user_input = input(f"Press Enter to start") ######## FOR TESTING ################################
-
-    set_mode_guided(the_connection)
+    user_input = input(f"Set mode guided and press Enter once survey center is reached to start") ######## FOR TESTING ################################
 
     # Orient correctly
     point_north(the_connection)
@@ -1180,9 +1234,9 @@ def main(boundary_choice):
             final_hotspots.append(refined[0])
             final_flags.append("refine")
     # Now manually fly to source of fire
-    set_mode_loiter(the_connection)
-    print("Fly to the fire source, then press Enter to mark its location.")
-    input()  # wait for pilot to arrive
+    print("Survey done, set mode loiter")
+    print("Fly to the fire source")
+    input("Press Enter to mark location:")  # wait for pilot to arrive
     lat_s, lon_s, _, _, _ = retrieve_gps()
     desc = input("Enter a description for this source of fire: ")
     source_markers.append((lat_s, lon_s, desc))
@@ -1190,7 +1244,9 @@ def main(boundary_choice):
     # generate and upload kml of final hotspots
     # merge any final picks that are still within, say, 2 m
     clustered_final_hotspots = cluster_hotspots(final_hotspots, threshold_m=2.0)
-    generateKML(clustered_final_hotspots, final_flags, source_markers)
+    # generateKML(clustered_final_hotspots, final_flags, source_markers)
+
+    save_kml_minimal_format(clustered_final_hotspots,source_markers[0])
 
     set_mode_RTL(the_connection)
 
@@ -1203,7 +1259,7 @@ def main(boundary_choice):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run drone spiral path with selected boundary.")
-    parser.add_argument("--boundary", type=str, choices=["comp", "vantreight", "metchosin"], default="comp",
-                        help="Boundary to use: 'comp' or 'vantreight'")
+    parser.add_argument("--boundary", type=str, choices=["comp", "vantreight", "metchosin, lansdowne"], default="comp",
+                        help="Boundary to use: 'comp' or 'vantreight' or 'metchosin' or 'lansdowne'")
     args = parser.parse_args()
     main(args.boundary)
