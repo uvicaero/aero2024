@@ -1161,8 +1161,8 @@ def main(boundary_choice):
     # Set manual exposure and ISO
     picam2.set_controls({
         "AeEnable": False,
-        "AnalogueGain": 2.0,    # ISO 200
-        "ExposureTime": 10000   # 10 ms
+        "AnalogueGain": 5.0,    # ISO 200
+        "ExposureTime": 15000   # 10 ms
     })
     picam2.start()
 
