@@ -1135,7 +1135,7 @@ cornerfix_metchosin = (48.3707741, -123.5405048)
 cornerfix_vantreight = (48.49254, -123.30896)
 cornerfix_lansdowne = (48.444793, -123.3305149)
 
-def main(boundary_choice):
+def main(boundary_choice, preview_enabled):
     if boundary_choice == "comp":
         boundary_polygon = comp_boundary_polygon
         cornerfix = cornerfix_comp
@@ -1220,12 +1220,13 @@ def main(boundary_choice):
         rgb_image = picam2.capture_array("main")
         image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
         # Show preview in a window
-        plt.imshow(image)
-        plt.axis('off')
-        plt.title(f"Preview")
-        plt.show(block=False)
-        plt.pause(1.5)  # Show for 1.5 seconds
-        plt.close()
+        if preview_enabled:
+            plt.imshow(image)
+            plt.axis('off')
+            plt.title("Preview")
+            plt.show(block=False)
+            plt.pause(1.5)
+            plt.close()
         detected_hotspots = imageToHotspotCoordinates(image)
         initial_hotspots.extend(detected_hotspots)
 
@@ -1333,5 +1334,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run drone spiral path with selected boundary.")
     parser.add_argument("--boundary", type=str, choices=["comp", "vantreight", "metchosin", "lansdowne"], default="comp",
                         help="Boundary to use: 'comp' or 'vantreight' or 'metchosin' or 'lansdowne'")
+    parser.add_argument("--preview", action="store_true", help="Enable preview of each photo using matplotlib")
     args = parser.parse_args()
-    main(args.boundary)
+    main(args.boundary, args.preview)
