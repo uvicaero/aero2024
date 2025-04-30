@@ -1158,9 +1158,12 @@ def main(boundary_choice):
         main={"format": "RGB888", "size": (3280, 2464)}  # Maximum resolution
     )
     picam2.configure(config)
-    # picam2.set_controls(
-
-    # )
+    # Set manual exposure and ISO
+    picam2.set_controls({
+        "AeEnable": False,
+        "AnalogueGain": 2.0,    # ISO 200
+        "ExposureTime": 10000   # 10 ms
+    })
     picam2.start()
 
     time.sleep(2)
