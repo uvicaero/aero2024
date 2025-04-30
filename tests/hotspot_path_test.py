@@ -1219,6 +1219,10 @@ def main(boundary_choice):
         # Capture image and extract hotspots
         rgb_image = picam2.capture_array("main")
         image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
+        # Show preview in a window
+        cv2.imshow("Preview", image)
+        cv2.waitKey(1000)  # Show for 1 second
+        cv2.destroyAllWindows()
         detected_hotspots = imageToHotspotCoordinates(image)
         initial_hotspots.extend(detected_hotspots)
 
