@@ -1135,7 +1135,7 @@ cornerfix_metchosin = (48.3707741, -123.5405048)
 cornerfix_vantreight = (48.49254, -123.30896)
 cornerfix_lansdowne = (48.444793, -123.3305149)
 
-def main(boundary_choice, preview_enabled):
+def main(boundary_choice, preview_enabled, analogue_gain):
     if boundary_choice == "comp":
         boundary_polygon = comp_boundary_polygon
         cornerfix = cornerfix_comp
@@ -1161,8 +1161,8 @@ def main(boundary_choice, preview_enabled):
     # Set manual exposure and ISO
     picam2.set_controls({
         "AeEnable": False,
-        "AnalogueGain": 9.0,    # ISO 200
-        "ExposureTime": 15000   # 10 ms
+        "AnalogueGain": analogue_gain,
+        "ExposureTime": 15000
     })
     picam2.start()
 
@@ -1335,5 +1335,7 @@ if __name__ == "__main__":
     parser.add_argument("--boundary", type=str, choices=["comp", "vantreight", "metchosin", "lansdowne"], default="comp",
                         help="Boundary to use: 'comp' or 'vantreight' or 'metchosin' or 'lansdowne'")
     parser.add_argument("--preview", action="store_true", help="Enable preview of each photo using matplotlib")
+    parser.add_argument("--gain", type=float, default=9.0,
+                    help="Analogue gain (e.g., 2.0 for ISO 100, 4.0 for ISO 200, etc.)")
     args = parser.parse_args()
-    main(args.boundary, args.preview)
+    main(args.boundary, args.preview, args.gain)
