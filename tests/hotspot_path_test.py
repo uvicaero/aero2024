@@ -1162,7 +1162,7 @@ def main(boundary_choice):
     picam2.set_controls({
         "AeEnable": False,
         "AnalogueGain": 4.0,    # ISO 200
-        "ExposureTime": 10000   # 10 ms
+        "ExposureTime": 15000   # 10 ms
     })
     picam2.start()
 
