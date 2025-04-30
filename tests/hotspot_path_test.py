@@ -528,7 +528,7 @@ def get_offset(connection, image, fov_x=62.2, fov_y=48.8, image_width=3280, imag
     gray_image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
     
     # Detect hotspots
-    hotspots = detect_hotspots(gray_image, threshold=0.9)
+    hotspots = detect_hotspots(gray_image, threshold=0.7)
     if hotspots is None or len(hotspots) == 0:
         print("No hotspots detected.")
         return None, None, 0 
