@@ -481,7 +481,7 @@ def calculate_gps_distances(landmark_points, get_gps_points):
     elif len(gps_list) > num_pairs:
         print(f"?? {len(gps_list) - num_pairs} extra GPS points not compared.")
 
-def reposition_drone_over_hotspot(connection, camera, threshold=0.5, k_p=0.8):
+def reposition_drone_over_hotspot(connection, camera, threshold=1.5, k_p=0.8):
     """
     Grabs the bucket location via bucket detection and repositions the drone until
     it is within an acceptable distance from the bucket.
@@ -509,7 +509,7 @@ def reposition_drone_over_hotspot(connection, camera, threshold=0.5, k_p=0.8):
         yaw_rad = float(yaw)
         target_x = current_x + (move_x * math.cos(yaw_rad) - move_y * math.sin(yaw_rad))
         target_y = current_y + (move_x * math.sin(yaw_rad) + move_y * math.cos(yaw_rad))
-        target_z = current_z + z_offset
+        target_z = current_z + z_offset # This should be z_offset or move_z?
         
         send_body_offset_local_position(connection, move_x, move_y, move_z)
         wait_for_position_target_local(connection, target_x, target_y, target_z)
@@ -528,7 +528,7 @@ def wait_for_position_target_local(connection, target_x, target_y, target_z, thr
             return True
         time.sleep(interval)
 
-def get_offset(connection, camera, videoLength=1, fov_x=62.2, fov_y=48.8, image_width=1280 , image_height=720, camera_offset = (0,1)):
+def get_offset(connection, camera, videoLength=1, fov_x=62.2, fov_y=48.8, image_width=1280 , image_height=720, camera_offset = (1,0)):
     """
     camera_offset = (x,y) camera's offset from vehicle's centre in meters
     Uses bucket detection to determine the target’s pixel center and calculates
@@ -544,16 +544,14 @@ def get_offset(connection, camera, videoLength=1, fov_x=62.2, fov_y=48.8, image_
         return None, None, 0
     target_hotspot = center
     print(f"Detected averaged center: {target_hotspot}")
-    pixels_per_meter_x = image_width / (2 * rel_alt * math.tan(fov_x_rad / 2))
-    pixels_per_meter_y = image_height / (2 * rel_alt * math.tan(fov_x_rad / 2))
-    img_center_x = image_width / 2 - camera_offset[0]*pixels_per_meter_x
-    img_center_y = image_height / 2 - camera_offset[1]*pixels_per_meter_y
+    img_center_x = image_width / 2 
+    img_center_y = image_height / 2 
     fov_x_rad = math.radians(fov_x)
     fov_y_rad = math.radians(fov_y)
     meters_per_pixel_x = (2 * rel_alt * math.tan(fov_x_rad / 2)) / image_width
     meters_per_pixel_y = (2 * rel_alt * math.tan(fov_y_rad / 2)) / image_height
-    x_offset = -(target_hotspot[1] - img_center_y) * meters_per_pixel_y
-    y_offset = (target_hotspot[0] - img_center_x) * meters_per_pixel_x
+    x_offset = ((target_hotspot[1] - img_center_y) * meters_per_pixel_y) + camera_offset[0]
+    y_offset = ((target_hotspot[0] - img_center_x) * meters_per_pixel_x) + camera_offset[1]
     z_offset = 0
     print(f"Offset to bucket: {x_offset:.2f} m forward/backward, {y_offset:.2f} m right/left")
     return x_offset, y_offset, z_offset
@@ -666,12 +664,12 @@ def averageCenters(centers):
 
 def main():
     # Initialize camera for main drone operations
-    # picam2 = Picamera2()
-    # config = picam2.create_still_configuration(
-        # main={"format": "RGB888", "size": (1280 , 720 )}
-    # )
-    # picam2.configure(config)
-    # picam2.start()
+     picam2 = Picamera2()
+     config = picam2.create_still_configuration(
+         main={"format": "RGB888", "size": (1280 , 720 )}
+     )
+     picam2.configure(config)
+     picam2.start()
 
     threshold = 0.5  # Replace with an appropriate threshold
 
@@ -684,9 +682,9 @@ def main():
         send_set_position_target_global_int(the_connection, 48.492795, -123.309293, 20, )
         
         wait_for_position_target( 48.492795, -123.309293, 20, threshold=0.5)
-        # reposition_drone_over_hotspot(the_connection, picam2, 0.03, 0.7)
+         reposition_drone_over_hotspot(the_connection, picam2, 1.5, 0.8)
 
-    # picam2.stop()
+     picam2.stop()
 
 if __name__ == "__main__":
     main()
