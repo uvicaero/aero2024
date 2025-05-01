@@ -481,7 +481,7 @@ def calculate_gps_distances(landmark_points, get_gps_points):
     elif len(gps_list) > num_pairs:
         print(f"?? {len(gps_list) - num_pairs} extra GPS points not compared.")
 
-def reposition_drone_over_hotspot(connection, camera, threshold=0.5, k_p=0.8):
+def reposition_drone_over_hotspot(connection, camera, threshold=1.5, k_p=0.8):
     """
     Grabs the bucket location via bucket detection and repositions the drone until
     it is within an acceptable distance from the bucket.
@@ -509,7 +509,7 @@ def reposition_drone_over_hotspot(connection, camera, threshold=0.5, k_p=0.8):
         yaw_rad = float(yaw)
         target_x = current_x + (move_x * math.cos(yaw_rad) - move_y * math.sin(yaw_rad))
         target_y = current_y + (move_x * math.sin(yaw_rad) + move_y * math.cos(yaw_rad))
-        target_z = current_z + z_offset
+        target_z = current_z + z_offset # This should be z_offset or move_z?
         
         send_body_offset_local_position(connection, move_x, move_y, move_z)
         wait_for_position_target_local(connection, target_x, target_y, target_z)
