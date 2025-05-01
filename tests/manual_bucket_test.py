@@ -664,12 +664,12 @@ def averageCenters(centers):
 
 def main():
     # Initialize camera for main drone operations
-    # picam2 = Picamera2()
-    # config = picam2.create_still_configuration(
-        # main={"format": "RGB888", "size": (1280 , 720 )}
-    # )
-    # picam2.configure(config)
-    # picam2.start()
+     picam2 = Picamera2()
+     config = picam2.create_still_configuration(
+         main={"format": "RGB888", "size": (1280 , 720 )}
+     )
+     picam2.configure(config)
+     picam2.start()
 
     threshold = 0.5  # Replace with an appropriate threshold
 
@@ -682,9 +682,9 @@ def main():
         send_set_position_target_global_int(the_connection, 48.492795, -123.309293, 20, )
         
         wait_for_position_target( 48.492795, -123.309293, 20, threshold=0.5)
-        # reposition_drone_over_hotspot(the_connection, picam2, 0.03, 0.7)
+         reposition_drone_over_hotspot(the_connection, picam2, 1.5, 0.8)
 
-    # picam2.stop()
+     picam2.stop()
 
 if __name__ == "__main__":
     main()
