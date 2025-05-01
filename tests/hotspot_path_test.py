@@ -1111,13 +1111,11 @@ vantreight_boundary_coords = [
 ]
 
 lansdowne_boundary_coords = [
-
-    (48.4454336, -123.3320062),
-    (48.4454549, -123.3305363),
-    (48.444793, -123.3305149),
-    (48.4440956, -123.3296458),
-    (48.4441098, -123.3320491)
-
+    (48.4439995, -123.3324485),  # Point 1
+    (48.4448713, -123.3324056),  # Point 2
+    (48.4448749, -123.3314025),  # Point 3
+    (48.4445329, -123.3314029),  # Point 4
+    (48.4440204, -123.3309308),  # Point 5
 ]
 
 # Create the boundary polygon
@@ -1133,7 +1131,7 @@ landsdowne_boundary_polygon = Polygon([(lon, lat) for lat, lon in lansdowne_boun
 cornerfix_comp = (50.0989139, -110.7381534)
 cornerfix_metchosin = (48.3707741, -123.5405048)
 cornerfix_vantreight = (48.49254, -123.30896)
-cornerfix_lansdowne = (48.444793, -123.3305149)
+cornerfix_lansdowne = (48.4445329, -123.3314029)
 
 def main(boundary_choice, preview_enabled, analogue_gain):
     if boundary_choice == "comp":
