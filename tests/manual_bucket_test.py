@@ -328,7 +328,7 @@ def send_set_position_target_global_int(connection, latitude, longitude, altitud
     )
     print(f"Set position target global int sent to ({latitude}, {longitude}, {altitude})")
 
-def wait_for_position_target(target_lat, target_lon, target_alt, threshold=0.5):
+def wait_for_position_target(target_lat, target_lon, target_alt, threshold=0.1):
     """
     Waits for the drone to reach the target position within a given threshold.
 
@@ -488,7 +488,7 @@ def reposition_drone_over_hotspot(connection, camera, threshold=1.5, k_p=0.8):
     """
     while True:
         # Use the new get_offset (which calls detectBucket) with a 5-second video
-        x_offset, y_offset, z_offset = get_offset(connection, camera, videoLength=1)
+        x_offset, y_offset, z_offset = get_offset(connection, camera, videoLength=5)
         if x_offset is None or y_offset is None:
             print("Error retrieving offset")
             return False
@@ -528,7 +528,7 @@ def wait_for_position_target_local(connection, target_x, target_y, target_z, thr
             return True
         time.sleep(interval)
 
-def get_offset(connection, camera, videoLength=1, fov_x=62.2, fov_y=48.8, image_width=1280 , image_height=720, camera_offset = (1,0)):
+def get_offset(connection, camera, videoLength=5, fov_x=62.2, fov_y=48.8, image_width=1280 , image_height=720, camera_offset = (1,0)):
     """
     camera_offset = (x,y) camera's offset from vehicle's centre in meters
     Uses bucket detection to determine the target’s pixel center and calculates
@@ -681,7 +681,7 @@ def main():
             break  # Exit the loop
         send_set_position_target_global_int(the_connection, 48.4440204, -123.3309308, 10, )
         
-        wait_for_position_target( 48.4440204, -123.3309308, 10, threshold=0.5)
+        wait_for_position_target( 48.4440204, -123.3309308, 10, threshold=0.1)
         reposition_drone_over_hotspot(the_connection, picam2, 1.5, 0.8)
 
      picam2.stop()
