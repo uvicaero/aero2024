@@ -679,9 +679,9 @@ def main():
         if user_input.lower() == "s":
             print("Stopping relocation capture.")
             break  # Exit the loop
-        send_set_position_target_global_int(the_connection, 48.492795, -123.309293, 20, )
+        send_set_position_target_global_int(the_connection, 48.4440204, -123.3309308, 10, )
         
-        wait_for_position_target( 48.492795, -123.309293, 20, threshold=0.5)
+        wait_for_position_target( 48.4440204, -123.3309308, 10, threshold=0.5)
          reposition_drone_over_hotspot(the_connection, picam2, 1.5, 0.8)
 
      picam2.stop()
