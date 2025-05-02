@@ -682,7 +682,7 @@ def main():
         send_set_position_target_global_int(the_connection, 48.4440204, -123.3309308, 10, )
         
         wait_for_position_target( 48.4440204, -123.3309308, 10, threshold=0.5)
-         reposition_drone_over_hotspot(the_connection, picam2, 1.5, 0.8)
+        reposition_drone_over_hotspot(the_connection, picam2, 1.5, 0.8)
 
      picam2.stop()
 
