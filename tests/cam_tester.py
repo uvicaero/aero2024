@@ -53,7 +53,8 @@ def main(resolution, gain, exposure, threshold, preview):
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
             fig, ax = plt.subplots()
             ax.imshow(gray, cmap='gray')
-            for y, x in hotspots:
+            # Unpack correctly: detect_hotspots returns (x, y) pairs
+            for x, y in hotspots:
                 ax.plot(x, y, marker='x', markersize=10)
             ax.axis('off')
 
