@@ -2,16 +2,26 @@
 """
 test_hotspot_detection.py
 
-Standalone script to test Picamera2 photo capture and hotspot detection.
+Standalone script to test Picamera2 photo capture and hotspot detection,
+with matplotlib preview and saving annotated images.
 """
 import time
+import os
 import argparse
+import datetime
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 from picamera2 import Picamera2
 from src.functions.detect_hotspots import detect_hotspots
 
 def main(resolution, gain, exposure, threshold, preview):
+    # Prepare output directory structure
+    base_dir = os.path.join("data", "test_outputs", "cam_test_photos")
+    subdir = f"gain_{gain}_exp_{exposure}_thr_{threshold}"
+    output_dir = os.path.join(base_dir, subdir)
+    os.makedirs(output_dir, exist_ok=True)
+
     # Initialize Picamera2
     picam2 = Picamera2()
     config = picam2.create_still_configuration(
@@ -25,14 +35,12 @@ def main(resolution, gain, exposure, threshold, preview):
     })
     picam2.start()
     time.sleep(2)  # allow sensor to settle
-    print("Camera initialized ({}×{}) at gain={} and exposure={}µs".format(
-        resolution[0], resolution[1], gain, exposure)
-    )
+    print(f"Camera initialized ({resolution[0]}×{resolution[1]}) at gain={gain}, exposure={exposure}µs, threshold={threshold}")
 
     try:
         while True:
             input("Press Enter to capture an image (Ctrl+C to exit)...")
-            # Capture and convert to grayscale
+            # Capture and grayscale
             rgb = picam2.capture_array("main")
             gray = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
 
@@ -40,14 +48,27 @@ def main(resolution, gain, exposure, threshold, preview):
             hotspots = detect_hotspots(gray, threshold=threshold)
             print(f"Detected hotspots: {hotspots}")
 
+            # Annotate with matplotlib
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            fig, ax = plt.subplots()
+            ax.imshow(gray, cmap='gray')
+            for y, x in hotspots:
+                ax.plot(x, y, marker='x', markersize=10)
+            ax.axis('off')
+
+            # Preview if requested
             if preview:
-                # Draw markers on the image
-                vis = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
-                for y, x in hotspots:
-                    cv2.drawMarker(vis, (int(x), int(y)), (0, 0, 255), markerType=cv2.MARKER_CROSS)
-                cv2.imshow("Hotspot Preview", vis)
-                cv2.waitKey(0)
-                cv2.destroyAllWindows()
+                plt.show(block=False)
+                plt.pause(1.5)
+                plt.close(fig)
+
+            # Save annotated image
+            filename = f"{timestamp}.png"
+            out_path = os.path.join(output_dir, filename)
+            fig.savefig(out_path, bbox_inches='tight', pad_inches=0)
+            plt.close(fig)
+            print(f"Saved annotated image to {out_path}")
+
     except KeyboardInterrupt:
         print("Exiting test script.")
     finally:
@@ -55,7 +76,7 @@ def main(resolution, gain, exposure, threshold, preview):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Test script for Picamera2 photo capture and hotspot detection."
+        description="Test script for Picamera2 capture and hotspot detection with matplotlib preview and saving."
     )
     parser.add_argument(
         "-r", "--resolution", nargs=2, type=int, default=[3280, 2464],
@@ -75,7 +96,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-p", "--preview", action="store_true",
-        help="Show a preview window with detected hotspots"
+        help="Show a matplotlib preview with detected hotspots"
     )
     args = parser.parse_args()
     main(
