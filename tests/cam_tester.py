@@ -40,7 +40,8 @@ def main(resolution, gain, exposure, threshold, preview):
     try:
         while True:
             input("Press Enter to capture an image (Ctrl+C to exit)...")
-            # Capture and grayscale
+
+            # Capture and convert to grayscale
             rgb = picam2.capture_array("main")
             gray = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
 
@@ -48,7 +49,7 @@ def main(resolution, gain, exposure, threshold, preview):
             hotspots = detect_hotspots(gray, threshold=threshold)
             print(f"Detected hotspots: {hotspots}")
 
-            # Annotate with matplotlib
+            # Annotate image
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
             fig, ax = plt.subplots()
             ax.imshow(gray, cmap='gray')
@@ -56,11 +57,9 @@ def main(resolution, gain, exposure, threshold, preview):
                 ax.plot(x, y, marker='x', markersize=10)
             ax.axis('off')
 
-            # Preview if requested
+            # Preview and hold until closed
             if preview:
-                plt.show(block=False)
-                plt.pause(1.5)
-                plt.close(fig)
+                plt.show()  # Blocks until window is closed by the user
 
             # Save annotated image
             filename = f"{timestamp}.png"
@@ -96,7 +95,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-p", "--preview", action="store_true",
-        help="Show a matplotlib preview with detected hotspots"
+        help="Show a matplotlib preview that stays open until you close it"
     )
     args = parser.parse_args()
     main(
