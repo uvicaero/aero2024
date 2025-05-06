@@ -28,6 +28,7 @@ def main(resolution, gain, exposure, threshold, preview):
         main={"format": "RGB888", "size": (3280, 2464)},
         controls={"ExposureTime": exposure, "AnalogueGain": gain}
     )
+    picam2.configure(config)
     picam2.start()
     time.sleep(2)  # allow sensor to settle
     print(f"Camera initialized ({resolution[0]}×{resolution[1]}) at gain={gain}, exposure={exposure}µs, threshold={threshold}")
