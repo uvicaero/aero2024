@@ -25,7 +25,7 @@ def main(resolution, gain, exposure, threshold, preview):
     # Initialize Picamera2
     picam2 = Picamera2()
     config = picam2.create_still_configuration(
-        main={"format": "RGB888", "size": (resolution[0], resolution[1])},
+        main={"format": "RGB888", "size": (3280, 2464)},
         controls={"ExposureTime": exposure, "AnalogueGain": gain}
     )
     picam2.start()
