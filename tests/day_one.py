@@ -1148,7 +1148,7 @@ def main():
             "  'list' to view sources\n"
             "  'delete <index>' to delete one\n"
             "  'undo' to remove the last one\n"
-            "  'done' to finish marking sources\n> "
+            "  'done' to finish marking sources and upload kml\n> "
         ).strip().lower()
 
         if user_input == "done":
@@ -1191,7 +1191,7 @@ def main():
     clustered_final_hotspots = cluster_hotspots(final_hotspots, threshold_m=2.0)
     # generateKML(clustered_final_hotspots, final_flags, source_markers)
 
-    save_kml_minimal_format(clustered_final_hotspots,source_markers[0], "data/kml_source_files/hotspots_minimal.kml")
+    save_kml_minimal_format(clustered_final_hotspots,source_markers[0], "data/kml_source_files/uvic_firefly.kml")
 
     input("Press Enter to return to launch:")
 
