@@ -1094,22 +1094,97 @@ def main():
     # set_mode_loiter(the_connection)
     print("Set mode to loiter, fly around and log hotspots")
 
-    while(True):
-        user_input = input(f"Press enter to log current location as hotspot, enter 'stop' to finish")
+    while True:
+        user_input = input(
+            "Enter:\n"
+            "  ⏎ to log current hotspot\n"
+            "  'list' to show all hotspots\n"
+            "  'delete <index>' to remove a specific hotspot\n"
+            "  'undo' to remove the last hotspot\n"
+            "  'stop' to finish\n> "
+        ).strip().lower()
 
-        if user_input.lower() == "stop":
-            print("Stopping hotspot logging capture.")
-            break  # Exit the loop
+        if user_input == "stop":
+            print("Stopping hotspot logging.")
+            break
 
-        lat_s, lon_s, _, _, _ = retrieve_gps()
+        elif user_input == "list":
+            if not final_hotspots:
+                print("No hotspots logged yet.")
+            else:
+                print("Current Hotspots:")
+                for i, (lat, lon) in enumerate(final_hotspots, start=1):
+                    print(f"  {i}: ({lat:.7f}, {lon:.7f})")
 
-        final_hotspots.append([lat_s, lon_s])
+        elif user_input.startswith("delete "):
+            try:
+                index = int(user_input.split()[1])
+                if 1 <= index <= len(final_hotspots):
+                    removed = final_hotspots.pop(index - 1)
+                    print(f"Deleted hotspot {index}: {removed}")
+                else:
+                    print("Invalid index.")
+            except (IndexError, ValueError):
+                print("Usage: delete <index> (e.g., delete 2)")
+
+        elif user_input == "undo":
+            if final_hotspots:
+                removed = final_hotspots.pop()
+                print(f"Removed last hotspot: {removed}")
+            else:
+                print("No hotspot to undo.")
+
+        else:
+            lat, lon, *_ = retrieve_gps()
+            final_hotspots.append([lat, lon])
+            print(f"Logged hotspot at: ({lat:.7f}, {lon:.7f})")
 
     print("Fly to the fire source")
-    input("Press Enter to mark location:")  # wait for pilot to arrive
-    lat_s, lon_s, _, _, _ = retrieve_gps()
-    desc = input("Enter a description for this source of fire: ")
-    source_markers.append((lat_s, lon_s, desc))
+    print("\nFly to each source of fire. You can mark multiple if needed.")
+    while True:
+        user_input = input(
+            "Enter:\n"
+            "  ⏎ to mark current location as a source of fire\n"
+            "  'list' to view sources\n"
+            "  'delete <index>' to delete one\n"
+            "  'undo' to remove the last one\n"
+            "  'done' to finish marking sources\n> "
+        ).strip().lower()
+
+        if user_input == "done":
+            break
+
+        elif user_input == "list":
+            if not source_markers:
+                print("No sources marked yet.")
+            else:
+                print("Current Source Markers:")
+                for i, (lat, lon, desc) in enumerate(source_markers, 1):
+                    print(f"  {i}: ({lat:.7f}, {lon:.7f}) — {desc}")
+
+        elif user_input.startswith("delete "):
+            try:
+                index = int(user_input.split()[1])
+                if 1 <= index <= len(source_markers):
+                    removed = source_markers.pop(index - 1)
+                    print(f"Deleted source {index}: {removed}")
+                else:
+                    print("Invalid index.")
+            except (IndexError, ValueError):
+                print("Usage: delete <index> (e.g., delete 1)")
+        
+        elif user_input == "undo":
+            if source_markers:
+                removed = source_markers.pop()
+                print(f"Removed last source marker: {removed}")
+            else:
+                print("No source marker to undo.")
+
+        else:
+            lat_s, lon_s, *_ = retrieve_gps()
+            desc = input("Enter a description for this source of fire: ")
+            source_markers.append((lat_s, lon_s, desc))
+            print(f"Marked source at: ({lat_s:.7f}, {lon_s:.7f}) — '{desc}'")
 
     # generate and upload kml of final hotspots
     # merge any final picks that are still within, say, 2 m
