@@ -907,7 +907,7 @@ def save_kml_minimal_format(hotspots, source_marker, output_path="data/kml_sourc
     print(f"KML file saved to {output_path}")
 
     # Upload the file
-    upload_kml(output_path, 'https://drive.google.com/drive/folders/1Nc0sSJF1-gshAaj4k81v2x1kxkqtnhiA')
+    upload_kml(output_path, 'https://drive.google.com/drive/folders/1nFWE89MJqKwaC_dDQW_T_uOxprXq28K2')
     print("KML file uploaded to Google Drive")
 
     return output_path
