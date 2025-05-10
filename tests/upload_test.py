@@ -96,7 +96,9 @@ def retrieve_gps():
     """Generate dummy lat/lon around UVic"""
     lat = 48.4439 + random.uniform(-0.0001, 0.0001)
     lon = -123.3322 + random.uniform(-0.0001, 0.0001)
-    rel_alt, pitch, yaw = 0
+    rel_alt = 0
+    pitch = 0
+    yaw = 0
     return lat, lon, rel_alt, pitch, yaw
 
 def retrieve_local():
